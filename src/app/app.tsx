@@ -1,5 +1,3 @@
 export const App = () => {
-  return <div>
-    Test
-  </div>;
+  return <div className="p-10 text-3xl font-bold underlin">Test</div>;
 };
