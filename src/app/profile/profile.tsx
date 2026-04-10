@@ -1,3 +1,3 @@
-export const ProfilePage = () => {
-  return <div></div>;
+export const Profile = () => {
+  return <div>Profile page</div>;
 };
