@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router";
-import { Layout } from "./layout/layout";
-import { Home } from "./home/home";
-import { Profile } from "./profile/profile";
-import { CommingSoon } from "./soon";
+import { Layout } from "@/app/layout/layout";
+import { Home } from "@/app/home/home";
+import { Profile } from "@/app/profile/profile";
+import { CommingSoon } from "@/app/soon";
 
 export const App = () => {
   return (
