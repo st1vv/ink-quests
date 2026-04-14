@@ -28,7 +28,7 @@ export const LayoutHeader = () => {
   const location = useLocation();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0b0f]/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0b0f]">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link
           to="/"
