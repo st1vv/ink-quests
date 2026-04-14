@@ -7,14 +7,14 @@ export const LayoutFooter = () => {
         <div className="flex items-center gap-4">
           <a
             href="https://github.com/st1vv/ink-quests"
-            className="hover:text-white"
+            className="hover:text-white transition"
             target="_blank"
           >
             GitHub
           </a>
           <a
             href="https://x.com/stanislav1w"
-            className="hover:text-white"
+            className="hover:text-white transition"
             target="_blank"
           >
             X
