@@ -35,7 +35,7 @@ export const LayoutHeader = () => {
           className="flex items-center gap-2 text-base font-semibold tracking-tight text-white"
         >
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#7132f5]" />
-          Ink Daily Quests
+          InkQuest
         </Link>
 
         <nav className="hidden items-center gap-1 rounded-full p-1 md:flex">

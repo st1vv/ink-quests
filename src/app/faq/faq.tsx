@@ -4,9 +4,9 @@ import { Surface } from "@/shared/ui/surface";
 const faqItems = [
   {
     id: 1,
-    question: "What is Ink Daily Quests?",
+    question: "What is InkQuest?",
     answer:
-      "Ink Daily Quests is a platform where users complete simple daily onchain actions in the Ink ecosystem, earn XP, and grow their streak.",
+      "InkQuest is a platform where users complete simple daily onchain actions in the Ink ecosystem, earn XP, and grow their streak.",
   },
   {
     id: 2,
