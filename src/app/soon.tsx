@@ -1,18 +1,17 @@
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
+import { Badge } from "@/shared/ui/badge";
 
 export const CommingSoon = () => {
   const navigate = useNavigate();
 
   return (
     <div className="flex min-h-[calc(100vh-128px)] items-center justify-center">
-      <Surface className="">
+      <Surface className="md:p-12">
         <div className="absolute left-1/2 top-0 h-64 w-64 -translate-x-1/2 rounded-full bg-[#7132f5]/20 blur-3xl" />
         <div className="relative z-10 text-center">
-          <div className="mb-4 inline-flex rounded-full border border-[#7132f5]/30 bg-[#7132f5]/10 px-4 py-1.5 text-sm font-medium text-[#a884ff]">
-            New feature in progress
-          </div>
+          <Badge className="mb-4 px-4 py-1.5">New feature in progress</Badge>
           <h1 className="text-4xl font-semibold tracking-tight text-white md:text-6xl">
             Coming Soon
           </h1>

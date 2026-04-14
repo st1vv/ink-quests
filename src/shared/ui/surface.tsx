@@ -15,7 +15,7 @@ export const Surface = ({ children, className = "" }: SurfaceProps) => {
         bg-white/5
         p-5 shadow-2xl
         backdrop-blur
-        md:p-12
+        md:p-8
         ${className}
       `}
     >
