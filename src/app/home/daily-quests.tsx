@@ -18,25 +18,25 @@ const initialQuests: QuestItem[] = [
   {
     id: 1,
     title: "Say GM",
-    description: "Say GM on the official platform",
+    description: "Say GM on the official platform.",
     questUrl: "https://gm.inkonchain.com/",
     status: "idle",
     points: 20,
   },
   {
     id: 2,
-    title: "Swap on the InkySwap",
+    title: "Swap on InkySwap",
     description:
-      "Make a simple swap on the InkySwap to complete this daily quest.",
+      "Make a simple swap on InkySwap to complete this daily quest.",
     questUrl: "https://inkyswap.com/swap",
     status: "idle",
     points: 30,
   },
   {
     id: 3,
-    title: "Bridge to Ink using the Superbridge",
+    title: "Bridge to Ink using Superbridge",
     description:
-      "Bridge assets to Ink using the Superbridge and keep your streak alive.",
+      "Bridge assets to Ink using Superbridge and keep your streak alive.",
     questUrl: "https://superbridge.app/?fromChainId=1&toChainId=57073",
     status: "idle",
     points: 40,
