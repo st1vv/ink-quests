@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router";
 import { Layout } from "@/app/layout/layout";
 import { Home } from "@/app/home/home";
 import { Profile } from "@/app/profile/profile";
+import { Leaderboard } from "@/app/leaderboard/leaderboard";
 import { CommingSoon } from "@/app/soon";
 
 export const App = () => {
@@ -10,7 +11,7 @@ export const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/leaderboard" element={<CommingSoon />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/quests" element={<CommingSoon />} />
         <Route path="/faq" element={<CommingSoon />} />
       </Routes>
