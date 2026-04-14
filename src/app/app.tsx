@@ -3,6 +3,7 @@ import { Layout } from "@/app/layout/layout";
 import { Home } from "@/app/home/home";
 import { Profile } from "@/app/profile/profile";
 import { Leaderboard } from "@/app/leaderboard/leaderboard";
+import { Faq } from "@/app/faq/faq";
 import { CommingSoon } from "@/app/soon";
 
 export const App = () => {
@@ -13,7 +14,7 @@ export const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/quests" element={<CommingSoon />} />
-        <Route path="/faq" element={<CommingSoon />} />
+        <Route path="/faq" element={<Faq />} />
       </Routes>
     </Layout>
   );
