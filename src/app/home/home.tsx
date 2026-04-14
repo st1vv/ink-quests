@@ -1,3 +1,7 @@
 export const Home = () => {
-  return <div>Home page</div>;
+  return (
+    <section className="w-full">
+      Hello
+    </section>
+  );
 };
