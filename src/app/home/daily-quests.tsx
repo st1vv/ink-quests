@@ -18,7 +18,7 @@ const initialQuests: QuestItem[] = [
   {
     id: 1,
     title: "Say GM",
-    description: "Say GM on the official Ink platform",
+    description: "Say GM on the official platform",
     questUrl: "https://gm.inkonchain.com/",
     status: "idle",
     points: 20,
@@ -37,7 +37,7 @@ const initialQuests: QuestItem[] = [
     title: "Bridge to Ink using the Superbridge",
     description:
       "Bridge assets to Ink using the Superbridge and keep your streak alive.",
-    questUrl: "#",
+    questUrl: "https://superbridge.app/?fromChainId=1&toChainId=57073",
     status: "idle",
     points: 40,
   },
@@ -45,6 +45,7 @@ const initialQuests: QuestItem[] = [
 
 export const HomeDailyQuests = () => {
   const [quests, setQuests] = useState<QuestItem[]>(initialQuests);
+  const [timeLeft, setTimeLeft] = useState("");
 
   const handleStartQuest = (questId: number, questUrl: string) => {
     window.open(questUrl, "_blank", "noopener,noreferrer");
@@ -74,13 +75,53 @@ export const HomeDailyQuests = () => {
     );
   };
 
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+
+      const nextReset = new Date();
+      nextReset.setHours(12, 0, 0, 0);
+
+      if (now >= nextReset) {
+        nextReset.setDate(nextReset.getDate() + 1);
+      }
+
+      const diff = nextReset.getTime() - now.getTime();
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft(
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0",
+        )}:${String(seconds).padStart(2, "0")}`,
+      );
+    };
+
+    updateTimer();
+
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Surface className="w-full max-w-full">
       <div className="flex flex-col gap-4">
-        <div>
+        <div className="flex items-center justify-between gap-4">
           <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
             Daily quests
           </h2>
+          {timeLeft && (
+            <Badge className="flex items-center gap-2 px-4 py-1.5">
+              <span>Refresh in</span>
+              <span className="font-semibold text-white tabular-nums text-right">
+                {timeLeft}
+              </span>
+            </Badge>
+          )}
         </div>
 
         <div className="flex flex-col gap-4">
