@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Button } from "@/shared/ui/button";
+import { ConnectWallet } from "@/app/layout/connect-wallet";
 
 const NAVIGATION_ITEMS = [
   {
@@ -49,7 +49,7 @@ export const LayoutHeader = () => {
           ))}
         </nav>
 
-        <Button>Connect Wallet</Button>
+        <ConnectWallet />
       </div>
     </header>
   );
