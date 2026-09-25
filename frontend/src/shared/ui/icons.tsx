@@ -76,6 +76,12 @@ export const SwitchIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const SpinnerIcon = ({ className = "", ...props }: IconProps) => (
+  <Icon className={`h-4 w-4 animate-spin ${className}`} {...props}>
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </Icon>
+);
+
 export const ChevronDownIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="m6 9 6 6 6-6" />

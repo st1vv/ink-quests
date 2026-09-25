@@ -1,20 +1,16 @@
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { StatCard } from "@/shared/ui/stat-card";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
-import {
-  CHECK_IN_XP,
-  useCheckIn,
-  useProgress,
-} from "@/app/home/use-progress";
+import { useRequireAuth } from "@/app/auth/use-require-auth";
+import { CHECK_IN_XP, useCheckIn, useProgress } from "@/app/home/use-progress";
 
 const PLACEHOLDER = "—";
 
 export const HomeProgress = () => {
   const { status: authStatus } = useAuth();
-  const { openConnectModal } = useConnectModal();
+  const requireAuth = useRequireAuth();
   // Signed-out visitors and the first load show placeholders.
   const { data: progress } = useProgress();
   const checkIn = useCheckIn();
@@ -51,9 +47,7 @@ export const HomeProgress = () => {
             <StatCard
               label="Total XP"
               value={
-                progress
-                  ? `${formatNumber(progress.totalXp)} XP`
-                  : PLACEHOLDER
+                progress ? `${formatNumber(progress.totalXp)} XP` : PLACEHOLDER
               }
             >
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -72,22 +66,18 @@ export const HomeProgress = () => {
         </div>
 
         <div className="mt-auto flex flex-col gap-2 pt-2">
-          {authStatus !== "authenticated" ? (
-            <Button
-              onClick={openConnectModal}
-              disabled={authStatus === "loading"}
-              className="w-full"
-            >
-              Sign in to check in
-            </Button>
-          ) : progress?.checkedInToday ? (
+          {progress?.checkedInToday ? (
             <Button variant="ghost" disabled className="w-full">
               ✓ Checked in today
             </Button>
           ) : (
             <Button
-              onClick={() => checkIn.mutate()}
-              disabled={!progress || checkIn.isPending}
+              onClick={requireAuth(() => checkIn.mutate())}
+              disabled={
+                authStatus === "loading" ||
+                (authStatus === "authenticated" && !progress) ||
+                checkIn.isPending
+              }
               className="w-full"
             >
               {checkIn.isPending

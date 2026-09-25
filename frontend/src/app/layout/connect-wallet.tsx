@@ -1,6 +1,13 @@
+import type { ReactNode } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/shared/ui/button";
-import { ChevronDownIcon, SwitchIcon, WalletIcon } from "@/shared/ui/icons";
+import type { ButtonVariant } from "@/shared/ui/button-styles";
+import {
+  ChevronDownIcon,
+  SpinnerIcon,
+  SwitchIcon,
+  WalletIcon,
+} from "@/shared/ui/icons";
 
 export const ConnectWallet = () => {
   return (
@@ -10,25 +17,30 @@ export const ConnectWallet = () => {
         chain,
         mounted,
         authenticationStatus,
+        connectModalOpen,
         openConnectModal,
         openChainModal,
         openAccountModal,
       }) => {
-        if (!mounted || authenticationStatus === "loading") {
+        // The connect modal stays open through picking a wallet, approving
+        // the connection and signing the SIWE message.
+        if (
+          !mounted ||
+          authenticationStatus === "loading" ||
+          connectModalOpen
+        ) {
           return (
-            <Button disabled>
-              <WalletIcon />
-              Connect Wallet
-            </Button>
+            <WalletButton disabled icon={<SpinnerIcon />}>
+              Connecting…
+            </WalletButton>
           );
         }
 
         if (!account || !chain) {
           return (
-            <Button onClick={openConnectModal}>
-              <WalletIcon />
+            <WalletButton onClick={openConnectModal} icon={<WalletIcon />}>
               Connect Wallet
-            </Button>
+            </WalletButton>
           );
         }
 
@@ -36,30 +48,59 @@ export const ConnectWallet = () => {
         // modal reopens on its sign-in step.
         if (authenticationStatus === "unauthenticated") {
           return (
-            <Button onClick={openConnectModal}>
-              <WalletIcon />
+            <WalletButton onClick={openConnectModal} icon={<WalletIcon />}>
               Sign in
-            </Button>
+            </WalletButton>
           );
         }
 
         if (chain.unsupported) {
           return (
-            <Button onClick={openChainModal}>
-              <SwitchIcon />
+            <WalletButton onClick={openChainModal} icon={<SwitchIcon />}>
               Switch to Ink
-            </Button>
+            </WalletButton>
           );
         }
 
         return (
-          <Button variant="ghost" onClick={openAccountModal}>
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+          <WalletButton
+            variant="ghost"
+            onClick={openAccountModal}
+            icon={
+              <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+            }
+            trailing={<ChevronDownIcon className="h-4 w-4 text-white/50" />}
+          >
             {account.displayName}
-            <ChevronDownIcon className="h-4 w-4 text-white/50" />
-          </Button>
+          </WalletButton>
         );
       }}
     </ConnectButton.Custom>
   );
 };
+
+type WalletButtonProps = {
+  icon: ReactNode;
+  trailing?: ReactNode;
+  variant?: ButtonVariant;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: ReactNode;
+};
+
+// One fixed width for every state, so the header doesn't shift when the
+// label changes. Sized for "Connect Wallet" and a shortened address and
+// still fits a 320px screen next to the logo; longer labels (ENS names)
+// are truncated.
+const WalletButton = ({
+  icon,
+  trailing,
+  children,
+  ...props
+}: WalletButtonProps) => (
+  <Button className="w-44" {...props}>
+    {icon}
+    <span className="min-w-0 truncate">{children}</span>
+    {trailing}
+  </Button>
+);

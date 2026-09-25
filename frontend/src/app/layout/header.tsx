@@ -105,7 +105,7 @@ const HeaderLink = ({
       className={({ isActive }) =>
         `inline-flex items-center font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
           isActive
-            ? "bg-white/10 text-white"
+            ? "bg-ink text-white shadow-lg shadow-ink/25"
             : "text-white/60 hover:bg-white/5 hover:text-white"
         }`
       }

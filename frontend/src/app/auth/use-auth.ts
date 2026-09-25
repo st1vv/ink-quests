@@ -18,10 +18,13 @@ export const useAuth = () => {
   });
 
   const sessionAddress = session.data?.address;
+  // Only the silent reconnect on page load counts as loading. A connection
+  // the user started must stay "unauthenticated": RainbowKit keeps the
+  // modal open for the signature only if the status is unauthenticated when
+  // the wallet connects, and it closes the modal whenever the status changes
+  // to unauthenticated.
   const status: AuthenticationStatus =
-    session.isPending ||
-    accountStatus === "connecting" ||
-    accountStatus === "reconnecting"
+    session.isPending || accountStatus === "reconnecting"
       ? "loading"
       : address && sessionAddress && isAddressEqual(address, sessionAddress)
         ? "authenticated"

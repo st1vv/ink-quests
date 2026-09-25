@@ -2,8 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { useAuth } from "@/app/auth/use-auth";
+import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useDailyQuests, type Quest } from "@/app/quests/catalog";
 import { useClaimQuest, useCompletions } from "@/app/quests/claims";
 import { ApiError } from "@/lib/api";
@@ -19,6 +18,7 @@ export const HomeDailyQuests = () => {
   const completions = useCompletions();
   const [statuses, setStatuses] = useState<Record<number, QuestStatus>>({});
   const [timeLeft, setTimeLeft] = useState("");
+  const requireAuth = useRequireAuth();
 
   const quests: QuestItem[] = (dailyQuests.data ?? []).map((quest) => ({
     ...quest,
@@ -116,7 +116,7 @@ export const HomeDailyQuests = () => {
               key={quest.id}
               step={index + 1}
               quest={quest}
-              onStart={handleStartQuest}
+              onStart={requireAuth(handleStartQuest)}
             />
           ))}
         </div>
@@ -133,8 +133,7 @@ type QuestRowProps = {
 
 const QuestRow = ({ step, quest, onStart }: QuestRowProps) => {
   const [secondsLeft, setSecondsLeft] = useState(5);
-  const { status: authStatus } = useAuth();
-  const { openConnectModal } = useConnectModal();
+  const requireAuth = useRequireAuth();
   const claim = useClaimQuest();
 
   useEffect(() => {
@@ -223,31 +222,16 @@ const QuestRow = ({ step, quest, onStart }: QuestRowProps) => {
           </Button>
         )}
 
-        {quest.status === "claim_ready" &&
-          quest.claimable &&
-          authStatus !== "authenticated" && (
-            <Button
-              variant="secondary"
-              onClick={openConnectModal}
-              disabled={authStatus === "loading"}
-              className="w-full md:w-auto"
-            >
-              Sign in to claim
-            </Button>
-          )}
-
-        {quest.status === "claim_ready" &&
-          quest.claimable &&
-          authStatus === "authenticated" && (
-            <Button
-              variant="secondary"
-              onClick={() => claim.mutate(quest.id)}
-              disabled={claim.isPending}
-              className="w-full md:w-auto"
-            >
-              {claim.isPending ? "Checking…" : `Claim ${quest.points} XP`}
-            </Button>
-          )}
+        {quest.status === "claim_ready" && quest.claimable && (
+          <Button
+            variant="secondary"
+            onClick={requireAuth(() => claim.mutate(quest.id))}
+            disabled={claim.isPending}
+            className="w-full md:w-auto"
+          >
+            {claim.isPending ? "Checking…" : `Claim ${quest.points} XP`}
+          </Button>
+        )}
 
         {isCompleted && (
           <span className="w-full text-center text-sm font-semibold text-emerald-300 md:w-auto md:px-4">
