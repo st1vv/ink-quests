@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LayoutHeader } from "@/app/layout/header";
+import { LayoutHeader, LayoutMobileNav } from "@/app/layout/header";
 import { LayoutFooter } from "@/app/layout/footer";
 
 interface LayoutProps {
@@ -8,7 +8,8 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="flex min-h-screen flex-col text-white">
+    // Bottom padding on mobile keeps the footer clear of the fixed bottom nav.
+    <div className="flex min-h-screen flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] text-white md:pb-0">
       <LayoutHeader />
 
       <main className="flex-1">
@@ -16,6 +17,7 @@ export const Layout = ({ children }: LayoutProps) => {
       </main>
 
       <LayoutFooter />
+      <LayoutMobileNav />
     </div>
   );
 };

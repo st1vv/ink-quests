@@ -1,5 +1,6 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Button } from "@/shared/ui/button";
+import { ChevronDownIcon, SwitchIcon, WalletIcon } from "@/shared/ui/icons";
 
 export const ConnectWallet = () => {
   return (
@@ -13,21 +14,37 @@ export const ConnectWallet = () => {
         openAccountModal,
       }) => {
         if (!mounted) {
-          return <Button disabled>Connect Wallet</Button>;
+          return (
+            <Button disabled>
+              <WalletIcon />
+              Connect Wallet
+            </Button>
+          );
         }
 
         if (!account || !chain) {
-          return <Button onClick={openConnectModal}>Connect Wallet</Button>;
+          return (
+            <Button onClick={openConnectModal}>
+              <WalletIcon />
+              Connect Wallet
+            </Button>
+          );
         }
 
         if (chain.unsupported) {
-          return <Button onClick={openChainModal}>Switch to Ink</Button>;
+          return (
+            <Button onClick={openChainModal}>
+              <SwitchIcon />
+              Switch to Ink
+            </Button>
+          );
         }
 
         return (
           <Button variant="ghost" onClick={openAccountModal}>
-            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
             {account.displayName}
+            <ChevronDownIcon className="h-4 w-4 text-white/50" />
           </Button>
         );
       }}

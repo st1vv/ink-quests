@@ -1,26 +1,38 @@
+import type { ComponentType } from "react";
 import { Link, NavLink } from "react-router";
 import { ConnectWallet } from "@/app/layout/connect-wallet";
+import {
+  HelpIcon,
+  HomeIcon,
+  QuestsIcon,
+  TrophyIcon,
+  type IconProps,
+} from "@/shared/ui/icons";
 
 const NAVIGATION_ITEMS = [
   {
     id: "home",
     label: "Home",
     link: "/",
+    icon: HomeIcon,
   },
   {
     id: "quests",
     label: "Quests",
     link: "/quests",
+    icon: QuestsIcon,
   },
   {
     id: "leaderboard",
     label: "Leaderboard",
     link: "/leaderboard",
+    icon: TrophyIcon,
   },
   {
     id: "faq",
     label: "FAQ",
     link: "/faq",
+    icon: HelpIcon,
   },
 ];
 
@@ -38,47 +50,68 @@ export const LayoutHeader = () => {
 
         <nav className="hidden items-center gap-1 md:flex">
           {NAVIGATION_ITEMS.map((item) => (
-            <HeaderLink key={item.id} to={item.link} label={item.label} />
+            <HeaderLink
+              key={item.id}
+              to={item.link}
+              label={item.label}
+              icon={item.icon}
+            />
           ))}
         </nav>
 
         <ConnectWallet />
       </div>
+    </header>
+  );
+};
 
-      <nav className="mx-4 mb-3 flex gap-1 md:hidden">
+// Rendered outside <header>: its backdrop-blur would become the containing
+// block for this fixed element and pin it to the header instead of the viewport.
+export const LayoutMobileNav = () => {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-50 min-w-80 border-t border-white/10 bg-canvas/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg md:hidden">
+      <div className="mx-auto flex h-16 max-w-md items-stretch gap-1 px-2 py-1.5">
         {NAVIGATION_ITEMS.map((item) => (
           <HeaderLink
             key={item.id}
             to={item.link}
             label={item.label}
-            className="flex-auto px-3 text-center"
+            icon={item.icon}
+            className="min-w-0 flex-1 flex-col justify-center gap-1 rounded-xl px-1 text-xs"
           />
         ))}
-      </nav>
-    </header>
+      </div>
+    </nav>
   );
 };
 
 type HeaderLinkProps = {
   to: string;
   label: string;
+  icon: ComponentType<IconProps>;
   className?: string;
 };
 
-const HeaderLink = ({ to, label, className = "px-4" }: HeaderLinkProps) => {
+const HeaderLink = ({
+  to,
+  label,
+  icon: IconComponent,
+  className = "gap-2 rounded-full px-4 py-2 text-sm",
+}: HeaderLinkProps) => {
   return (
     <NavLink
       to={to}
       end={to === "/"}
       className={({ isActive }) =>
-        `rounded-full py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
+        `inline-flex items-center font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
           isActive
             ? "bg-white/10 text-white"
             : "text-white/60 hover:bg-white/5 hover:text-white"
         }`
       }
     >
-      {label}
+      <IconComponent />
+      <span className="max-w-full truncate">{label}</span>
     </NavLink>
   );
 };

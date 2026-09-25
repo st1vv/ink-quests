@@ -13,6 +13,8 @@
 }
 
 body {
+  /* Below this the layout stops shrinking and the page scrolls horizontally. */
+  min-width: 320px;
   background-color: var(--color-canvas);
   -webkit-font-smoothing: antialiased;
 }
