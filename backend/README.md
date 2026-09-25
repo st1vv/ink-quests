@@ -115,3 +115,15 @@ are the total XP at which the current and next level start.
 - **Check-in**: `POST /me/check-in` gives 20 XP, once per UTC day (409 on a repeat).
 - **Streak**: consecutive UTC days with a check-in; quests don't count toward it. It stays alive
   through today if the last check-in was yesterday.
+
+## Leaderboard
+
+- `GET /leaderboard` (public): top 100 users by total XP (quests + check-ins) as
+  `{ rank, address, xp, level }[]`. Users with the same XP share a rank; users without XP aren't
+  listed.
+- `GET /me/rank` (signed in): `{ rank, xp, xpToNextRank }`, also for users outside the top.
+  `rank` is null until the user has XP; `xpToNextRank` is what it takes to strictly pass the
+  closest user above, null for first place.
+
+Both aggregate all completions on every request, which is fine for now; cache or precompute the
+totals once that gets slow.
