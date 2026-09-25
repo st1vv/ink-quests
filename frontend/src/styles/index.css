@@ -10,6 +10,17 @@
 
 :root {
   color-scheme: dark;
+  /* Reserve the scrollbar's space even on short pages, so the layout
+     doesn't jump sideways when navigating between them. */
+  scrollbar-gutter: stable;
+}
+
+/* RainbowKit's modals lock scrolling with react-remove-scroll, which adds a
+   scrollbar-wide margin to <body>. The gutter above already keeps that
+   space, so the margin would shift the page instead. Higher specificity
+   beats its !important rule. */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
 }
 
 body {
