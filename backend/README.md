@@ -41,12 +41,14 @@ Check it: `GET http://localhost:3000/health` → `{"status":"ok","db":"up"}`.
 
 See `.env.example`. The app refuses to start if a variable is missing or invalid.
 
-| Variable          | Description                                                    |
-| ----------------- | -------------------------------------------------------------- |
-| `PORT`            | HTTP port (default 3000)                                       |
-| `DATABASE_URL`    | Postgres connection string                                     |
-| `FRONTEND_ORIGIN` | Origin allowed by CORS, with credentials; also the SIWE domain |
-| `INK_RPC_URL`     | Optional Ink RPC for smart-wallet signature checks             |
+| Variable           | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
+| `PORT`             | HTTP port (default 3000)                                        |
+| `DATABASE_URL`     | Postgres connection string                                      |
+| `FRONTEND_ORIGIN`  | Origin allowed by CORS, with credentials; also the SIWE domain  |
+| `INK_RPC_URL`      | Optional Ink RPC for smart-wallet signature checks              |
+| `EXPLORER_API_KEY` | Blockscout PRO API key for quest checks; required in production |
+| `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                |
 
 ## Auth (Sign-In with Ethereum)
 
@@ -78,3 +80,25 @@ A partner or quest removed from the file is deactivated rather than deleted, sin
 reference it. A quest with `verifier: null` is listed but can't be claimed yet.
 
 Public routes: `GET /quests/daily`, `GET /partners`, `GET /partners/:slug` (with its quests).
+
+## Claiming quests
+
+`POST /quests/:id/claim` (signed in) looks the user's transactions up on the Ink explorer
+(Blockscout) and records a completion when one matches the quest's verifier. Daily quests count
+transactions since 00:00 UTC and can be claimed once per UTC day; partner quests count
+transactions since the quest was added and can be claimed once. `GET /me/completions` returns the
+ids completed for the current period.
+
+To make a quest claimable, add a spec to `VERIFIERS` in `src/quests/verifiers.ts` and set the
+quest's `verifier` in `seed.ts` to its key (the seed rejects unknown keys):
+
+```ts
+'inkyswap-swap': {
+  type: 'contract-call',
+  contracts: ['0x…'], // router address from the protocol's official docs
+  methods: ['0x…'], // optional: only these function selectors count
+},
+```
+
+Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337
+bundler can't claim yet.

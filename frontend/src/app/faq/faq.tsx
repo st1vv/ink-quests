@@ -25,7 +25,7 @@ const faqItems = [
     id: 4,
     question: "When do quests refresh?",
     answer:
-      "Daily quests refresh every day at 12:00. After the refresh, a new set of quests becomes available for all users.",
+      "Daily quests refresh every day at 00:00 UTC. After the refresh, a new set of quests becomes available for all users.",
   },
   {
     id: 5,

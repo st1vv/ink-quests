@@ -7,6 +7,13 @@ const envSchema = z.object({
   // Used to verify smart-contract wallet signatures; viem's public Ink RPC
   // is used when unset.
   INK_RPC_URL: z.url().optional(),
+  // Blockscout PRO API key (dev.blockscout.com), used to find the
+  // transactions that complete a quest. Without it the public Ink explorer
+  // is used, which allows only ~10 requests per IP: fine for local dev,
+  // not for production.
+  EXPLORER_API_KEY: z.string().min(1).optional(),
+  // Overrides the Blockscout API base picked from the key above.
+  EXPLORER_API_URL: z.url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

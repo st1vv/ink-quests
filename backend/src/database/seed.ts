@@ -7,6 +7,7 @@ import type { PgTable } from 'drizzle-orm/pg-core';
 import { createDatabase } from './client';
 import { partners, quests } from './schema';
 import { loadEnvFile } from '../config/load-env-file';
+import { VERIFIERS } from '../quests/verifiers';
 
 loadEnvFile();
 
@@ -56,6 +57,7 @@ const QUESTS: SeedQuest[] = [
     actionUrl: 'https://gm.inkonchain.com/',
     points: 20,
     sortOrder: 1,
+    verifier: 'ink-gm',
   },
   {
     slug: 'daily-inkyswap-swap',
@@ -97,6 +99,9 @@ const validate = () => {
     }
     if (q.kind === 'daily' && q.partner) {
       errors.push(`quest "${q.slug}": daily quests can't have a partner`);
+    }
+    if (q.verifier && !(q.verifier in VERIFIERS)) {
+      errors.push(`quest "${q.slug}": unknown verifier "${q.verifier}"`);
     }
     if (q.partner && !partnerSlugs.has(q.partner)) {
       errors.push(`quest "${q.slug}": unknown partner "${q.partner}"`);

@@ -2,30 +2,35 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAuth } from "@/app/auth/use-auth";
 import { useDailyQuests, type Quest } from "@/app/quests/catalog";
+import { useClaimQuest, useCompletions } from "@/app/quests/claims";
+import { ApiError } from "@/lib/api";
 
+// Completed comes from the server; the rest is the in-page flow of opening
+// the quest and waiting a moment before the claim button appears.
 type QuestStatus = "idle" | "started" | "claim_ready" | "completed";
 
 type QuestItem = Quest & { status: QuestStatus };
 
 export const HomeDailyQuests = () => {
   const dailyQuests = useDailyQuests();
-  // Progress is still simulated in the browser until claims hit the backend.
+  const completions = useCompletions();
   const [statuses, setStatuses] = useState<Record<number, QuestStatus>>({});
   const [timeLeft, setTimeLeft] = useState("");
 
   const quests: QuestItem[] = (dailyQuests.data ?? []).map((quest) => ({
     ...quest,
-    status: statuses[quest.id] ?? "idle",
+    status: completions.data?.has(quest.id)
+      ? "completed"
+      : (statuses[quest.id] ?? "idle"),
   }));
   const completedCount = quests.filter((q) => q.status === "completed").length;
 
-  const setStatus = (questId: number, status: QuestStatus) =>
-    setStatuses((prev) => ({ ...prev, [questId]: status }));
-
   const handleStartQuest = (questId: number, actionUrl: string) => {
     window.open(actionUrl, "_blank", "noopener,noreferrer");
-    setStatus(questId, "started");
+    setStatuses((prev) => ({ ...prev, [questId]: "started" }));
 
     window.setTimeout(() => {
       setStatuses((prev) =>
@@ -36,18 +41,13 @@ export const HomeDailyQuests = () => {
     }, 5000);
   };
 
-  const handleClaimQuest = (questId: number) => setStatus(questId, "completed");
-
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
 
-      const nextReset = new Date();
-      nextReset.setHours(12, 0, 0, 0);
-
-      if (now >= nextReset) {
-        nextReset.setDate(nextReset.getDate() + 1);
-      }
+      // Daily quests reset at 00:00 UTC; 24 rolls over to the next day.
+      const nextReset = new Date(now);
+      nextReset.setUTCHours(24, 0, 0, 0);
 
       const diff = nextReset.getTime() - now.getTime();
 
@@ -117,7 +117,6 @@ export const HomeDailyQuests = () => {
               step={index + 1}
               quest={quest}
               onStart={handleStartQuest}
-              onClaim={handleClaimQuest}
             />
           ))}
         </div>
@@ -130,11 +129,13 @@ type QuestRowProps = {
   step: number;
   quest: QuestItem;
   onStart: (questId: number, actionUrl: string) => void;
-  onClaim: (questId: number) => void;
 };
 
-const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
+const QuestRow = ({ step, quest, onStart }: QuestRowProps) => {
   const [secondsLeft, setSecondsLeft] = useState(5);
+  const { status: authStatus } = useAuth();
+  const { openConnectModal } = useConnectModal();
+  const claim = useClaimQuest();
 
   useEffect(() => {
     if (quest.status !== "started") return;
@@ -189,6 +190,14 @@ const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
           <p className="mt-1 text-sm leading-6 text-white/60">
             {quest.description}
           </p>
+
+          {claim.isError && !isCompleted && (
+            <p role="alert" className="mt-2 text-sm text-rose-300">
+              {claim.error instanceof ApiError
+                ? claim.error.message
+                : "Couldn't reach the server. Try again."}
+            </p>
+          )}
         </div>
       </div>
 
@@ -208,15 +217,37 @@ const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
           </Button>
         )}
 
-        {quest.status === "claim_ready" && (
-          <Button
-            variant="secondary"
-            onClick={() => onClaim(quest.id)}
-            className="w-full md:w-auto"
-          >
-            Claim {quest.points} XP
+        {quest.status === "claim_ready" && !quest.claimable && (
+          <Button disabled className="w-full md:w-auto">
+            Verification soon
           </Button>
         )}
+
+        {quest.status === "claim_ready" &&
+          quest.claimable &&
+          authStatus !== "authenticated" && (
+            <Button
+              variant="secondary"
+              onClick={openConnectModal}
+              disabled={authStatus === "loading"}
+              className="w-full md:w-auto"
+            >
+              Sign in to claim
+            </Button>
+          )}
+
+        {quest.status === "claim_ready" &&
+          quest.claimable &&
+          authStatus === "authenticated" && (
+            <Button
+              variant="secondary"
+              onClick={() => claim.mutate(quest.id)}
+              disabled={claim.isPending}
+              className="w-full md:w-auto"
+            >
+              {claim.isPending ? "Checking…" : `Claim ${quest.points} XP`}
+            </Button>
+          )}
 
         {isCompleted && (
           <span className="w-full text-center text-sm font-semibold text-emerald-300 md:w-auto md:px-4">
