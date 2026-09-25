@@ -22,6 +22,28 @@ export const users = pgTable('users', {
   lastLoginAt: timestamp({ withTimezone: true }),
 });
 
+// Single-use SIWE nonces; a row is deleted when a signed message consumes it.
+export const authNonces = pgTable('auth_nonces', {
+  // viem's generateSiweNonce() returns 96 chars.
+  nonce: varchar({ length: 96 }).primaryKey(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+});
+
+export const sessions = pgTable(
+  'sessions',
+  {
+    // sha256 of the token in the session cookie, so a DB leak can't be
+    // replayed as a login.
+    id: varchar({ length: 64 }).primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+  },
+  (t) => [index().on(t.userId)],
+);
+
 export const partners = pgTable('partners', {
   id: serial().primaryKey(),
   slug: varchar({ length: 64 }).notNull().unique(),

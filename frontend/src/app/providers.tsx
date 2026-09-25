@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { wagmiConfig } from "@/config/wagmi";
+import { AuthProvider } from "@/app/auth/auth-provider";
 
 const queryClient = new QueryClient();
 
@@ -21,9 +22,11 @@ export const Providers = ({ children }: ProvidersProps) => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={theme} modalSize="compact">
-          {children}
-        </RainbowKitProvider>
+        <AuthProvider>
+          <RainbowKitProvider theme={theme} modalSize="compact">
+            {children}
+          </RainbowKitProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

@@ -41,8 +41,25 @@ Check it: `GET http://localhost:3000/health` → `{"status":"ok","db":"up"}`.
 
 See `.env.example`. The app refuses to start if a variable is missing or invalid.
 
-| Variable          | Description                              |
-| ----------------- | ---------------------------------------- |
-| `PORT`            | HTTP port (default 3000)                 |
-| `DATABASE_URL`    | Postgres connection string               |
-| `FRONTEND_ORIGIN` | Origin allowed by CORS, with credentials |
+| Variable          | Description                                                    |
+| ----------------- | -------------------------------------------------------------- |
+| `PORT`            | HTTP port (default 3000)                                       |
+| `DATABASE_URL`    | Postgres connection string                                     |
+| `FRONTEND_ORIGIN` | Origin allowed by CORS, with credentials; also the SIWE domain |
+| `INK_RPC_URL`     | Optional Ink RPC for smart-wallet signature checks             |
+
+## Auth (Sign-In with Ethereum)
+
+The frontend signs a SIWE message with the connected wallet; the backend checks it and sets
+an HttpOnly session cookie (`inkquest_session`, 30 days).
+
+| Route               | What it does                                                        |
+| ------------------- | ------------------------------------------------------------------- |
+| `GET /auth/nonce`   | Single-use nonce, valid 10 minutes                                  |
+| `POST /auth/verify` | `{ message, signature }` → creates the user if new, sets the cookie |
+| `GET /auth/session` | `{ address }` of the current session, or `{ address: null }`        |
+| `POST /auth/logout` | Deletes the session and clears the cookie                           |
+
+The message must be for the `FRONTEND_ORIGIN` host and Ink's chain id (57073). To require a
+signed-in user on a route, import `AuthModule` and add `@UseGuards(AuthGuard)`; read the user
+with `@CurrentUser()`.

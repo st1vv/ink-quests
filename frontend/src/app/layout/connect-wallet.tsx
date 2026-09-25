@@ -9,11 +9,12 @@ export const ConnectWallet = () => {
         account,
         chain,
         mounted,
+        authenticationStatus,
         openConnectModal,
         openChainModal,
         openAccountModal,
       }) => {
-        if (!mounted) {
+        if (!mounted || authenticationStatus === "loading") {
           return (
             <Button disabled>
               <WalletIcon />
@@ -27,6 +28,17 @@ export const ConnectWallet = () => {
             <Button onClick={openConnectModal}>
               <WalletIcon />
               Connect Wallet
+            </Button>
+          );
+        }
+
+        // Connected but the signature was dismissed or failed: the connect
+        // modal reopens on its sign-in step.
+        if (authenticationStatus === "unauthenticated") {
+          return (
+            <Button onClick={openConnectModal}>
+              <WalletIcon />
+              Sign in
             </Button>
           );
         }
