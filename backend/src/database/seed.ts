@@ -1,13 +1,26 @@
-// Upserts the starter quest catalog (moved from the frontend's hardcoded data).
-// Run with: npm run db:seed
-import { sql } from 'drizzle-orm';
+// The quest catalog lives here, in code: edit the lists below and run
+// `npm run db:seed`. Rows are matched by slug and every field is overwritten,
+// so this file is the source of truth. A partner or quest removed from the
+// file is deactivated, not deleted, because completions still point at it.
+import { getTableColumns, notInArray, sql } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
 import { createDatabase } from './client';
 import { partners, quests } from './schema';
 import { loadEnvFile } from '../config/load-env-file';
 
 loadEnvFile();
 
-const PARTNERS: (typeof partners.$inferInsert)[] = [
+type SeedPartner = Omit<typeof partners.$inferInsert, 'id' | 'createdAt'>;
+
+type SeedQuest = Omit<
+  typeof quests.$inferInsert,
+  'id' | 'createdAt' | 'partnerId'
+> & {
+  // Slug of the partner, required for kind 'partner'.
+  partner?: string;
+};
+
+const PARTNERS: SeedPartner[] = [
   {
     slug: 'nado',
     title: 'Nado',
@@ -34,7 +47,7 @@ const PARTNERS: (typeof partners.$inferInsert)[] = [
   },
 ];
 
-const DAILY_QUESTS: (typeof quests.$inferInsert)[] = [
+const QUESTS: SeedQuest[] = [
   {
     slug: 'daily-gm',
     kind: 'daily',
@@ -65,41 +78,95 @@ const DAILY_QUESTS: (typeof quests.$inferInsert)[] = [
   },
 ];
 
-// On conflict, overwrite the given columns with the incoming row values.
-const excludedAll = (columns: string[]) =>
-  Object.fromEntries(
-    columns.map((c) => [c, sql.raw(`excluded.${toSnake(c)}`)]),
-  );
+// Fail before touching the DB instead of half-applying a broken catalog.
+const validate = () => {
+  const partnerSlugs = new Set(PARTNERS.map((p) => p.slug));
+  const errors: string[] = [];
+
+  for (const list of [PARTNERS, QUESTS]) {
+    const seen = new Set<string>();
+    for (const { slug } of list) {
+      if (seen.has(slug)) errors.push(`duplicate slug "${slug}"`);
+      seen.add(slug);
+    }
+  }
+
+  for (const q of QUESTS) {
+    if (q.kind === 'partner' && !q.partner) {
+      errors.push(`quest "${q.slug}": partner quests need a partner`);
+    }
+    if (q.kind === 'daily' && q.partner) {
+      errors.push(`quest "${q.slug}": daily quests can't have a partner`);
+    }
+    if (q.partner && !partnerSlugs.has(q.partner)) {
+      errors.push(`quest "${q.slug}": unknown partner "${q.partner}"`);
+    }
+  }
+
+  if (errors.length) {
+    throw new Error(`Invalid seed data:\n- ${errors.join('\n- ')}`);
+  }
+};
+
 const toSnake = (s: string) =>
   s.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
 
+// On conflict, overwrite every column except the key and bookkeeping ones.
+// A field left out of a seed entry resets to its column default.
+const overwriteAll = (table: PgTable) =>
+  Object.fromEntries(
+    Object.keys(getTableColumns(table))
+      .filter((c) => !['id', 'slug', 'createdAt'].includes(c))
+      .map((c) => [c, sql.raw(`excluded.${toSnake(c)}`)]),
+  );
+
 async function main() {
+  validate();
+
   const { db, pool } = createDatabase(process.env.DATABASE_URL!);
   try {
-    await db
-      .insert(partners)
-      .values(PARTNERS)
-      .onConflictDoUpdate({
-        target: partners.slug,
-        set: excludedAll(['title', 'description', 'imageUrl']),
-      });
+    await db.transaction(async (tx) => {
+      const partnerRows = await tx
+        .insert(partners)
+        .values(PARTNERS)
+        .onConflictDoUpdate({
+          target: partners.slug,
+          set: overwriteAll(partners),
+        })
+        .returning({ id: partners.id, slug: partners.slug });
+      const partnerIds = new Map(partnerRows.map((p) => [p.slug, p.id]));
 
-    await db
-      .insert(quests)
-      .values(DAILY_QUESTS)
-      .onConflictDoUpdate({
-        target: quests.slug,
-        set: excludedAll([
-          'title',
-          'description',
-          'actionUrl',
-          'points',
-          'sortOrder',
-        ]),
-      });
+      await tx
+        .update(partners)
+        .set({ isActive: false })
+        .where(notInArray(partners.slug, [...partnerIds.keys()]));
+
+      await tx
+        .insert(quests)
+        .values(
+          QUESTS.map(({ partner, ...q }) => ({
+            ...q,
+            partnerId: partner ? partnerIds.get(partner)! : null,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: quests.slug,
+          set: overwriteAll(quests),
+        });
+
+      await tx
+        .update(quests)
+        .set({ isActive: false })
+        .where(
+          notInArray(
+            quests.slug,
+            QUESTS.map((q) => q.slug),
+          ),
+        );
+    });
 
     console.log(
-      `Seeded ${PARTNERS.length} partners and ${DAILY_QUESTS.length} daily quests.`,
+      `Seeded ${PARTNERS.length} partners and ${QUESTS.length} quests.`,
     );
   } finally {
     await pool.end();

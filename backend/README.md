@@ -63,3 +63,18 @@ an HttpOnly session cookie (`inkquest_session`, 30 days).
 The message must be for the `FRONTEND_ORIGIN` host and Ink's chain id (57073). To require a
 signed-in user on a route, import `AuthModule` and add `@UseGuards(AuthGuard)`; read the user
 with `@CurrentUser()`.
+
+## Quest catalog
+
+The catalog lives in code: `src/database/seed.ts` is the source of truth.
+
+1. Add a partner to `PARTNERS` and/or a quest to `QUESTS` (`kind: 'daily'`, or
+   `kind: 'partner'` with `partner: '<partner slug>'`).
+2. Run `npm run db:seed` (from the repo root in Docker, or here on the host).
+3. Commit the change.
+
+Rows are matched by `slug`, so never rename one; every other field is overwritten on each run.
+A partner or quest removed from the file is deactivated rather than deleted, since completions
+reference it. A quest with `verifier: null` is listed but can't be claimed yet.
+
+Public routes: `GET /quests/daily`, `GET /partners`, `GET /partners/:slug` (with its quests).

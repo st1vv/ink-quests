@@ -1,81 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
+import { useDailyQuests, type Quest } from "@/app/quests/catalog";
 
 type QuestStatus = "idle" | "started" | "claim_ready" | "completed";
 
-type QuestItem = {
-  id: number;
-  title: string;
-  description: string;
-  questUrl: string;
-  status: QuestStatus;
-  points: number;
-};
-
-const initialQuests: QuestItem[] = [
-  {
-    id: 1,
-    title: "Say GM",
-    description: "Say GM on the official platform.",
-    questUrl: "https://gm.inkonchain.com/",
-    status: "idle",
-    points: 20,
-  },
-  {
-    id: 2,
-    title: "Swap on InkySwap",
-    description:
-      "Make a simple swap on InkySwap to complete this daily quest.",
-    questUrl: "https://inkyswap.com/swap",
-    status: "idle",
-    points: 30,
-  },
-  {
-    id: 3,
-    title: "Bridge to Ink using Superbridge",
-    description:
-      "Bridge assets to Ink using Superbridge and keep your streak alive.",
-    questUrl: "https://superbridge.app/?fromChainId=1&toChainId=57073",
-    status: "idle",
-    points: 40,
-  },
-];
+type QuestItem = Quest & { status: QuestStatus };
 
 export const HomeDailyQuests = () => {
-  const [quests, setQuests] = useState<QuestItem[]>(initialQuests);
+  const dailyQuests = useDailyQuests();
+  // Progress is still simulated in the browser until claims hit the backend.
+  const [statuses, setStatuses] = useState<Record<number, QuestStatus>>({});
   const [timeLeft, setTimeLeft] = useState("");
 
+  const quests: QuestItem[] = (dailyQuests.data ?? []).map((quest) => ({
+    ...quest,
+    status: statuses[quest.id] ?? "idle",
+  }));
   const completedCount = quests.filter((q) => q.status === "completed").length;
 
-  const handleStartQuest = (questId: number, questUrl: string) => {
-    window.open(questUrl, "_blank", "noopener,noreferrer");
+  const setStatus = (questId: number, status: QuestStatus) =>
+    setStatuses((prev) => ({ ...prev, [questId]: status }));
 
-    setQuests((prev) =>
-      prev.map((quest) =>
-        quest.id === questId ? { ...quest, status: "started" } : quest,
-      ),
-    );
+  const handleStartQuest = (questId: number, actionUrl: string) => {
+    window.open(actionUrl, "_blank", "noopener,noreferrer");
+    setStatus(questId, "started");
 
     window.setTimeout(() => {
-      setQuests((prev) =>
-        prev.map((quest) =>
-          quest.id === questId && quest.status === "started"
-            ? { ...quest, status: "claim_ready" }
-            : quest,
-        ),
+      setStatuses((prev) =>
+        prev[questId] === "started"
+          ? { ...prev, [questId]: "claim_ready" }
+          : prev,
       );
     }, 5000);
   };
 
-  const handleClaimQuest = (questId: number) => {
-    setQuests((prev) =>
-      prev.map((quest) =>
-        quest.id === questId ? { ...quest, status: "completed" } : quest,
-      ),
-    );
-  };
+  const handleClaimQuest = (questId: number) => setStatus(questId, "completed");
 
   useEffect(() => {
     const updateTimer = () => {
@@ -132,6 +93,24 @@ export const HomeDailyQuests = () => {
         </div>
 
         <div className="flex flex-col gap-3">
+          {dailyQuests.isPending && <QuestsPlaceholder />}
+          {dailyQuests.isError && (
+            <QuestsMessage>
+              Couldn't load today's quests.{" "}
+              <button
+                type="button"
+                onClick={() => dailyQuests.refetch()}
+                className="cursor-pointer font-semibold text-ink-light hover:text-white"
+              >
+                Try again
+              </button>
+            </QuestsMessage>
+          )}
+          {dailyQuests.isSuccess && quests.length === 0 && (
+            <QuestsMessage>
+              No daily quests right now. Check back soon.
+            </QuestsMessage>
+          )}
           {quests.map((quest, index) => (
             <QuestRow
               key={quest.id}
@@ -150,7 +129,7 @@ export const HomeDailyQuests = () => {
 type QuestRowProps = {
   step: number;
   quest: QuestItem;
-  onStart: (questId: number, questUrl: string) => void;
+  onStart: (questId: number, actionUrl: string) => void;
   onClaim: (questId: number) => void;
 };
 
@@ -216,7 +195,7 @@ const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
       <div className="flex shrink-0 items-center gap-3">
         {quest.status === "idle" && (
           <Button
-            onClick={() => onStart(quest.id, quest.questUrl)}
+            onClick={() => onStart(quest.id, quest.actionUrl)}
             className="w-full md:w-auto"
           >
             Go to quest ↗
@@ -248,3 +227,18 @@ const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
     </div>
   );
 };
+
+const QuestsPlaceholder = () =>
+  [0, 1, 2].map((i) => (
+    <div
+      key={i}
+      aria-hidden
+      className="h-[86px] animate-pulse rounded-3xl border border-white/10 bg-white/[0.03]"
+    />
+  ));
+
+const QuestsMessage = ({ children }: { children: ReactNode }) => (
+  <p className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-white/60">
+    {children}
+  </p>
+);
