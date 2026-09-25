@@ -1,0 +1,58 @@
+# Local dev stack: `npm run dev` (or `docker compose up --build`).
+# Source folders are bind-mounted, so code changes hot-reload.
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: inkquest
+      POSTGRES_PASSWORD: inkquest
+      POSTGRES_DB: inkquest
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U inkquest -d inkquest']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://inkquest:inkquest@postgres:5432/inkquest
+      FRONTEND_ORIGIN: http://localhost:5173
+      # File change events from a Windows/macOS host don't reach the
+      # container, so the TypeScript watcher has to poll.
+      TSC_WATCHFILE: DynamicPriorityPolling
+      TSC_WATCHDIRECTORY: DynamicPriorityPolling
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./backend:/app
+      # Keep the container's Linux node_modules instead of the host's.
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - backend
+    environment:
+      WATCH_POLLING: 'true'
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres-data:
