@@ -44,6 +44,23 @@ export const sessions = pgTable(
   (t) => [index().on(t.userId)],
 );
 
+// One per user per UTC day. Worth XP on its own and the only thing that
+// keeps the daily streak going.
+export const checkIns = pgTable(
+  'check_ins',
+  {
+    id: serial().primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    day: date({ mode: 'string' }).notNull(),
+    // Copied at check-in time so changing the reward doesn't rewrite history.
+    points: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex().on(t.userId, t.day)],
+);
+
 export const partners = pgTable('partners', {
   id: serial().primaryKey(),
   slug: varchar({ length: 64 }).notNull().unique(),

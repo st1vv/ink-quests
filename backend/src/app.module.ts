@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
+import { ProgressModule } from './progress/progress.module';
 import { QuestsModule } from './quests/quests.module';
 import { validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
@@ -14,6 +15,7 @@ import { HealthController } from './health/health.controller';
     AuthModule,
     CatalogModule,
     QuestsModule,
+    ProgressModule,
   ],
   controllers: [HealthController],
 })

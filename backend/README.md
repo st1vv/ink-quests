@@ -102,3 +102,16 @@ quest's `verifier` in `seed.ts` to its key (the seed rejects unknown keys):
 
 Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337
 bundler can't claim yet.
+
+## Progress and levels
+
+`GET /me/progress` (signed in) returns `{ totalXp, level, levelXp, nextLevelXp, streak,
+checkedInToday }`. `totalXp` sums quest completions and check-ins. `levelXp` / `nextLevelXp`
+are the total XP at which the current and next level start.
+
+- **Level**: reaching level L takes `125 · L · (L − 1)` XP in total (0, 250, 750, 1500, 2500, …),
+  so each level needs 250 XP more than the previous one. The curve lives in
+  `src/progress/level.ts`.
+- **Check-in**: `POST /me/check-in` gives 20 XP, once per UTC day (409 on a repeat).
+- **Streak**: consecutive UTC days with a check-in; quests don't count toward it. It stays alive
+  through today if the last check-in was yesterday.

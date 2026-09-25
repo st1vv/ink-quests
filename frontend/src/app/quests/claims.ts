@@ -37,6 +37,9 @@ export const useClaimQuest = () => {
       }
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["completions"] }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["completions"] }),
+        queryClient.invalidateQueries({ queryKey: ["progress"] }),
+      ]),
   });
 };
