@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Surface } from "@/shared/ui/surface";
+import { PageIntro } from "@/shared/ui/page-intro";
 
 const faqItems = [
   {
@@ -37,20 +38,13 @@ const faqItems = [
 export const Faq = () => {
   return (
     <div className="flex flex-col gap-4">
-      <Surface className="w-full max-w-full">
-        <div className="max-w-3xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
-            Frequently Asked Questions
-          </h1>
+      <PageIntro
+        eyebrow="Help"
+        title="Frequently Asked Questions"
+        description="Everything you need to know about daily quests, streaks, rewards, and how the platform works."
+      />
 
-          <p className="mt-3 text-sm leading-6 text-white/65 md:text-base">
-            Everything you need to know about daily quests, streaks, rewards,
-            and how the platform works.
-          </p>
-        </div>
-      </Surface>
-
-      <Surface className="w-full max-w-full">
+      <Surface>
         <div className="flex flex-col gap-3">
           {faqItems.map((item) => (
             <FaqItem
@@ -74,18 +68,23 @@ const FaqItem = ({ question, answer }: FaqItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/20 px-5 py-4">
+    <div
+      className={`rounded-3xl border bg-black/20 px-5 py-4 transition-colors ${
+        isOpen ? "border-ink/30" : "border-white/10 hover:border-white/20"
+      }`}
+    >
       <button
         type="button"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex cursor-pointer w-full items-center justify-between gap-4 text-left"
+        className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink-light"
       >
         <span className="text-base font-semibold text-white md:text-lg">
           {question}
         </span>
 
         <span
-          className={`text-3xl leading-none text-[#7132f5] transition-transform ${
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/10 text-xl leading-none text-ink-light transition-transform duration-300 ${
             isOpen ? "rotate-45" : ""
           }`}
         >
@@ -93,11 +92,17 @@ const FaqItem = ({ question, answer }: FaqItemProps) => {
         </span>
       </button>
 
-      {isOpen && (
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-white/65 md:text-base">
-          {answer}
-        </p>
-      )}
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ${
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <p className="max-w-3xl pt-3 text-sm leading-7 text-white/65 md:text-base">
+            {answer}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

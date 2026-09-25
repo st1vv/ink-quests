@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router";
+import { Link, NavLink } from "react-router";
 import { ConnectWallet } from "@/app/layout/connect-wallet";
 
 const NAVIGATION_ITEMS = [
@@ -25,32 +25,36 @@ const NAVIGATION_ITEMS = [
 ];
 
 export const LayoutHeader = () => {
-  const location = useLocation();
-
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b0b0f]">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-canvas/80 backdrop-blur-lg">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         <Link
           to="/"
           className="flex items-center gap-2 text-base font-semibold tracking-tight text-white"
         >
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#7132f5]" />
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-ink shadow-[0_0_12px_2px] shadow-ink/60" />
           InkQuest
         </Link>
 
-        <nav className="hidden items-center gap-1 rounded-full p-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {NAVIGATION_ITEMS.map((item) => (
-            <HeaderLink
-              key={item.id}
-              to={item.link}
-              label={item.label}
-              isActive={item.link === location.pathname}
-            />
+            <HeaderLink key={item.id} to={item.link} label={item.label} />
           ))}
         </nav>
 
         <ConnectWallet />
       </div>
+
+      <nav className="mx-4 mb-3 flex gap-1 md:hidden">
+        {NAVIGATION_ITEMS.map((item) => (
+          <HeaderLink
+            key={item.id}
+            to={item.link}
+            label={item.label}
+            className="flex-auto px-3 text-center"
+          />
+        ))}
+      </nav>
     </header>
   );
 };
@@ -58,16 +62,23 @@ export const LayoutHeader = () => {
 type HeaderLinkProps = {
   to: string;
   label: string;
-  isActive: boolean;
+  className?: string;
 };
 
-const HeaderLink = ({ to, label, isActive }: HeaderLinkProps) => {
+const HeaderLink = ({ to, label, className = "px-4" }: HeaderLinkProps) => {
   return (
-    <Link
+    <NavLink
       to={to}
-      className={`rounded-full px-4 py-2 text-sm font-medium transition hover:bg-white/10 ${isActive ? "text-white" : "text-white/70"}`}
+      end={to === "/"}
+      className={({ isActive }) =>
+        `rounded-full py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
+          isActive
+            ? "bg-white/10 text-white"
+            : "text-white/60 hover:bg-white/5 hover:text-white"
+        }`
+      }
     >
       {label}
-    </Link>
+    </NavLink>
   );
 };

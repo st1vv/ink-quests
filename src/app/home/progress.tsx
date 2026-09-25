@@ -1,49 +1,61 @@
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
+import { StatCard } from "@/shared/ui/stat-card";
+import { formatNumber } from "@/lib/format";
 
 export const HomeProgress = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
 
   const user = {
-    name: "Stanislav",
     totalXP: 1240,
     streak: 5,
     level: 3,
+    nextLevelXP: 1500,
   };
+
+  const levelProgress = Math.min(user.totalXP / user.nextLevelXP, 1) * 100;
 
   const handleCheckIn = () => {
     setIsCheckedIn(true);
   };
 
   return (
-    <Surface className="w-full max-w-full h-full">
-      <div className="flex h-full flex-col justify-between gap-4">
-        <div>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+    <Surface className="h-full">
+      <div className="flex h-full flex-col gap-4">
+        <div className="flex min-h-9 items-center">
+          <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
             Your progress
           </h2>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <ProgressCard label="Daily streak" value={`${user.streak} days`} />
-            <ProgressCard label="Level" value={`${user.level}`} />
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="Daily streak" value={`🔥 ${user.streak} days`} />
+          <StatCard label="Level" value={user.level} />
 
-            <div className="col-span-2">
-              <ProgressCard label="Total XP" value={`${user.totalXP} XP`} />
-            </div>
+          <div className="col-span-2">
+            <StatCard
+              label="Total XP"
+              value={`${formatNumber(user.totalXP)} XP`}
+            >
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-linear-to-r from-ink to-ink-light"
+                  style={{ width: `${levelProgress}%` }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-white/40">
+                {formatNumber(user.nextLevelXP - user.totalXP)} XP to level{" "}
+                {user.level + 1}
+              </p>
+            </StatCard>
           </div>
         </div>
 
-        <div className="pt-2">
+        <div className="mt-auto pt-2">
           {isCheckedIn ? (
-            <Button
-              variant="ghost"
-              disabled
-              className="w-full cursor-not-allowed opacity-60"
-            >
-              Checked in today
+            <Button variant="ghost" disabled className="w-full">
+              ✓ Checked in today
             </Button>
           ) : (
             <Button onClick={handleCheckIn} className="w-full">
@@ -53,19 +65,5 @@ export const HomeProgress = () => {
         </div>
       </div>
     </Surface>
-  );
-};
-
-type ProgressCardProps = {
-  label: string;
-  value: string;
-};
-
-const ProgressCard = ({ label, value }: ProgressCardProps) => {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
-      <p className="text-sm text-white/50">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
-    </div>
   );
 };

@@ -47,6 +47,8 @@ export const HomeDailyQuests = () => {
   const [quests, setQuests] = useState<QuestItem[]>(initialQuests);
   const [timeLeft, setTimeLeft] = useState("");
 
+  const completedCount = quests.filter((q) => q.status === "completed").length;
+
   const handleStartQuest = (questId: number, questUrl: string) => {
     window.open(questUrl, "_blank", "noopener,noreferrer");
 
@@ -108,26 +110,32 @@ export const HomeDailyQuests = () => {
   }, []);
 
   return (
-    <Surface className="w-full max-w-full">
+    <Surface>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-            Daily quests
-          </h2>
+        <div className="flex min-h-9 items-center justify-between gap-4">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+              Daily quests
+            </h2>
+            <span className="text-sm text-white/40 tabular-nums">
+              {completedCount}/{quests.length}
+            </span>
+          </div>
           {timeLeft && (
-            <Badge className="flex items-center gap-2 px-4 py-1.5">
+            <Badge className="items-center gap-2 px-3 py-1.5 text-xs md:px-4 md:text-sm">
               <span>Refresh in</span>
-              <span className="font-semibold text-white tabular-nums text-right">
+              <span className="font-semibold text-white tabular-nums">
                 {timeLeft}
               </span>
             </Badge>
           )}
         </div>
 
-        <div className="flex flex-col gap-4">
-          {quests.map((quest) => (
+        <div className="flex flex-col gap-3">
+          {quests.map((quest, index) => (
             <QuestRow
               key={quest.id}
+              step={index + 1}
               quest={quest}
               onStart={handleStartQuest}
               onClaim={handleClaimQuest}
@@ -140,12 +148,13 @@ export const HomeDailyQuests = () => {
 };
 
 type QuestRowProps = {
+  step: number;
   quest: QuestItem;
   onStart: (questId: number, questUrl: string) => void;
   onClaim: (questId: number) => void;
 };
 
-const QuestRow = ({ quest, onStart, onClaim }: QuestRowProps) => {
+const QuestRow = ({ step, quest, onStart, onClaim }: QuestRowProps) => {
   const [secondsLeft, setSecondsLeft] = useState(5);
 
   useEffect(() => {
@@ -169,48 +178,71 @@ const QuestRow = ({ quest, onStart, onClaim }: QuestRowProps) => {
     };
   }, [quest.status]);
 
-  return (
-    <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
-      <div className="min-w-0">
-        <div className="flex gap-2 items-center">
-          <h3 className="text-base font-semibold text-white md:text-lg">
-            {quest.title}
-          </h3>
-          <Badge className="text-xs px-2 py-1">{quest.points} XP</Badge>
-        </div>
+  const isCompleted = quest.status === "completed";
 
-        <p className="mt-1 text-sm leading-6 text-white/60">
-          {quest.description}
-        </p>
+  return (
+    <div
+      className={`flex flex-col gap-4 rounded-3xl border p-4 transition md:flex-row md:items-center md:justify-between ${
+        isCompleted
+          ? "border-emerald-400/20 bg-emerald-400/5"
+          : "border-white/10 bg-black/20 hover:border-white/20"
+      }`}
+    >
+      <div className="flex min-w-0 gap-4">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+            isCompleted
+              ? "bg-emerald-400/15 text-emerald-300"
+              : "bg-white/5 text-white/60"
+          }`}
+        >
+          {isCompleted ? "✓" : step}
+        </span>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="text-base font-semibold text-white md:text-lg">
+              {quest.title}
+            </h3>
+            <Badge className="px-2 py-0.5 text-xs">+{quest.points} XP</Badge>
+          </div>
+
+          <p className="mt-1 text-sm leading-6 text-white/60">
+            {quest.description}
+          </p>
+        </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
         {quest.status === "idle" && (
-          <Button onClick={() => onStart(quest.id, quest.questUrl)}>
-            Go to quest
+          <Button
+            onClick={() => onStart(quest.id, quest.questUrl)}
+            className="w-full md:w-auto"
+          >
+            Go to quest ↗
           </Button>
         )}
 
         {quest.status === "started" && (
-          <Button disabled className="cursor-not-allowed opacity-60">
+          <Button disabled className="w-full tabular-nums md:w-auto">
             Claim in {secondsLeft}s
           </Button>
         )}
 
         {quest.status === "claim_ready" && (
-          <Button variant="secondary" onClick={() => onClaim(quest.id)}>
+          <Button
+            variant="secondary"
+            onClick={() => onClaim(quest.id)}
+            className="w-full md:w-auto"
+          >
             Claim {quest.points} XP
           </Button>
         )}
 
-        {quest.status === "completed" && (
-          <Button
-            variant="ghost"
-            disabled
-            className="cursor-not-allowed opacity-60"
-          >
+        {isCompleted && (
+          <span className="w-full text-center text-sm font-semibold text-emerald-300 md:w-auto md:px-4">
             Completed
-          </Button>
+          </span>
         )}
       </div>
     </div>

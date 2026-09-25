@@ -1,4 +1,8 @@
 import { Surface } from "@/shared/ui/surface";
+import { PageIntro } from "@/shared/ui/page-intro";
+import { StatCard } from "@/shared/ui/stat-card";
+import { Badge } from "@/shared/ui/badge";
+import { formatNumber } from "@/lib/format";
 
 type LeaderboardUser = {
   id: number;
@@ -21,6 +25,12 @@ const leaderboardData: LeaderboardUser[] = [
 
 const currentUserWallet = "0x1234...abcd";
 
+const PODIUM_STYLES: Record<number, string> = {
+  1: "bg-amber-400/15 text-amber-300",
+  2: "bg-slate-300/15 text-slate-200",
+  3: "bg-orange-400/15 text-orange-300",
+};
+
 export const Leaderboard = () => {
   const sortedLeaderboard = [...leaderboardData].sort((a, b) => b.xp - a.xp);
 
@@ -30,43 +40,45 @@ export const Leaderboard = () => {
 
   const currentUser = sortedLeaderboard[currentUserIndex];
   const currentUserRank = currentUserIndex + 1;
+  const userAbove = sortedLeaderboard[currentUserIndex - 1];
+  const xpToNextRank = userAbove ? userAbove.xp - currentUser.xp + 1 : 0;
 
   return (
     <div className="flex flex-col gap-4">
-      <Surface className="w-full max-w-full">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <PageIntro
+        eyebrow="Your position"
+        title={`You are ranked #${currentUserRank}`}
+        description="Keep completing daily quests to climb higher in the leaderboard."
+        aside={
+          <div className="grid grid-cols-2 gap-4 md:min-w-[420px]">
+            <StatCard
+              label="Total XP"
+              value={`${formatNumber(currentUser.xp)} XP`}
+            />
+            <StatCard
+              label="To next rank"
+              value={userAbove ? `+${formatNumber(xpToNextRank)} XP` : "—"}
+              hint={
+                userAbove ? `to pass #${currentUserRank - 1}` : "You're on top"
+              }
+            />
+          </div>
+        }
+      />
+
+      <Surface>
+        <div className="flex flex-col gap-4">
           <div>
-            <p className="text-sm text-white/50">Your position</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white md:text-3xl">
-              You are ranked #{currentUserRank}
-            </h1>
+            <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+              Global leaderboard
+            </h2>
             <p className="mt-2 text-sm leading-6 text-white/60">
-              Keep completing daily quests to climb higher in the leaderboard.
+              Top players ranked by total XP.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:min-w-[420px]">
-            <UserStatCard label="Rank" value={`#${currentUserRank}`} />
-            <UserStatCard label="XP" value={`${currentUser.xp}`} />
-          </div>
-        </div>
-      </Surface>
-
-      <Surface className="w-full max-w-full">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-                Global leaderboard
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-white/60">
-                Top players ranked by total XP.
-              </p>
-            </div>
-          </div>
-
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/20">
-            <div className="grid grid-cols-[80px_1.4fr_1fr] gap-4 border-b border-white/10 px-4 py-4 text-sm font-medium text-white/45">
+            <div className="grid grid-cols-[56px_1fr_auto] gap-4 border-b border-white/10 px-4 py-3 text-xs font-medium uppercase tracking-wide text-white/40 md:grid-cols-[80px_1fr_auto]">
               <span>Rank</span>
               <span>Wallet</span>
               <span className="text-right">XP</span>
@@ -80,33 +92,36 @@ export const Leaderboard = () => {
                 return (
                   <div
                     key={user.id}
-                    className={`grid grid-cols-[80px_1.4fr_1fr] gap-4 border-b border-white/10 px-4 py-4 last:border-b-0 ${
-                      isCurrentUser ? "bg-[#7132f5]/10" : ""
+                    className={`grid grid-cols-[56px_1fr_auto] items-center gap-4 border-b border-white/10 px-4 py-3.5 transition last:border-b-0 md:grid-cols-[80px_1fr_auto] ${
+                      isCurrentUser ? "bg-ink/10" : "hover:bg-white/[0.03]"
                     }`}
                   >
-                    <div className="flex items-center">
-                      <span
-                        className={`inline-flex min-w-[44px] items-center justify-center rounded-full px-3 py-1 text-sm font-semibold ${
-                          isCurrentUser
-                            ? "bg-[#7132f5] text-white"
-                            : "bg-white/5 text-white/80"
-                        }`}
-                      >
-                        #{rank}
-                      </span>
-                    </div>
+                    <span
+                      className={`inline-flex w-11 items-center justify-center rounded-full py-1 text-sm font-semibold tabular-nums ${
+                        isCurrentUser
+                          ? "bg-ink text-white"
+                          : (PODIUM_STYLES[rank] ?? "bg-white/5 text-white/70")
+                      }`}
+                    >
+                      {rank}
+                    </span>
 
-                    <div className="flex items-center">
-                      <span className="truncate text-sm text-white/55">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={`truncate font-mono text-sm ${isCurrentUser ? "text-white" : "text-white/55"}`}
+                      >
                         {user.wallet}
                       </span>
-                    </div>
+                      {isCurrentUser && (
+                        <span className="hidden sm:block">
+                          <Badge className="px-2 py-0.5 text-xs">You</Badge>
+                        </span>
+                      )}
+                    </span>
 
-                    <div className="flex items-center justify-end">
-                      <span className="text-sm font-semibold text-white md:text-base">
-                        {user.xp} XP
-                      </span>
-                    </div>
+                    <span className="text-right text-sm font-semibold text-white tabular-nums md:text-base">
+                      {formatNumber(user.xp)} XP
+                    </span>
                   </div>
                 );
               })}
@@ -114,20 +129,6 @@ export const Leaderboard = () => {
           </div>
         </div>
       </Surface>
-    </div>
-  );
-};
-
-type UserStatCardProps = {
-  label: string;
-  value: string;
-};
-
-const UserStatCard = ({ label, value }: UserStatCardProps) => {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
-      <p className="text-sm text-white/50">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
     </div>
   );
 };
