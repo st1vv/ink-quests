@@ -5,6 +5,7 @@ import { ExplorerClient } from './explorer.client';
 import { PriceService } from './price.service';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
+import { RelayClient } from './relay.client';
 import { VerificationService } from './verification.service';
 
 // Claiming quests: checks the user's transactions onchain and records
@@ -12,6 +13,12 @@ import { VerificationService } from './verification.service';
 @Module({
   imports: [AuthModule, ReferralsModule],
   controllers: [QuestsController],
-  providers: [QuestsService, VerificationService, ExplorerClient, PriceService],
+  providers: [
+    QuestsService,
+    VerificationService,
+    ExplorerClient,
+    PriceService,
+    RelayClient,
+  ],
 })
 export class QuestsModule {}

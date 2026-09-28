@@ -19,6 +19,19 @@ import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
 import { VerificationService, type Verification } from './verification.service';
 import { VERIFIERS } from './verifiers';
 
+// Explorers and Relay index a few seconds behind the chain, so a fresh
+// transaction may not be visible on the first try.
+const MISSING_MESSAGES: Record<
+  Extract<Verification, { done: false }>['missing'],
+  string
+> = {
+  transaction:
+    'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
+  nft: 'No NFT from this collection found in your wallet',
+  bridge:
+    'No Relay bridge to Ink found yet today (at least $1 from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute',
+};
+
 @Injectable()
 export class QuestsService {
   private readonly logger = new Logger(QuestsService.name);
@@ -95,13 +108,7 @@ export class QuestsService {
     }
 
     if (!result.done) {
-      throw new UnprocessableEntityException(
-        result.missing === 'nft'
-          ? 'No NFT from this collection found in your wallet'
-          : // The explorer indexes a few seconds behind the chain, so a
-            // fresh transaction may not be visible on the first try.
-            'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
-      );
+      throw new UnprocessableEntityException(MISSING_MESSAGES[result.missing]);
     }
 
     // The unique index settles a race between two parallel claims.

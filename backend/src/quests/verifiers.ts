@@ -1,5 +1,7 @@
 import type { Address, Hex } from 'viem';
+import { ink } from 'viem/chains';
 import type { ExplorerTx } from './explorer.client';
+import type { RelayRequest } from './relay.client';
 
 // A minimum USD value the transaction has to move.
 export type MinUsd = {
@@ -37,7 +39,16 @@ export type NftHolderSpec = {
   contract: Address;
 };
 
-export type VerifierSpec = ContractCallSpec | NftHolderSpec;
+// A successful Relay bridge to Ink, received by the user's wallet, from one
+// of `fromChains`, worth at least `minUsd` (Relay's USD value of what was
+// sent), made during the quest's window.
+export type RelayBridgeSpec = {
+  type: 'relay-bridge';
+  fromChains: number[];
+  minUsd: number;
+};
+
+export type VerifierSpec = ContractCallSpec | NftHolderSpec | RelayBridgeSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -45,7 +56,7 @@ export const USD_PRICE_UNIT = 10n ** 8n;
 
 const WETH: Address = '0x4200000000000000000000000000000000000006';
 const USDT0: Address = '0x0200C29006150606B650577BBE7B6248F58470c1';
-const MIN_SUPPLY_USD = 1;
+const MIN_QUEST_USD = 1;
 
 // Tydro (Aave V3 on Ink). The pool takes any listed asset, so each supply
 // quest pins the asset as supply()'s first argument.
@@ -84,7 +95,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   // Supplying at least $1 of WETH, either way, counts:
   'tydro-supply-weth': [
     // WETH the token.
-    tydroSupply(WETH, { usd: MIN_SUPPLY_USD, decimals: 18 }),
+    tydroSupply(WETH, { usd: MIN_QUEST_USD, decimals: 18 }),
     // Native ETH through WrappedTokenGatewayV3, which wraps it and supplies
     // WETH. Its constructor args name the Tydro pool and WETH.
     {
@@ -92,7 +103,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       contracts: ['0xDe090EfCD6ef4b86792e2D84E55a5fa8d49D25D2'], // gateway
       methods: ['0x474cf53d'], // depositETH(address,address,uint16)
       minUsd: {
-        usd: MIN_SUPPLY_USD,
+        usd: MIN_QUEST_USD,
         asset: WETH,
         decimals: 18,
         amountFrom: 'value',
@@ -103,12 +114,27 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   // USD₮0 (6 decimals), listed in the pool's getReservesList(). ERC-20
   // only: there's no gateway for it.
   'tydro-supply-usdt': [
-    tydroSupply(USDT0, { usd: MIN_SUPPLY_USD, decimals: 6, pegged: true }),
+    tydroSupply(USDT0, { usd: MIN_QUEST_USD, decimals: 6, pegged: true }),
   ],
 
   // NFT holder dailies: ERC-721 collections on Ink (name/symbol/supply and
   // supportsInterface(0x80ac58cd) checked onchain). Only balanceOf counts,
   // so one NFT moved between wallets can be claimed by each of them.
+  // Bridge to Ink with Relay (relay.link) from Ethereum, Base, Arbitrum or
+  // Robinhood Chain; chain ids as listed by Relay's GET /chains.
+  'relay-bridge-to-ink': [
+    {
+      type: 'relay-bridge',
+      fromChains: [
+        1, // Ethereum
+        8453, // Base
+        42161, // Arbitrum
+        4663, // Robinhood Chain
+      ],
+      minUsd: MIN_QUEST_USD,
+    },
+  ],
+
   'hold-templars-of-the-storm': [
     {
       type: 'nft-holder',
@@ -186,4 +212,25 @@ export const findMatchingTx = async (
     }
   }
   return undefined;
+};
+
+// The Ink transaction hash of a Relay request that completes the quest, or
+// null. The caller still confirms that transaction onchain.
+export const matchingRelayBridge = (
+  spec: RelayBridgeSpec,
+  request: RelayRequest,
+  user: string,
+  since: Date,
+) => {
+  const origin = request.data?.inTxs?.[0]?.chainId;
+  const inkTx = request.data?.outTxs?.find((t) => t.chainId === ink.id);
+  const usd = Number(request.data?.metadata?.currencyIn?.amountUsd ?? 0);
+  const ok =
+    request.status === 'success' &&
+    request.recipient?.toLowerCase() === user.toLowerCase() &&
+    origin !== undefined &&
+    spec.fromChains.includes(origin) &&
+    Date.parse(request.createdAt) >= since.getTime() &&
+    usd >= spec.minUsd;
+  return ok && inkTx ? (inkTx.hash as Hex) : null;
 };

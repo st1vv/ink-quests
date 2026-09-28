@@ -103,6 +103,17 @@ const QUESTS: SeedQuest[] = [
     verifier: 'tydro-supply-usdt',
   },
   {
+    slug: 'daily-relay-bridge',
+    kind: 'daily',
+    title: 'Bridge to Ink with Relay',
+    description:
+      'Bridge at least $1 to Ink from Ethereum, Base, Arbitrum or Robinhood Chain with Relay.',
+    actionUrl: 'https://relay.link/bridge/ink',
+    points: 50,
+    sortOrder: 9,
+    verifier: 'relay-bridge-to-ink',
+  },
+  {
     slug: 'daily-hold-templars-of-the-storm',
     kind: 'daily',
     title: 'Hold a Templars of the Storm NFT',

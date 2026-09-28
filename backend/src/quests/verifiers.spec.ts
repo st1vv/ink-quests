@@ -1,7 +1,9 @@
 import type { Address } from 'viem';
 import type { ExplorerTx } from './explorer.client';
+import type { RelayRequest } from './relay.client';
 import {
   findMatchingTx,
+  matchingRelayBridge,
   USD_PRICE_UNIT,
   VERIFIERS,
   type VerifierSpec,
@@ -127,5 +129,79 @@ describe('ink-gm', () => {
   it('matches a plain gm() with no amount check', async () => {
     const t = tx('0x14aec24ce62258fecde22e928d8f37dd47165d4f', '0xc0129d43');
     expect(await matches(VERIFIERS['ink-gm'], t)).toBe(true);
+  });
+});
+
+describe('relay-bridge-to-ink', () => {
+  const [spec] = VERIFIERS['relay-bridge-to-ink'];
+  if (spec.type !== 'relay-bridge') throw new Error('unexpected spec type');
+  const USER = '0x00000000000000000000000000000000000000Aa';
+  const since = new Date('2026-09-28T00:00:00Z');
+  const request = (
+    over: Partial<RelayRequest> = {},
+    usd = '5',
+    origin = 8453,
+  ) =>
+    ({
+      id: '0x1',
+      status: 'success',
+      user: USER,
+      recipient: USER,
+      createdAt: '2026-09-28T10:00:00Z',
+      data: {
+        inTxs: [{ chainId: origin, hash: '0xorigin' }],
+        outTxs: [{ chainId: 57073, hash: '0xinktx' }],
+        metadata: { currencyIn: { amountUsd: usd } },
+      },
+      ...over,
+    }) as RelayRequest;
+  const match = (r: RelayRequest) => matchingRelayBridge(spec, r, USER, since);
+
+  it('returns the Ink tx of a successful $1+ bridge to the user', () => {
+    expect(match(request())).toBe('0xinktx');
+    expect(match(request({}, '1'))).toBe('0xinktx');
+  });
+
+  it('accepts Ethereum, Base, Arbitrum and Robinhood Chain', () => {
+    for (const chain of [1, 8453, 42161, 4663]) {
+      expect(match(request({}, '5', chain))).toBe('0xinktx');
+    }
+  });
+
+  it('rejects other origin chains', () => {
+    expect(match(request({}, '5', 10))).toBeNull();
+  });
+
+  it('rejects less than $1', () => {
+    expect(match(request({}, '0.99'))).toBeNull();
+  });
+
+  it('rejects unfinished, failed or refunded bridges', () => {
+    for (const status of ['pending', 'failure', 'refund']) {
+      expect(match(request({ status }))).toBeNull();
+    }
+  });
+
+  it('rejects a bridge to someone else, even if the user sent it', () => {
+    expect(
+      match(
+        request({ recipient: '0x00000000000000000000000000000000000000Bb' }),
+      ),
+    ).toBeNull();
+  });
+
+  it('accepts a bridge received from another wallet, any address case', () => {
+    expect(
+      match(
+        request({
+          user: '0x00000000000000000000000000000000000000cc',
+          recipient: USER.toLowerCase(),
+        }),
+      ),
+    ).toBe('0xinktx');
+  });
+
+  it('rejects bridges from before today', () => {
+    expect(match(request({ createdAt: '2026-09-27T23:59:59Z' }))).toBeNull();
   });
 });

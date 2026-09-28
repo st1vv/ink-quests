@@ -49,6 +49,7 @@ See `.env.example`. The app refuses to start if a variable is missing or invalid
 | `INK_RPC_URL`      | Optional Ink RPC for smart-wallet signature checks              |
 | `EXPLORER_API_KEY` | Blockscout PRO API key for quest checks; required in production |
 | `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                |
+| `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)   |
 
 ## Auth (Sign-In with Ethereum)
 
@@ -112,6 +113,11 @@ Holder quests use `{ type: 'nft-holder', contract: '0x…' }` instead: the claim
 wallet holds at least one token of that ERC-721 collection (`balanceOf` over RPC), with no
 transaction to find. Only the balance counts, so one NFT moved between wallets can be claimed by
 each of them.
+
+Bridge quests use `{ type: 'relay-bridge', fromChains: [1, 8453, …], minUsd: 1 }`: the claim asks
+Relay's API (`RELAY_API_URL`) for today's bridges to Ink that involve the wallet and passes on a
+successful one received by that wallet, from one of `fromChains`, worth at least `minUsd`. The Ink
+transaction Relay names must also be found as successful over RPC, and its hash is stored.
 
 Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337
 bundler can't claim yet.
