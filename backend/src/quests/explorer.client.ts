@@ -10,6 +10,10 @@ export type ExplorerTx = {
   from: string;
   to: string;
   methodId: string;
+  // Calldata: selector + ABI-encoded arguments.
+  input: string;
+  // ETH sent with the transaction, in wei (decimal string).
+  value: string;
   isError: string;
   timeStamp: string;
 };

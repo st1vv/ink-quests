@@ -16,7 +16,8 @@ import { questCompletions, quests } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
 import { ExplorerClient, type ExplorerTx } from './explorer.client';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
-import { matchesSpec, VERIFIERS } from './verifiers';
+import { PriceService } from './price.service';
+import { findMatchingTx, VERIFIERS } from './verifiers';
 
 @Injectable()
 export class QuestsService {
@@ -26,6 +27,7 @@ export class QuestsService {
     @Inject(DB) private readonly db: Database,
     private readonly explorer: ExplorerClient,
     private readonly referrals: ReferralsService,
+    private readonly prices: PriceService,
   ) {}
 
   // Quests the user has completed for the current period: today's daily
@@ -78,26 +80,28 @@ export class QuestsService {
 
     const windowStart =
       quest.kind === 'daily' ? startOfUtcDay(now) : quest.createdAt;
-    let txs: ExplorerTx[];
+    let tx: ExplorerTx | undefined;
     try {
-      txs = await this.explorer.sentTransactions(
+      const txs = await this.explorer.sentTransactions(
         user.address,
         windowStart,
         now,
       );
+      tx = await findMatchingTx(spec, txs, (asset) =>
+        this.prices.usdPrice(asset),
+      );
     } catch (err) {
-      this.logger.warn(`Explorer lookup failed: ${(err as Error).message}`);
+      this.logger.warn(`Quest check failed: ${(err as Error).message}`);
       throw new ServiceUnavailableException(
         "Couldn't check the chain right now, try again in a moment",
       );
     }
 
-    const tx = txs.find((t) => matchesSpec(spec, t));
     if (!tx) {
       // The explorer indexes a few seconds behind the chain, so a fresh
       // transaction may not be visible on the first try.
       throw new UnprocessableEntityException(
-        'No matching transaction found yet. If you just made it, try again in a minute',
+        'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
       );
     }
 

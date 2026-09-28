@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ReferralsModule } from '../referrals/referrals.module';
 import { ExplorerClient } from './explorer.client';
+import { PriceService } from './price.service';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
 
@@ -10,6 +11,6 @@ import { QuestsService } from './quests.service';
 @Module({
   imports: [AuthModule, ReferralsModule],
   controllers: [QuestsController],
-  providers: [QuestsService, ExplorerClient],
+  providers: [QuestsService, ExplorerClient, PriceService],
 })
 export class QuestsModule {}

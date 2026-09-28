@@ -89,15 +89,23 @@ transactions since 00:00 UTC and can be claimed once per UTC day; partner quests
 transactions since the quest was added and can be claimed once. `GET /me/completions` returns the
 ids completed for the current period.
 
-To make a quest claimable, add a spec to `VERIFIERS` in `src/quests/verifiers.ts` and set the
-quest's `verifier` in `seed.ts` to its key (the seed rejects unknown keys):
+To make a quest claimable, add an entry to `VERIFIERS` in `src/quests/verifiers.ts` and set the
+quest's `verifier` in `seed.ts` to its key (the seed rejects unknown keys). An entry is a list of
+accepted calls; the quest is done when any of them matches:
 
 ```ts
-'inkyswap-swap': {
-  type: 'contract-call',
-  contracts: ['0x…'], // router address from the protocol's official docs
-  methods: ['0x…'], // optional: only these function selectors count
-},
+'tydro-supply-weth': [
+  {
+    type: 'contract-call',
+    contracts: ['0x…'], // from the protocol's docs or onchain wiring
+    methods: ['0x617ba037'], // optional: only these function selectors count
+    firstArg: '0x4200…0006', // optional: the first argument must be this address
+    // optional: the amount (tx value or the second argument) must be worth at least this much;
+    // priced by Tydro's AaveOracle, or at $1 for stablecoins with `pegged: true`
+    minUsd: { usd: 1, asset: '0x4200…0006', decimals: 18, amountFrom: 'secondArg' },
+  },
+  // …another way to do the same quest, e.g. through a gateway contract
+],
 ```
 
 Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337

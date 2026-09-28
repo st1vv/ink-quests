@@ -78,6 +78,30 @@ const QUESTS: SeedQuest[] = [
     points: 40,
     sortOrder: 3,
   },
+  {
+    slug: 'daily-tydro-supply-weth',
+    kind: 'daily',
+    title: 'Supply WETH on Tydro',
+    description:
+      'Supply at least $1 of WETH (or ETH) to the Tydro lending market to complete this daily quest.',
+    actionUrl:
+      'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3',
+    points: 30,
+    sortOrder: 4,
+    verifier: 'tydro-supply-weth',
+  },
+  {
+    slug: 'daily-tydro-supply-usdt',
+    kind: 'daily',
+    title: 'Supply USDT on Tydro',
+    description:
+      'Supply at least 1 USDT to the Tydro lending market to complete this daily quest.',
+    actionUrl:
+      'https://app.tydro.com/reserve-overview/?underlyingAsset=0x0200c29006150606b650577bbe7b6248f58470c1&marketName=proto_ink_v3',
+    points: 30,
+    sortOrder: 5,
+    verifier: 'tydro-supply-usdt',
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.
