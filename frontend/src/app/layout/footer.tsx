@@ -1,4 +1,6 @@
-const FOOTER_LINKS = [
+import { Link } from "react-router";
+
+const EXTERNAL_LINKS = [
   { id: "github", label: "GitHub", href: "https://github.com/st1vv/ink-quests" },
   { id: "x", label: "X", href: "https://x.com/stanislav1w" },
 ];
@@ -10,7 +12,10 @@ export const LayoutFooter = () => {
         <span>© {new Date().getFullYear()} InkQuest · Built on Ink</span>
 
         <div className="flex items-center gap-4">
-          {FOOTER_LINKS.map((link) => (
+          <Link to="/faq" className="transition hover:text-white">
+            FAQ
+          </Link>
+          {EXTERNAL_LINKS.map((link) => (
             <a
               key={link.id}
               href={link.href}

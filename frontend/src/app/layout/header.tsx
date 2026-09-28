@@ -2,7 +2,6 @@ import type { ComponentType } from "react";
 import { Link, NavLink } from "react-router";
 import { ConnectWallet } from "@/app/layout/connect-wallet";
 import {
-  HelpIcon,
   HomeIcon,
   QuestsIcon,
   TrophyIcon,
@@ -35,12 +34,6 @@ const NAVIGATION_ITEMS = [
     link: "/profile",
     icon: UserIcon,
   },
-  {
-    id: "faq",
-    label: "FAQ",
-    link: "/faq",
-    icon: HelpIcon,
-  },
 ];
 
 export const LayoutHeader = () => {
@@ -55,8 +48,8 @@ export const LayoutHeader = () => {
           InkQuest
         </Link>
 
-        {/* Five labelled links don't fit next to the logo and wallet button
-            below lg, so tablets get icons only. */}
+        {/* The labelled links don't fit next to the logo and wallet button
+            below lg, so tablets get icons only. FAQ lives in the footer. */}
         <nav className="hidden items-center gap-1 md:flex">
           {NAVIGATION_ITEMS.map((item) => (
             <HeaderLink
