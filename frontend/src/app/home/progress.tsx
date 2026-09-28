@@ -83,7 +83,7 @@ export const HomeProgress = () => {
           </p>
         </div>
 
-        <div className="mt-auto flex flex-col gap-2 pt-2">
+        <div className="mt-auto flex flex-col gap-2">
           {progress?.checkedInToday ? (
             <Button variant="ghost" disabled className="w-full">
               Checked in today
