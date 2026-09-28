@@ -58,7 +58,9 @@ export class VerificationService {
       if (txHash) return { done: true, txHash };
     }
 
-    const hasCallSpecs = specs.some((s) => s.type === 'contract-call');
+    const hasCallSpecs = specs.some(
+      (s) => s.type === 'contract-call' || s.type === 'inkyswap-swap',
+    );
     if (!hasCallSpecs) {
       return { done: false, missing: bridges.length ? 'bridge' : 'nft' };
     }

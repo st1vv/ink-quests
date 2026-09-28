@@ -26,7 +26,7 @@ const MISSING_MESSAGES: Record<
   string
 > = {
   transaction:
-    'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
+    'No matching transaction found yet (swaps and supplies need to be worth at least $1). If you just made it, try again in a minute',
   nft: 'No NFT from this collection found in your wallet',
   bridge:
     'No Relay bridge to Ink found yet today (at least $1 from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute',

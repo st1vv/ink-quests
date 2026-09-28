@@ -109,6 +109,12 @@ accepted calls; the quest is done when any of them matches:
 ],
 ```
 
+The InkySwap swap quest uses `{ type: 'inkyswap-swap', minUsd: 1 }`: a successful swap through
+InkySwap's UniversalRouter (what its UI uses) or the V2 router from its docs, both on the same V2
+pools. The swap is valued by its ETH/WETH side (ETH sent, WETH in, or the guaranteed WETH out) at
+Tydro's oracle price; token-to-token swaps without WETH and V4 swaps paid in tokens can't be valued
+and don't count. See `src/quests/swap.ts`.
+
 Holder quests use `{ type: 'nft-holder', contract: '0x…' }` instead: the claim passes when the
 wallet holds at least one token of that ERC-721 collection (`balanceOf` over RPC), with no
 transaction to find. Only the balance counts, so one NFT moved between wallets can be claimed by

@@ -2,6 +2,7 @@ import type { Address, Hex } from 'viem';
 import { ink } from 'viem/chains';
 import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
+import { inkySwapWethValue } from './swap';
 
 // A minimum USD value the transaction has to move.
 export type MinUsd = {
@@ -48,7 +49,18 @@ export type RelayBridgeSpec = {
   minUsd: number;
 };
 
-export type VerifierSpec = ContractCallSpec | NftHolderSpec | RelayBridgeSpec;
+// A successful swap on InkySwap (its UniversalRouter or V2 router) worth
+// at least `minUsd`, valued by its ETH/WETH side (see swap.ts).
+export type InkySwapSpec = {
+  type: 'inkyswap-swap';
+  minUsd: number;
+};
+
+export type VerifierSpec =
+  | ContractCallSpec
+  | NftHolderSpec
+  | RelayBridgeSpec
+  | InkySwapSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -135,6 +147,8 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     },
   ],
 
+  'inkyswap-swap': [{ type: 'inkyswap-swap', minUsd: MIN_QUEST_USD }],
+
   'hold-templars-of-the-storm': [
     {
       type: 'nft-holder',
@@ -185,14 +199,37 @@ const txAmount = (min: MinUsd, tx: ExplorerTx) => {
   return word ? BigInt(`0x${word}`) : 0n;
 };
 
+// amount / 10^decimals * price / 1e8 >= usd, in integers (cents).
+const worthAtLeast = (
+  amount: bigint,
+  decimals: number,
+  price: bigint,
+  usd: number,
+) =>
+  amount * price * 100n >=
+  BigInt(Math.round(usd * 100)) * 10n ** BigInt(decimals) * USD_PRICE_UNIT;
+
 const meetsMinimum = async (min: MinUsd, tx: ExplorerTx, priceOf: PriceOf) => {
   const price = min.pegged ? USD_PRICE_UNIT : await priceOf(min.asset);
-  // amount / 10^decimals * price / 1e8 >= usd, in integers (cents).
-  const cents = BigInt(Math.round(min.usd * 100));
-  return (
-    txAmount(min, tx) * price * 100n >=
-    cents * 10n ** BigInt(min.decimals) * USD_PRICE_UNIT
-  );
+  return worthAtLeast(txAmount(min, tx), min.decimals, price, min.usd);
+};
+
+const txMatches = async (
+  spec: VerifierSpec,
+  tx: ExplorerTx,
+  priceOf: PriceOf,
+) => {
+  if (spec.type === 'contract-call') {
+    if (!matchesCall(spec, tx)) return false;
+    return !spec.minUsd || meetsMinimum(spec.minUsd, tx, priceOf);
+  }
+  if (spec.type === 'inkyswap-swap') {
+    const wei = inkySwapWethValue(tx);
+    if (wei === 0n) return false;
+    return worthAtLeast(wei, 18, await priceOf(WETH), spec.minUsd);
+  }
+  // Holding and bridge specs aren't about the user's own transactions.
+  return false;
 };
 
 // The first transaction (newest first, as the explorer returns them) that
@@ -205,10 +242,7 @@ export const findMatchingTx = async (
 ) => {
   for (const tx of txs) {
     for (const spec of specs) {
-      if (spec.type !== 'contract-call' || !matchesCall(spec, tx)) continue;
-      if (!spec.minUsd || (await meetsMinimum(spec.minUsd, tx, priceOf))) {
-        return tx;
-      }
+      if (await txMatches(spec, tx, priceOf)) return tx;
     }
   }
   return undefined;

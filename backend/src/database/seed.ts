@@ -63,10 +63,12 @@ const QUESTS: SeedQuest[] = [
     slug: 'daily-inkyswap-swap',
     kind: 'daily',
     title: 'Swap on InkySwap',
-    description: 'Make a simple swap on InkySwap to complete this daily quest.',
+    description:
+      'Swap at least $1 worth on InkySwap to complete this daily quest.',
     actionUrl: 'https://inkyswap.com/swap',
     points: 30,
     sortOrder: 2,
+    verifier: 'inkyswap-swap',
   },
   {
     slug: 'daily-tydro-supply-weth',
