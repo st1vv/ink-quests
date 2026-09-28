@@ -2,8 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { count, eq, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
-import { checkIns, questCompletions, users } from '../database/schema';
-import { longestStreak } from '../progress/streak';
+import { questCompletions, users } from '../database/schema';
 
 export const ACTIVITY_LIMIT = 30;
 
@@ -33,17 +32,7 @@ export class ProfileService {
       .from(questCompletions)
       .where(eq(questCompletions.userId, userId));
 
-    const days = await this.db
-      .select({ day: checkIns.day })
-      .from(checkIns)
-      .where(eq(checkIns.userId, userId));
-
-    return {
-      joinedAt: user.joinedAt,
-      checkIns: days.length,
-      questsCompleted,
-      bestStreak: longestStreak(days.map((d) => d.day)),
-    };
+    return { joinedAt: user.joinedAt, questsCompleted };
   }
 
   // Latest XP-earning actions, newest first.

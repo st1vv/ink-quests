@@ -6,6 +6,8 @@ interface PageIntroProps {
   title: ReactNode;
   description?: ReactNode;
   aside?: ReactNode;
+  // Full-width content under the title row, e.g. a row of stats.
+  children?: ReactNode;
 }
 
 // The hero card at the top of every page.
@@ -14,6 +16,7 @@ export const PageIntro = ({
   title,
   description,
   aside,
+  children,
 }: PageIntroProps) => {
   return (
     <Surface>
@@ -36,6 +39,8 @@ export const PageIntro = ({
 
         {aside}
       </div>
+
+      {children && <div className="mt-6">{children}</div>}
     </Surface>
   );
 };

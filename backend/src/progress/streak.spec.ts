@@ -1,4 +1,4 @@
-import { currentStreak, longestStreak } from './streak';
+import { currentStreak } from './streak';
 
 const now = new Date('2026-09-25T15:00:00Z');
 
@@ -35,32 +35,5 @@ describe('currentStreak', () => {
     // 23:30 UTC on the 25th is already the 26th in Kyiv.
     const lateUtc = new Date('2026-09-25T23:30:00Z');
     expect(currentStreak(['2026-09-25'], lateUtc)).toBe(1);
-  });
-});
-
-describe('longestStreak', () => {
-  it('is 0 without check-ins', () => {
-    expect(longestStreak([])).toBe(0);
-  });
-
-  it('finds the longest run anywhere in history', () => {
-    expect(
-      longestStreak([
-        '2026-09-25',
-        '2026-09-24',
-        '2026-09-10',
-        '2026-09-09',
-        '2026-09-08',
-        '2026-09-01',
-      ]),
-    ).toBe(3);
-  });
-
-  it('ignores order and duplicates', () => {
-    expect(longestStreak(['2026-09-02', '2026-09-01', '2026-09-02'])).toBe(2);
-  });
-
-  it('crosses month and year boundaries', () => {
-    expect(longestStreak(['2026-12-31', '2027-01-01', '2027-01-02'])).toBe(3);
   });
 });

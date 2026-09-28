@@ -4,9 +4,7 @@ import { apiFetch } from "@/lib/api";
 
 export type ProfileStats = {
   joinedAt: string;
-  checkIns: number;
   questsCompleted: number;
-  bestStreak: number;
 };
 
 export type Activity = {

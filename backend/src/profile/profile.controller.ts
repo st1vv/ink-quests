@@ -8,7 +8,7 @@ import { ProfileService } from './profile.service';
 export class ProfileController {
   constructor(private readonly profile: ProfileService) {}
 
-  // { joinedAt, checkIns, questsCompleted, bestStreak }
+  // { joinedAt, questsCompleted }
   @Get('stats')
   stats(@CurrentUser() user: AuthUser) {
     return this.profile.stats(user.id);

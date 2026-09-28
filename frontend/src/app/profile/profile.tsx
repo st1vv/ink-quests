@@ -28,8 +28,6 @@ import {
 const EXPLORER_TX_URL = "https://explorer.inkonchain.com/tx/";
 const PLACEHOLDER = "—";
 
-const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
-
 export const Profile = () => {
   const { address, status } = useAuth();
 
@@ -63,12 +61,6 @@ const SignedInProfile = ({ address }: { address: Address }) => {
   const { data: rank } = useMyRank();
   const { data: stats } = useProfileStats();
 
-  const levelProgress = progress
-    ? ((progress.totalXp - progress.levelXp) /
-        (progress.nextLevelXp - progress.levelXp)) *
-      100
-    : 0;
-
   return (
     <div className="flex flex-col gap-4">
       <PageIntro
@@ -77,60 +69,28 @@ const SignedInProfile = ({ address }: { address: Address }) => {
         description={
           stats ? `Member since ${formatDate(stats.joinedAt)}` : undefined
         }
-        aside={
-          <div className="rounded-3xl border border-white/10 bg-black/20 p-4 md:min-w-72">
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-sm text-white/50">Level</p>
-              <p className="text-lg font-semibold text-white tabular-nums">
-                {progress?.level ?? PLACEHOLDER}
-              </p>
-            </div>
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-linear-to-r from-ink to-ink-light"
-                style={{ width: `${levelProgress}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-white/40">
-              {progress
-                ? `${formatNumber(progress.nextLevelXp - progress.totalXp)} XP to level ${progress.level + 1}`
-                : PLACEHOLDER}
-            </p>
-          </div>
-        }
-      />
-
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-        <StatCard
-          label="Total XP"
-          value={
-            progress ? `${formatNumber(progress.totalXp)} XP` : PLACEHOLDER
-          }
-        />
-        <StatCard
-          label="Rank"
-          value={
-            rank?.rank != null ? `#${formatNumber(rank.rank)}` : PLACEHOLDER
-          }
-          hint={rank && rank.rank === null ? "Not ranked yet" : undefined}
-        />
-        <StatCard
-          label="Current streak"
-          value={progress ? `🔥 ${days(progress.streak)}` : PLACEHOLDER}
-        />
-        <StatCard
-          label="Best streak"
-          value={stats ? days(stats.bestStreak) : PLACEHOLDER}
-        />
-        <StatCard
-          label="Check-ins"
-          value={stats ? formatNumber(stats.checkIns) : PLACEHOLDER}
-        />
-        <StatCard
-          label="Quests completed"
-          value={stats ? formatNumber(stats.questsCompleted) : PLACEHOLDER}
-        />
-      </div>
+      >
+        <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-4">
+          <StatCard
+            label="Total XP"
+            value={
+              progress ? `${formatNumber(progress.totalXp)} XP` : PLACEHOLDER
+            }
+          />
+          <StatCard label="Level" value={progress?.level ?? PLACEHOLDER} />
+          <StatCard
+            label="Rank"
+            value={
+              rank?.rank != null ? `#${formatNumber(rank.rank)}` : PLACEHOLDER
+            }
+            hint={rank && rank.rank === null ? "Not ranked yet" : undefined}
+          />
+          <StatCard
+            label="Quests completed"
+            value={stats ? formatNumber(stats.questsCompleted) : PLACEHOLDER}
+          />
+        </div>
+      </PageIntro>
 
       <ReferralCard />
 
@@ -203,7 +163,7 @@ const ReferralCard = () => {
           {link && <CopyButton text={link} label="invite link" />}
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard
             label="Signed up"
             value={referrals ? formatNumber(referrals.invited) : PLACEHOLDER}

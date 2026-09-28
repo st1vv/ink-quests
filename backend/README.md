@@ -136,8 +136,7 @@ totals once that gets slow.
 
 Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
 
-- `GET /me/stats`: `{ joinedAt, checkIns, questsCompleted, bestStreak }`; `bestStreak` is the
-  longest run of consecutive check-in days ever.
+- `GET /me/stats`: `{ joinedAt, questsCompleted }`.
 - `GET /me/activity`: the latest 30 XP-earning actions, newest first, as
   `{ type: 'check-in' | 'quest', title, points, bonusPoints, at, txHash }[]`.
 
