@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             domain: window.location.host,
             uri: window.location.origin,
             address,
-            statement: "Sign in to InkQuest.",
+            statement: "Sign in to InkQuests.",
             version: "1",
             // The backend only accepts Ink. The signature doesn't depend on
             // the wallet's current network, so a wallet still on another

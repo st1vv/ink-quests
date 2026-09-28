@@ -10,6 +10,6 @@
     "db:generate": "docker compose exec backend npm run db:generate",
     "db:seed": "docker compose exec backend npm run db:seed",
     "db:studio": "cd backend && npm run db:studio",
-    "db:psql": "docker compose exec postgres psql -U inkquest"
+    "db:psql": "docker compose exec postgres psql -U inkquests"
   }
 }

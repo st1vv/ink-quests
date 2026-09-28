@@ -17,7 +17,7 @@ export const ComingSoon = () => {
             Coming Soon
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/65 md:text-base">
-            We’re working on something new for InkQuest. This page is
+            We’re working on something new for InkQuests. This page is
             currently under construction and will be available soon.
           </p>
           <div className="mt-8 flex justify-center">

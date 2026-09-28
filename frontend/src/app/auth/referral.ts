@@ -1,7 +1,7 @@
 // The invite code from a ?ref= link is kept until the visitor signs in, so
 // they can look around first and connect a wallet later. The backend only
 // uses it when the sign-in creates a new account.
-const STORAGE_KEY = "inkquest_ref";
+const STORAGE_KEY = "inkquests_ref";
 const CODE_PATTERN = /^[A-Za-z0-9]{4,16}$/;
 
 export const captureReferralFromUrl = () => {

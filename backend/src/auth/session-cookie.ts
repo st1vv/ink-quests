@@ -1,6 +1,6 @@
 import type { CookieOptions } from 'express';
 
-export const SESSION_COOKIE = 'inkquest_session';
+export const SESSION_COOKIE = 'inkquests_session';
 
 export const sessionCookieOptions = (
   frontendOrigin: string,

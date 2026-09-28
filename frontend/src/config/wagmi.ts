@@ -7,7 +7,7 @@ import {
 import { createConfig, http } from "wagmi";
 import { ink } from "viem/chains";
 
-const appName = "InkQuest";
+const appName = "InkQuests";
 
 // Get a free projectId at https://dashboard.reown.com and put it into .env.local
 const projectId: string | undefined = import.meta.env

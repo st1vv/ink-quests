@@ -45,7 +45,7 @@ export const LayoutHeader = () => {
           className="flex items-center gap-2 text-base font-semibold tracking-tight text-white"
         >
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-ink shadow-[0_0_12px_2px] shadow-ink/60" />
-          InkQuest
+          InkQuests
         </Link>
 
         {/* The labelled links don't fit next to the logo and wallet button

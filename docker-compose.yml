@@ -5,15 +5,15 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: inkquest
-      POSTGRES_PASSWORD: inkquest
-      POSTGRES_DB: inkquest
+      POSTGRES_USER: inkquests
+      POSTGRES_PASSWORD: inkquests
+      POSTGRES_DB: inkquests
     ports:
       - '5432:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U inkquest -d inkquest']
+      test: ['CMD-SHELL', 'pg_isready -U inkquests -d inkquests']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
-      DATABASE_URL: postgres://inkquest:inkquest@postgres:5432/inkquest
+      DATABASE_URL: postgres://inkquests:inkquests@postgres:5432/inkquests
       FRONTEND_ORIGIN: http://localhost:5173
       # File change events from a Windows/macOS host don't reach the
       # container, so the TypeScript watcher has to poll.

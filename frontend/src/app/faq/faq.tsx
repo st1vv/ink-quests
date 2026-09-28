@@ -5,9 +5,9 @@ import { PageIntro } from "@/shared/ui/page-intro";
 const faqItems = [
   {
     id: 1,
-    question: "What is InkQuest?",
+    question: "What is InkQuests?",
     answer:
-      "InkQuest is a platform where users complete simple daily onchain actions in the Ink ecosystem, earn XP, and grow their streak.",
+      "InkQuests is a platform where users complete simple daily onchain actions in the Ink ecosystem, earn XP, and grow their streak.",
   },
   {
     id: 2,

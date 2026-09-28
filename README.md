@@ -1,4 +1,4 @@
-# InkQuest
+# InkQuests
 
 Quests on [Ink](https://inkonchain.com): complete daily and partner quests onchain, earn points, climb the leaderboard.
 
@@ -18,7 +18,7 @@ npm run db:seed   # first run only: fill the quest catalog
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3000 (`/health` checks the DB connection)
-- Postgres: `localhost:5432`, user / password / db `inkquest`
+- Postgres: `localhost:5432`, user / password / db `inkquests`
 
 Migrations run automatically when the backend container starts. Source folders are mounted
 into the containers, so code changes hot-reload.

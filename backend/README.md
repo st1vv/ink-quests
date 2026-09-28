@@ -1,6 +1,6 @@
-# InkQuest backend
+# InkQuests backend
 
-NestJS API for InkQuest: users (wallet addresses), quest catalog, quest completions and points.
+NestJS API for InkQuests: users (wallet addresses), quest catalog, quest completions and points.
 
 ## Stack
 
@@ -53,7 +53,7 @@ See `.env.example`. The app refuses to start if a variable is missing or invalid
 ## Auth (Sign-In with Ethereum)
 
 The frontend signs a SIWE message with the connected wallet; the backend checks it and sets
-an HttpOnly session cookie (`inkquest_session`, 30 days).
+an HttpOnly session cookie (`inkquests_session`, 30 days).
 
 | Route               | What it does                                                        |
 | ------------------- | ------------------------------------------------------------------- |
