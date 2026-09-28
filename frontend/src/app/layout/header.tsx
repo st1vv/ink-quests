@@ -77,7 +77,7 @@ export const LayoutMobileNav = () => {
             to={item.link}
             label={item.label}
             icon={item.icon}
-            className="min-w-0 flex-1 flex-col justify-center gap-1 rounded-xl px-1 text-xs"
+            className="min-w-0 flex-1 flex-col justify-center gap-1 rounded-xl px-2 text-xs"
           />
         ))}
       </div>
@@ -105,7 +105,7 @@ const HeaderLink = ({
       className={({ isActive }) =>
         `inline-flex items-center font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
           isActive
-            ? "bg-ink text-white shadow-lg shadow-ink/25"
+            ? "bg-ink text-white"
             : "text-white/60 hover:bg-white/5 hover:text-white"
         }`
       }
