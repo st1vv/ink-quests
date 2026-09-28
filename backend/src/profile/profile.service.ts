@@ -4,7 +4,7 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { questCompletions, users } from '../database/schema';
 
-export const ACTIVITY_LIMIT = 30;
+export const ACTIVITY_LIMIT = 10;
 
 type ActivityRow = {
   type: 'check-in' | 'quest' | 'referral';

@@ -195,7 +195,7 @@ const ActivityList = () => {
             Recent activity
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/60">
-            Your latest check-ins, quests and referrals.
+            Your last 10 check-ins, quests and referrals.
           </p>
         </div>
 
