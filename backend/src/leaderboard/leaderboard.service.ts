@@ -15,7 +15,7 @@ const rankedUsers = sql`
     from (
       select user_id, points from quest_completions
       union all
-      select user_id, points from check_ins
+      select user_id, points + bonus_points from check_ins
     ) p
     group by user_id
     having sum(points) > 0

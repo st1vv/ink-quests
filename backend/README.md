@@ -106,13 +106,16 @@ bundler can't claim yet.
 ## Progress and levels
 
 `GET /me/progress` (signed in) returns `{ totalXp, level, levelXp, nextLevelXp, streak,
-checkedInToday }`. `totalXp` sums quest completions and check-ins. `levelXp` / `nextLevelXp`
-are the total XP at which the current and next level start.
+checkedInToday, week, checkInXp, fullWeekBonusXp }`; `week` is Monday to Sunday of the current UTC
+week, true where the user checked in. `totalXp` sums quest completions and check-ins.
+`levelXp` / `nextLevelXp` are the total XP at which the current and next level start.
 
 - **Level**: reaching level L takes `125 · L · (L − 1)` XP in total (0, 250, 750, 1500, 2500, …),
   so each level needs 250 XP more than the previous one. The curve lives in
   `src/progress/level.ts`.
-- **Check-in**: `POST /me/check-in` gives 20 XP, once per UTC day (409 on a repeat).
+- **Check-in**: `POST /me/check-in` gives 10 XP, once per UTC day (409 on a repeat). The Sunday
+  check-in that completes a Monday-Sunday week also gives a 10 XP bonus (`bonus_points`). Both
+  values are constants in `src/progress/progress.service.ts`; past check-ins keep what they paid.
 - **Streak**: consecutive UTC days with a check-in; quests don't count toward it. It stays alive
   through today if the last check-in was yesterday.
 

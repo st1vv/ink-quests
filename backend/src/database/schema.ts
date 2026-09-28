@@ -56,6 +56,8 @@ export const checkIns = pgTable(
     day: date({ mode: 'string' }).notNull(),
     // Copied at check-in time so changing the reward doesn't rewrite history.
     points: integer().notNull(),
+    // Extra XP for the Sunday check-in that completes a Monday-Sunday week.
+    bonusPoints: integer().notNull().default(0),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex().on(t.userId, t.day)],

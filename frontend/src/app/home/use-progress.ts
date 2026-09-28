@@ -10,10 +10,12 @@ export type Progress = {
   nextLevelXp: number;
   streak: number;
   checkedInToday: boolean;
+  // Monday to Sunday of the current UTC week: true where checked in.
+  week: boolean[];
+  checkInXp: number;
+  // Extra XP for checking in every day of a Monday-Sunday week.
+  fullWeekBonusXp: number;
 };
-
-// Shown on the button; the backend decides the actual reward.
-export const CHECK_IN_XP = 20;
 
 const msUntilNextUtcDay = () => {
   const next = new Date();
