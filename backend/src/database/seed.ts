@@ -69,16 +69,6 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 2,
   },
   {
-    slug: 'daily-superbridge',
-    kind: 'daily',
-    title: 'Bridge to Ink using Superbridge',
-    description:
-      'Bridge assets to Ink using Superbridge and keep your streak alive.',
-    actionUrl: 'https://superbridge.app/?fromChainId=1&toChainId=57073',
-    points: 40,
-    sortOrder: 3,
-  },
-  {
     slug: 'daily-tydro-supply-weth',
     kind: 'daily',
     title: 'Supply WETH on Tydro',
