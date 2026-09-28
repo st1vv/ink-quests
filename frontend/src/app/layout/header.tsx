@@ -6,6 +6,7 @@ import {
   HomeIcon,
   QuestsIcon,
   TrophyIcon,
+  UserIcon,
   type IconProps,
 } from "@/shared/ui/icons";
 
@@ -29,6 +30,12 @@ const NAVIGATION_ITEMS = [
     icon: TrophyIcon,
   },
   {
+    id: "profile",
+    label: "Profile",
+    link: "/profile",
+    icon: UserIcon,
+  },
+  {
     id: "faq",
     label: "FAQ",
     link: "/faq",
@@ -48,6 +55,8 @@ export const LayoutHeader = () => {
           InkQuest
         </Link>
 
+        {/* Five labelled links don't fit next to the logo and wallet button
+            below lg, so tablets get icons only. */}
         <nav className="hidden items-center gap-1 md:flex">
           {NAVIGATION_ITEMS.map((item) => (
             <HeaderLink
@@ -55,6 +64,7 @@ export const LayoutHeader = () => {
               to={item.link}
               label={item.label}
               icon={item.icon}
+              labelClassName="hidden lg:inline"
             />
           ))}
         </nav>
@@ -90,18 +100,23 @@ type HeaderLinkProps = {
   label: string;
   icon: ComponentType<IconProps>;
   className?: string;
+  labelClassName?: string;
 };
 
 const HeaderLink = ({
   to,
   label,
   icon: IconComponent,
-  className = "gap-2 rounded-full px-4 py-2 text-sm",
+  className = "gap-2 rounded-full px-3 py-2 text-sm lg:px-4",
+  labelClassName = "",
 }: HeaderLinkProps) => {
   return (
     <NavLink
       to={to}
       end={to === "/"}
+      // Keeps the link named when the visible label is hidden.
+      aria-label={label}
+      title={label}
       className={({ isActive }) =>
         `inline-flex items-center font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${className} ${
           isActive
@@ -111,7 +126,7 @@ const HeaderLink = ({
       }
     >
       <IconComponent />
-      <span className="max-w-full truncate">{label}</span>
+      <span className={`max-w-full truncate ${labelClassName}`}>{label}</span>
     </NavLink>
   );
 };

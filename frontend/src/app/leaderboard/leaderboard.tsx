@@ -5,7 +5,7 @@ import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, shortAddress } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import {
   useLeaderboard,
@@ -18,9 +18,6 @@ const PODIUM_STYLES: Record<number, string> = {
   2: "bg-slate-300/15 text-slate-200",
   3: "bg-orange-400/15 text-orange-300",
 };
-
-const shortAddress = (address: string) =>
-  `${address.slice(0, 6)}…${address.slice(-4)}`;
 
 export const Leaderboard = () => {
   const { address } = useAuth();

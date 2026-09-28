@@ -4,6 +4,7 @@ import { Home } from "@/app/home/home";
 import { Leaderboard } from "@/app/leaderboard/leaderboard";
 import { Quests } from "@/app/quests/quests";
 import { Faq } from "@/app/faq/faq";
+import { Profile } from "@/app/profile/profile";
 import { ComingSoon } from "@/app/soon";
 
 export const App = () => {
@@ -15,7 +16,7 @@ export const App = () => {
         <Route path="/quests" element={<Quests />} />
         <Route path="/quests/:slug" element={<ComingSoon />} />
         <Route path="/faq" element={<Faq />} />
-        <Route path="/profile" element={<ComingSoon />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Layout>
   );

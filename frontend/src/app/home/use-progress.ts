@@ -51,6 +51,8 @@ export const useCheckIn = () => {
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
+        queryClient.invalidateQueries({ queryKey: ["stats"] }),
+        queryClient.invalidateQueries({ queryKey: ["activity"] }),
       ]),
   });
 };

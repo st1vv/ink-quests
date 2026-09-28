@@ -76,7 +76,35 @@ export const SwitchIcon = (props: IconProps) => (
   </Icon>
 );
 
-export const SpinnerIcon = ({ className = "", ...props }: IconProps) => (
+export const UserIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0 1 16 0" />
+  </Icon>
+);
+
+export const CopyIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="9" y="9" width="12" height="12" rx="2" />
+    <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+  </Icon>
+);
+
+export const CheckIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M20 6 9 17l-5-5" />
+  </Icon>
+);
+
+export const ExternalLinkIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </Icon>
+);
+
+export const SpinnerIcon =({ className = "", ...props }: IconProps) => (
   <Icon className={`h-4 w-4 animate-spin ${className}`} {...props}>
     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
   </Icon>
