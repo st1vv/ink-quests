@@ -2,7 +2,11 @@ import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
-import { checkIns, questCompletions } from '../database/schema';
+import {
+  checkIns,
+  questCompletions,
+  referralRewards,
+} from '../database/schema';
 import { utcDay } from '../quests/period';
 import { levelProgress } from './level';
 import { currentStreak } from './streak';
@@ -35,10 +39,17 @@ export class ProgressService {
       .from(checkIns)
       .where(eq(checkIns.userId, userId));
 
+    const [{ referralXp }] = await this.db
+      .select({
+        referralXp: sql<number>`coalesce(sum(${referralRewards.points}), 0)::int`,
+      })
+      .from(referralRewards)
+      .where(eq(referralRewards.referrerId, userId));
+
     const days = await this.recentCheckInDays(userId, now);
     const checkedIn = new Set(days);
 
-    const totalXp = questXp + checkInXp;
+    const totalXp = questXp + checkInXp + referralXp;
     return {
       totalXp,
       ...levelProgress(totalXp),

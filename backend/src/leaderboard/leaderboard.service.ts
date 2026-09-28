@@ -7,7 +7,7 @@ import { levelForXp } from '../progress/level';
 
 export const LEADERBOARD_SIZE = 100;
 
-// Total XP per user from quest completions and check-ins, the same sum as
+// Total XP per user from quests, check-ins and referrals, the same sum as
 // GET /me/progress. Users without XP aren't ranked. Every user gets their
 // own place: on equal XP, whoever reached it first (the earlier last
 // XP-earning action) is ahead, then whoever signed up first.
@@ -21,6 +21,8 @@ const rankedUsers = sql`
       select user_id, points, completed_at as earned_at from quest_completions
       union all
       select user_id, points + bonus_points, created_at from check_ins
+      union all
+      select referrer_id, points, created_at from referral_rewards
     ) p
     group by user_id
     having sum(points) > 0

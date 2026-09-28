@@ -7,6 +7,7 @@ import {
 import { ink } from "viem/chains";
 import { createSiweMessage } from "viem/siwe";
 import { apiFetch } from "@/lib/api";
+import { clearStoredReferral, storedReferral } from "@/app/auth/referral";
 import {
   sessionQueryKey,
   useAuth,
@@ -47,8 +48,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           try {
             const session = await apiFetch<SessionResponse>("/auth/verify", {
               method: "POST",
-              body: JSON.stringify({ message, signature }),
+              body: JSON.stringify({
+                message,
+                signature,
+                ref: storedReferral(),
+              }),
             });
+            // Used or not (an existing account ignores it), it's done.
+            clearStoredReferral();
             queryClient.setQueryData(sessionQueryKey, session);
             return true;
           } catch {

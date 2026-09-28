@@ -19,6 +19,12 @@ import { SESSION_COOKIE, sessionCookieOptions } from './session-cookie';
 const verifyBody = z.object({
   message: z.string().min(1).max(4096),
   signature: z.string().regex(/^0x[0-9a-fA-F]+$/) as z.ZodType<`0x${string}`>,
+  // Invite code; a malformed one is dropped rather than failing the login.
+  ref: z
+    .string()
+    .regex(/^[A-Za-z0-9]{4,16}$/)
+    .optional()
+    .catch(undefined),
 });
 
 @Controller('auth')
@@ -53,6 +59,7 @@ export class AuthController {
     const session = await this.auth.signIn(
       input.data.message,
       input.data.signature,
+      input.data.ref,
     );
     if (!session) {
       throw new UnauthorizedException('Invalid or expired sign-in message');

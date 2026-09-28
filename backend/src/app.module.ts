@@ -5,6 +5,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProgressModule } from './progress/progress.module';
+import { ReferralsModule } from './referrals/referrals.module';
 import { QuestsModule } from './quests/quests.module';
 import { validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
@@ -20,6 +21,7 @@ import { HealthController } from './health/health.controller';
     ProgressModule,
     LeaderboardModule,
     ProfileModule,
+    ReferralsModule,
   ],
   controllers: [HealthController],
 })

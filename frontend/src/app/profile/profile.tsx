@@ -21,6 +21,7 @@ import { useMyRank } from "@/app/leaderboard/use-leaderboard";
 import {
   useActivity,
   useProfileStats,
+  useReferrals,
   type Activity,
 } from "@/app/profile/use-profile";
 
@@ -131,17 +132,28 @@ const SignedInProfile = ({ address }: { address: Address }) => {
         />
       </div>
 
+      <ReferralCard />
+
       <ActivityList />
     </div>
   );
 };
 
-const AddressTitle = ({ address }: { address: Address }) => {
+const AddressTitle = ({ address }: { address: Address }) => (
+  <span className="inline-flex items-center gap-3">
+    <span title={address} className="font-mono">
+      {shortAddress(address)}
+    </span>
+    <CopyButton text={address} label="address" />
+  </span>
+);
+
+const CopyButton = ({ text, label }: { text: string; label: string }) => {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(address);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -150,23 +162,65 @@ const AddressTitle = ({ address }: { address: Address }) => {
   };
 
   return (
-    <span className="inline-flex items-center gap-3">
-      <span title={address} className="font-mono">
-        {shortAddress(address)}
-      </span>
-      <button
-        type="button"
-        onClick={copy}
-        aria-label={copied ? "Address copied" : "Copy address"}
-        className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-ink-light"
-      >
-        {copied ? (
-          <CheckIcon className="h-4 w-4 text-emerald-300" />
-        ) : (
-          <CopyIcon className="h-4 w-4" />
-        )}
-      </button>
-    </span>
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
+      className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-ink-light"
+    >
+      {copied ? (
+        <CheckIcon className="h-4 w-4 text-emerald-300" />
+      ) : (
+        <CopyIcon className="h-4 w-4" />
+      )}
+    </button>
+  );
+};
+
+const ReferralCard = () => {
+  const { data: referrals } = useReferrals();
+  const link = referrals
+    ? `${window.location.origin}/?ref=${referrals.code}`
+    : null;
+
+  return (
+    <Surface>
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+            Invite friends
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-white/60">
+            Get +{referrals?.rewardXp ?? 50} XP for every friend who signs up
+            with your link and completes their first onchain quest.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-3xl border border-white/10 bg-black/20 py-2 pr-2 pl-4">
+          <span className="min-w-0 flex-1 truncate font-mono text-sm text-white/80">
+            {link ?? PLACEHOLDER}
+          </span>
+          {link && <CopyButton text={link} label="invite link" />}
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard
+            label="Signed up"
+            value={referrals ? formatNumber(referrals.invited) : PLACEHOLDER}
+          />
+          <StatCard
+            label="Completed a quest"
+            value={referrals ? formatNumber(referrals.rewarded) : PLACEHOLDER}
+          />
+          <StatCard
+            label="XP earned"
+            value={
+              referrals ? `${formatNumber(referrals.xpEarned)} XP` : PLACEHOLDER
+            }
+          />
+        </div>
+      </div>
+    </Surface>
   );
 };
 
@@ -181,7 +235,7 @@ const ActivityList = () => {
             Recent activity
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/60">
-            Your latest check-ins and completed quests.
+            Your latest check-ins, quests and referrals.
           </p>
         </div>
 
@@ -229,23 +283,38 @@ const ActivityList = () => {
   );
 };
 
+const ACTIVITY_ICONS: Record<
+  Activity["type"],
+  { icon: string; style: string }
+> = {
+  "check-in": { icon: "🔥", style: "bg-ink/20" },
+  quest: { icon: "✓", style: "bg-emerald-400/15 text-emerald-300" },
+  referral: { icon: "🤝", style: "bg-sky-400/15" },
+};
+
+const activityTitle = (item: Activity) => {
+  if (item.type === "check-in") return "Daily check-in";
+  if (item.type === "referral" && item.title) {
+    return `Friend ${shortAddress(item.title)} completed a quest`;
+  }
+  return item.title;
+};
+
 const ActivityRow = ({ item }: { item: Activity }) => {
-  const isCheckIn = item.type === "check-in";
+  const { icon, style } = ACTIVITY_ICONS[item.type];
 
   return (
     <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3.5 last:border-b-0">
       <span
         aria-hidden
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${
-          isCheckIn ? "bg-ink/20" : "bg-emerald-400/15 text-emerald-300"
-        }`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${style}`}
       >
-        {isCheckIn ? "🔥" : "✓"}
+        {icon}
       </span>
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-white md:text-base">
-          {isCheckIn ? "Daily check-in" : item.title}
+          {activityTitle(item)}
         </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-white/40">
           <time dateTime={item.at}>{formatDateTime(item.at)}</time>

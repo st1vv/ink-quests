@@ -56,7 +56,12 @@ export class AuthService {
   }
 
   // Returns null when the message or signature doesn't check out.
-  async signIn(message: string, signature: Hex): Promise<Session | null> {
+  // `ref` is an invite code from the link the user arrived with.
+  async signIn(
+    message: string,
+    signature: Hex,
+    ref?: string,
+  ): Promise<Session | null> {
     const parsed = parseSiweMessage(message);
     if (!parsed.nonce || !parsed.address || parsed.chainId !== ink.id) {
       return null;
@@ -85,9 +90,16 @@ export class AuthService {
     if (!isValid) return null;
 
     const now = new Date();
+    // The referrer is written only when this insert creates the account;
+    // an existing user just gets lastLoginAt, so nobody can be re-assigned.
+    const referredById = ref ? await this.referrerId(ref) : null;
     const [user] = await this.db
       .insert(users)
-      .values({ address: parsed.address.toLowerCase(), lastLoginAt: now })
+      .values({
+        address: parsed.address.toLowerCase(),
+        lastLoginAt: now,
+        referredById,
+      })
       .onConflictDoUpdate({ target: users.address, set: { lastLoginAt: now } })
       .returning({ id: users.id, address: users.address });
 
@@ -102,6 +114,15 @@ export class AuthService {
       .values({ id: hashToken(token), userId: user.id, expiresAt });
 
     return { token, expiresAt, user: toAuthUser(user) };
+  }
+
+  private async referrerId(code: string) {
+    const [referrer] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.referralCode, code.toUpperCase()))
+      .limit(1);
+    return referrer?.id ?? null;
   }
 
   async getSessionUser(token: string): Promise<AuthUser | null> {

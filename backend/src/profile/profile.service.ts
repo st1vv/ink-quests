@@ -8,7 +8,7 @@ import { longestStreak } from '../progress/streak';
 export const ACTIVITY_LIMIT = 30;
 
 type ActivityRow = {
-  type: 'check-in' | 'quest';
+  type: 'check-in' | 'quest' | 'referral';
   title: string | null;
   points: number;
   bonus_points: number;
@@ -64,6 +64,11 @@ export class ProfileService {
         from quest_completions c
         join quests q on q.id = c.quest_id
         where c.user_id = ${userId}
+        union all
+        select 'referral', u.address, r.points, 0, r.created_at, null
+        from referral_rewards r
+        join users u on u.id = r.referred_id
+        where r.referrer_id = ${userId}
       ) a
       order by at desc
       limit ${ACTIVITY_LIMIT}

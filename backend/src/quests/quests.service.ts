@@ -13,6 +13,7 @@ import type { AuthUser } from '../auth/auth.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { questCompletions, quests } from '../database/schema';
+import { ReferralsService } from '../referrals/referrals.service';
 import { ExplorerClient, type ExplorerTx } from './explorer.client';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
 import { matchesSpec, VERIFIERS } from './verifiers';
@@ -24,6 +25,7 @@ export class QuestsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly explorer: ExplorerClient,
+    private readonly referrals: ReferralsService,
   ) {}
 
   // Quests the user has completed for the current period: today's daily
@@ -112,6 +114,9 @@ export class QuestsService {
       .onConflictDoNothing()
       .returning({ points: questCompletions.points });
     if (!completion) throw new ConflictException('Already claimed');
+
+    // A verified onchain quest is what makes an invited user count.
+    await this.referrals.rewardReferrer(user.id);
 
     return { questId: quest.id, points: completion.points, txHash: tx.hash };
   }

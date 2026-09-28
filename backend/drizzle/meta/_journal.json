@@ -29,6 +29,13 @@
       "when": 1790576177475,
       "tag": "0003_check_in_bonus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790584307796,
+      "tag": "0004_referrals",
+      "breakpoints": true
     }
   ]
 }

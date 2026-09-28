@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 export const questKind = pgEnum('quest_kind', ['daily', 'partner']);
@@ -20,6 +21,28 @@ export const users = pgTable('users', {
   address: varchar({ length: 42 }).notNull().unique(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   lastLoginAt: timestamp({ withTimezone: true }),
+  // The user's own invite code; created the first time they ask for it.
+  referralCode: varchar({ length: 16 }).unique(),
+  // Who invited this user. Set only when the account is created.
+  referredById: integer().references((): AnyPgColumn => users.id, {
+    onDelete: 'set null',
+  }),
+});
+
+// XP paid to a referrer, once per invited user, when that user completes
+// their first onchain quest.
+export const referralRewards = pgTable('referral_rewards', {
+  id: serial().primaryKey(),
+  referrerId: integer()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  referredId: integer()
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // Copied at reward time so changing the reward doesn't rewrite history.
+  points: integer().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
 // Single-use SIWE nonces; a row is deleted when a signed message consumes it.

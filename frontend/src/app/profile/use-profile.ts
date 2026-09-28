@@ -10,8 +10,9 @@ export type ProfileStats = {
 };
 
 export type Activity = {
-  type: "check-in" | "quest";
-  // Quest title; null for check-ins.
+  type: "check-in" | "quest" | "referral";
+  // Quest title, the invited friend's address for referrals, null for
+  // check-ins.
   title: string | null;
   points: number;
   // Full-week bonus paid with a Sunday check-in.
@@ -34,6 +35,25 @@ export const useActivity = () => {
   return useQuery({
     queryKey: ["activity", address],
     queryFn: () => apiFetch<Activity[]>("/me/activity"),
+    enabled: Boolean(address),
+  });
+};
+
+export type Referrals = {
+  code: string;
+  // Signed up with the user's link.
+  invited: number;
+  // Also completed an onchain quest, which paid the reward.
+  rewarded: number;
+  xpEarned: number;
+  rewardXp: number;
+};
+
+export const useReferrals = () => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["referrals", address],
+    queryFn: () => apiFetch<Referrals>("/me/referrals"),
     enabled: Boolean(address),
   });
 };
