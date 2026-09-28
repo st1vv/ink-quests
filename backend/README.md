@@ -122,11 +122,12 @@ week, true where the user checked in. `totalXp` sums quest completions and check
 ## Leaderboard
 
 - `GET /leaderboard` (public): top 100 users by total XP (quests + check-ins) as
-  `{ rank, address, xp, level }[]`. Users with the same XP share a rank; users without XP aren't
-  listed.
+  `{ rank, address, xp, level }[]`. Every user has their own rank: on equal XP, whoever reached
+  it first (earlier last XP-earning action) is ahead, then whoever signed up first. Users without
+  XP aren't listed.
 - `GET /me/rank` (signed in): `{ rank, xp, xpToNextRank }`, also for users outside the top.
-  `rank` is null until the user has XP; `xpToNextRank` is what it takes to strictly pass the
-  closest user above, null for first place.
+  `rank` is null until the user has XP; `xpToNextRank` is what it takes to pass the user one
+  place above (1 XP if they have the same XP), null for first place.
 
 Both aggregate all completions on every request, which is fine for now; cache or precompute the
 totals once that gets slow.

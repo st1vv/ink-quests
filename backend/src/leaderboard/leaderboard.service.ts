@@ -8,14 +8,19 @@ import { levelForXp } from '../progress/level';
 export const LEADERBOARD_SIZE = 100;
 
 // Total XP per user from quest completions and check-ins, the same sum as
-// GET /me/progress. Users without XP aren't ranked. Equal XP shares a rank.
+// GET /me/progress. Users without XP aren't ranked. Every user gets their
+// own place: on equal XP, whoever reached it first (the earlier last
+// XP-earning action) is ahead, then whoever signed up first.
 const rankedUsers = sql`
   with xp as (
-    select user_id, sum(points)::int as xp
+    select
+      user_id,
+      sum(points)::int as xp,
+      max(earned_at) filter (where points > 0) as reached_at
     from (
-      select user_id, points from quest_completions
+      select user_id, points, completed_at as earned_at from quest_completions
       union all
-      select user_id, points + bonus_points from check_ins
+      select user_id, points + bonus_points, created_at from check_ins
     ) p
     group by user_id
     having sum(points) > 0
@@ -24,7 +29,9 @@ const rankedUsers = sql`
     u.id as user_id,
     u.address,
     xp.xp,
-    rank() over (order by xp.xp desc)::int as rank
+    row_number() over (
+      order by xp.xp desc, xp.reached_at asc, u.id asc
+    )::int as rank
   from xp
   join users u on u.id = xp.user_id
 `;
@@ -55,30 +62,27 @@ export class LeaderboardService {
   }
 
   // rank is null until the user has any XP. xpToNextRank is what it takes
-  // to strictly pass the closest user above, null when already first.
+  // to pass the user one place above (1 XP when they have the same XP but
+  // got there first), null when already first.
   async rankOf(userId: number) {
     const { rows } = await this.db.execute<{
-      rank: number | null;
-      xp: number | null;
-      next_xp: number | null;
+      rank: number;
+      xp: number;
+      above_xp: number | null;
     }>(sql`
       with r as (${rankedUsers})
-      select
-        me.rank,
-        me.xp,
-        (select min(xp) from r where r.xp > me.xp) as next_xp
+      select me.rank, me.xp, above.xp as above_xp
       from r me
+      left join r above on above.rank = me.rank - 1
       where me.user_id = ${userId}
     `);
 
     const me = rows[0];
-    if (!me || me.rank === null || me.xp === null) {
-      return { rank: null, xp: 0, xpToNextRank: null };
-    }
+    if (!me) return { rank: null, xp: 0, xpToNextRank: null };
     return {
       rank: me.rank,
       xp: me.xp,
-      xpToNextRank: me.next_xp === null ? null : me.next_xp - me.xp + 1,
+      xpToNextRank: me.above_xp === null ? null : me.above_xp - me.xp + 1,
     };
   }
 }
