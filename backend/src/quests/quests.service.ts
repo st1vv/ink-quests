@@ -9,15 +9,15 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
+import type { Address } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { questCompletions, quests } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
-import { ExplorerClient, type ExplorerTx } from './explorer.client';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
-import { PriceService } from './price.service';
-import { findMatchingTx, VERIFIERS } from './verifiers';
+import { VerificationService, type Verification } from './verification.service';
+import { VERIFIERS } from './verifiers';
 
 @Injectable()
 export class QuestsService {
@@ -25,9 +25,8 @@ export class QuestsService {
 
   constructor(
     @Inject(DB) private readonly db: Database,
-    private readonly explorer: ExplorerClient,
+    private readonly verification: VerificationService,
     private readonly referrals: ReferralsService,
-    private readonly prices: PriceService,
   ) {}
 
   // Quests the user has completed for the current period: today's daily
@@ -80,15 +79,13 @@ export class QuestsService {
 
     const windowStart =
       quest.kind === 'daily' ? startOfUtcDay(now) : quest.createdAt;
-    let tx: ExplorerTx | undefined;
+    let result: Verification;
     try {
-      const txs = await this.explorer.sentTransactions(
-        user.address,
+      result = await this.verification.verify(
+        spec,
+        user.address as Address,
         windowStart,
         now,
-      );
-      tx = await findMatchingTx(spec, txs, (asset) =>
-        this.prices.usdPrice(asset),
       );
     } catch (err) {
       this.logger.warn(`Quest check failed: ${(err as Error).message}`);
@@ -97,11 +94,13 @@ export class QuestsService {
       );
     }
 
-    if (!tx) {
-      // The explorer indexes a few seconds behind the chain, so a fresh
-      // transaction may not be visible on the first try.
+    if (!result.done) {
       throw new UnprocessableEntityException(
-        'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
+        result.missing === 'nft'
+          ? 'No NFT from this collection found in your wallet'
+          : // The explorer indexes a few seconds behind the chain, so a
+            // fresh transaction may not be visible on the first try.
+            'No matching transaction found yet (supplies need at least $1). If you just made it, try again in a minute',
       );
     }
 
@@ -113,7 +112,7 @@ export class QuestsService {
         questId: quest.id,
         period,
         points: quest.points,
-        txHash: tx.hash,
+        txHash: result.txHash,
       })
       .onConflictDoNothing()
       .returning({ points: questCompletions.points });
@@ -122,6 +121,10 @@ export class QuestsService {
     // A verified onchain quest is what makes an invited user count.
     await this.referrals.rewardReferrer(user.id);
 
-    return { questId: quest.id, points: completion.points, txHash: tx.hash };
+    return {
+      questId: quest.id,
+      points: completion.points,
+      txHash: result.txHash,
+    };
   }
 }

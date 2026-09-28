@@ -108,6 +108,11 @@ accepted calls; the quest is done when any of them matches:
 ],
 ```
 
+Holder quests use `{ type: 'nft-holder', contract: '0x…' }` instead: the claim passes when the
+wallet holds at least one token of that ERC-721 collection (`balanceOf` over RPC), with no
+transaction to find. Only the balance counts, so one NFT moved between wallets can be claimed by
+each of them.
+
 Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337
 bundler can't claim yet.
 

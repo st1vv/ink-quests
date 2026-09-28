@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createPublicClient, http, parseAbi, type Address } from 'viem';
-import { ink } from 'viem/chains';
+import { parseAbi, type Address } from 'viem';
+import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 
 // Tydro's pool; its addresses provider points at the oracle it uses for
 // collateral, so the quest minimums use the same prices.
 const TYDRO_POOL: Address = '0x2816cf15F6d2A220E789aA011D5EE4eB6c47FEbA';
 const CACHE_MS = 60 * 1000;
-
-const createInkClient = (rpcUrl?: string) =>
-  createPublicClient({ chain: ink, transport: http(rpcUrl) });
 
 const poolAbi = parseAbi([
   'function ADDRESSES_PROVIDER() view returns (address)',
@@ -25,7 +22,7 @@ const oracleAbi = parseAbi([
 // USD prices from Tydro's AaveOracle, scaled by 1e8 (its BASE_CURRENCY_UNIT).
 @Injectable()
 export class PriceService {
-  private readonly client: ReturnType<typeof createInkClient>;
+  private readonly client: InkClient;
   private oracle: Promise<Address> | null = null;
   private readonly cache = new Map<string, { price: bigint; at: number }>();
 

@@ -2,9 +2,10 @@ import { createHash, randomBytes } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { and, eq, gt, lt } from 'drizzle-orm';
-import { createPublicClient, getAddress, http, type Hex } from 'viem';
+import { getAddress, type Hex } from 'viem';
 import { ink } from 'viem/chains';
 import { generateSiweNonce, parseSiweMessage } from 'viem/siwe';
+import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
@@ -21,9 +22,6 @@ export type Session = {
   user: AuthUser;
 };
 
-const createInkClient = (rpcUrl?: string) =>
-  createPublicClient({ chain: ink, transport: http(rpcUrl) });
-
 const hashToken = (token: string) =>
   createHash('sha256').update(token).digest('hex');
 
@@ -32,7 +30,7 @@ export class AuthService {
   // The SIWE message must be issued for our frontend, not another site
   // that tricked the user into signing.
   private readonly domain: string;
-  private readonly client: ReturnType<typeof createInkClient>;
+  private readonly client: InkClient;
 
   constructor(
     @Inject(DB) private readonly db: Database,

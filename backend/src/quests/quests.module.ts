@@ -5,12 +5,13 @@ import { ExplorerClient } from './explorer.client';
 import { PriceService } from './price.service';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
+import { VerificationService } from './verification.service';
 
 // Claiming quests: checks the user's transactions onchain and records
 // completions. The public catalog lives in CatalogModule.
 @Module({
   imports: [AuthModule, ReferralsModule],
   controllers: [QuestsController],
-  providers: [QuestsService, ExplorerClient, PriceService],
+  providers: [QuestsService, VerificationService, ExplorerClient, PriceService],
 })
 export class QuestsModule {}

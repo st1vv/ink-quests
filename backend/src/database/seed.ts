@@ -102,6 +102,39 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 5,
     verifier: 'tydro-supply-usdt',
   },
+  {
+    slug: 'daily-hold-templars-of-the-storm',
+    kind: 'daily',
+    title: 'Hold a Templars of the Storm NFT',
+    description:
+      'Hold at least one Templars of the Storm NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/templars-of-the-storm',
+    points: 100,
+    sortOrder: 6,
+    verifier: 'hold-templars-of-the-storm',
+  },
+  {
+    slug: 'daily-hold-rekt-ink',
+    kind: 'daily',
+    title: 'Hold a Rekt Ink NFT',
+    description:
+      'Hold at least one Rekt Ink NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/rekt-ink',
+    points: 50,
+    sortOrder: 7,
+    verifier: 'hold-rekt-ink',
+  },
+  {
+    slug: 'daily-hold-ink-bunnies',
+    kind: 'daily',
+    title: 'Hold an INK Bunnies NFT',
+    description:
+      'Hold at least one INK Bunnies NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/inkbunnies',
+    points: 50,
+    sortOrder: 8,
+    verifier: 'hold-ink-bunnies',
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.

@@ -18,7 +18,7 @@ export type MinUsd = {
 // One way of completing a quest: a successful transaction the user sent to
 // one of `contracts` during the quest's window (today for daily quests,
 // since the quest was added for partner quests).
-export type VerifierSpec = {
+export type ContractCallSpec = {
   type: 'contract-call';
   contracts: Address[];
   // Optional 4-byte selectors the transaction must call, e.g. only swaps
@@ -29,6 +29,15 @@ export type VerifierSpec = {
   firstArg?: Address;
   minUsd?: MinUsd;
 };
+
+// Holding at least one token of an ERC-721 collection at claim time, read
+// with balanceOf over RPC. No transaction is involved.
+export type NftHolderSpec = {
+  type: 'nft-holder';
+  contract: Address;
+};
+
+export type VerifierSpec = ContractCallSpec | NftHolderSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -44,7 +53,7 @@ const TYDRO_POOL = '0x2816cf15F6d2A220E789aA011D5EE4eB6c47FEbA'; // Pool proxy
 const tydroSupply = (
   asset: Address,
   minUsd: Omit<MinUsd, 'asset' | 'amountFrom'>,
-): VerifierSpec => ({
+): ContractCallSpec => ({
   type: 'contract-call',
   contracts: [TYDRO_POOL],
   methods: ['0x617ba037'], // supply(address,uint256,address,uint16)
@@ -96,6 +105,28 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'tydro-supply-usdt': [
     tydroSupply(USDT0, { usd: MIN_SUPPLY_USD, decimals: 6, pegged: true }),
   ],
+
+  // NFT holder dailies: ERC-721 collections on Ink (name/symbol/supply and
+  // supportsInterface(0x80ac58cd) checked onchain). Only balanceOf counts,
+  // so one NFT moved between wallets can be claimed by each of them.
+  'hold-templars-of-the-storm': [
+    {
+      type: 'nft-holder',
+      contract: '0x46625E7de9894D83fca49E79cB53B5C25550cE99',
+    },
+  ],
+  'hold-rekt-ink': [
+    {
+      type: 'nft-holder',
+      contract: '0x25Aa78Ab6785A4b0aeFF5c170998992Fd958d43d',
+    },
+  ],
+  'hold-ink-bunnies': [
+    {
+      type: 'nft-holder',
+      contract: '0x4443970B315d3c08C2f962fe00770c52396AFDb7',
+    },
+  ],
 };
 
 // The n-th (0-based) 32-byte ABI word after the selector, or null.
@@ -110,7 +141,7 @@ const firstArgAddress = (input: string) => {
 };
 
 // Contract, method and first argument: everything that needs no price.
-const matchesCall = (spec: VerifierSpec, tx: ExplorerTx) => {
+const matchesCall = (spec: ContractCallSpec, tx: ExplorerTx) => {
   const to = tx.to.toLowerCase();
   const method = tx.methodId.toLowerCase();
   return (
@@ -148,7 +179,7 @@ export const findMatchingTx = async (
 ) => {
   for (const tx of txs) {
     for (const spec of specs) {
-      if (!matchesCall(spec, tx)) continue;
+      if (spec.type !== 'contract-call' || !matchesCall(spec, tx)) continue;
       if (!spec.minUsd || (await meetsMinimum(spec.minUsd, tx, priceOf))) {
         return tx;
       }
