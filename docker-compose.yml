@@ -37,8 +37,10 @@ services:
       - '3000:3000'
     volumes:
       - ./backend:/app
-      # Keep the container's Linux node_modules instead of the host's.
-      - /app/node_modules
+      # The container's Linux node_modules, not the host's. A named volume
+      # survives `down`, so it isn't re-copied from the image on every `up`
+      # (slow on Windows); `npm run deps` refreshes it.
+      - backend-node-modules:/app/node_modules
 
   frontend:
     build:
@@ -52,7 +54,9 @@ services:
       - '5173:5173'
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend-node-modules:/app/node_modules
 
 volumes:
   postgres-data:
+  backend-node-modules:
+  frontend-node-modules:

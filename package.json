@@ -5,7 +5,7 @@
     "dev": "docker compose up --build",
     "down": "docker compose down",
     "logs": "docker compose logs -f",
-    "deps": "docker compose up --build --renew-anon-volumes -d",
+    "deps": "docker compose down && docker volume rm -f ink-quests_backend-node-modules ink-quests_frontend-node-modules && docker compose up --build -d",
     "db:migrate": "docker compose exec backend npm run db:migrate",
     "db:generate": "docker compose exec backend npm run db:generate",
     "db:seed": "docker compose exec backend npm run db:seed",
