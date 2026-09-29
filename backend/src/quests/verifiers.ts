@@ -268,3 +268,32 @@ export const matchingRelayBridge = (
     usd >= spec.minUsd;
   return ok && inkTx ? (inkTx.hash as Hex) : null;
 };
+
+// The verifier with every amount check set to `usd` (a quest's own
+// minimum, e.g. its $5 variant); null keeps the verifier's defaults.
+export const withMinUsd = (
+  specs: VerifierSpec[],
+  usd: number | null,
+): VerifierSpec[] =>
+  usd === null
+    ? specs
+    : specs.map((spec) => {
+        if (spec.type === 'contract-call' && spec.minUsd) {
+          return { ...spec, minUsd: { ...spec.minUsd, usd } };
+        }
+        if (spec.type === 'relay-bridge' || spec.type === 'inkyswap-swap') {
+          return { ...spec, minUsd: usd };
+        }
+        return spec;
+      });
+
+// The minimum a verifier asks for, for messages; $1 if it has none.
+export const minUsdOf = (specs: VerifierSpec[]) => {
+  for (const spec of specs) {
+    if (spec.type === 'contract-call' && spec.minUsd) return spec.minUsd.usd;
+    if (spec.type === 'relay-bridge' || spec.type === 'inkyswap-swap') {
+      return spec.minUsd;
+    }
+  }
+  return MIN_QUEST_USD;
+};

@@ -11,25 +11,29 @@ import {
 import { and, eq, inArray } from 'drizzle-orm';
 import type { Address } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
+import { DailyScheduleService } from '../catalog/daily-schedule.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { questCompletions, quests } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
 import { VerificationService, type Verification } from './verification.service';
-import { VERIFIERS } from './verifiers';
+import { minUsdOf, VERIFIERS, withMinUsd } from './verifiers';
 
 // Explorers and Relay index a few seconds behind the chain, so a fresh
 // transaction may not be visible on the first try.
-const MISSING_MESSAGES: Record<
-  Extract<Verification, { done: false }>['missing'],
-  string
-> = {
-  transaction:
-    'No matching transaction found yet (swaps and supplies need to be worth at least $1). If you just made it, try again in a minute',
-  nft: 'No NFT from this collection found in your wallet',
-  bridge:
-    'No Relay bridge to Ink found yet today (at least $1 from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute',
+const missingMessage = (
+  missing: Extract<Verification, { done: false }>['missing'],
+  minUsd: number,
+) => {
+  switch (missing) {
+    case 'transaction':
+      return `No matching transaction worth at least $${minUsd} found yet. If you just made it, try again in a minute`;
+    case 'nft':
+      return 'No NFT from this collection found in your wallet';
+    case 'bridge':
+      return `No Relay bridge of at least $${minUsd} to Ink found yet today (from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute`;
+  }
 };
 
 @Injectable()
@@ -39,6 +43,7 @@ export class QuestsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly verification: VerificationService,
+    private readonly schedule: DailyScheduleService,
     private readonly referrals: ReferralsService,
   ) {}
 
@@ -64,6 +69,7 @@ export class QuestsService {
         kind: quests.kind,
         points: quests.points,
         verifier: quests.verifier,
+        minUsd: quests.minUsd,
         createdAt: quests.createdAt,
       })
       .from(quests)
@@ -71,10 +77,20 @@ export class QuestsService {
       .limit(1);
     if (!quest) throw new NotFoundException('Quest not found');
 
-    const spec = quest.verifier ? VERIFIERS[quest.verifier] : undefined;
-    if (!spec) {
+    const verifier = quest.verifier ? VERIFIERS[quest.verifier] : undefined;
+    if (!verifier) {
       throw new BadRequestException("This quest can't be claimed yet");
     }
+    // Only the day's rotating set can be claimed, not the whole catalog.
+    if (
+      quest.kind === 'daily' &&
+      !(await this.schedule.isScheduled(quest.id, now))
+    ) {
+      throw new BadRequestException("This isn't one of today's daily quests");
+    }
+    // The $1/$5/$10 variants of a quest share a verifier; the quest says how
+    // much it takes.
+    const spec = withMinUsd(verifier, quest.minUsd);
 
     const period = questPeriod(quest.kind, now);
     const alreadyClaimed = await this.db
@@ -108,7 +124,9 @@ export class QuestsService {
     }
 
     if (!result.done) {
-      throw new UnprocessableEntityException(MISSING_MESSAGES[result.missing]);
+      throw new UnprocessableEntityException(
+        missingMessage(result.missing, minUsdOf(spec)),
+      );
     }
 
     // The unique index settles a race between two parallel claims.

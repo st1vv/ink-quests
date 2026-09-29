@@ -80,7 +80,19 @@ Rows are matched by `slug`, so never rename one; every other field is overwritte
 A partner or quest removed from the file is deactivated rather than deleted, since completions
 reference it. A quest with `verifier: null` is listed but can't be claimed yet.
 
-Public routes: `GET /quests/daily`, `GET /partners`, `GET /partners/:slug` (with its quests).
+### Daily rotation
+
+The daily quests in `seed.ts` are a pool: each UTC day shows **3** of them, picked from 3
+different groups and avoiding the previous day's groups when possible (`src/catalog/rotation.ts`).
+The pick depends only on the day, and the day's set is stored in `daily_quest_schedule` the first
+time the day is requested, so it stays the same for everyone all day. Only quests with a verifier
+are picked, and only the day's set can be claimed.
+
+Amount quests (swap, supply, bridge) come in $1 / $5 / $10 variants built by `tiered()` in
+`seed.ts`: each step is worth 10 XP more, sets `minUsd` on the quest (which overrides the
+verifier's minimum), and shares a `groupKey`, so a day never shows two variants of one quest.
+
+Public routes: `GET /quests/daily` (today's 3), `GET /partners`, `GET /partners/:slug` (with its quests).
 
 ## Claiming quests
 

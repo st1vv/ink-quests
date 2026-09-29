@@ -5,6 +5,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
@@ -112,11 +113,36 @@ export const quests = pgTable(
     // Key of the server-side verifier that checks the quest onchain;
     // null means the quest can't be claimed yet.
     verifier: varchar({ length: 64 }),
+    // Minimum USD value for verifiers that check an amount (swap, supply,
+    // bridge); null keeps the verifier's own minimum.
+    minUsd: integer(),
+    // Variants of one quest (e.g. the $1/$5/$10 swap) share a group, so the
+    // daily rotation never shows two of them on the same day. Null means
+    // the quest is its own group.
+    groupKey: varchar({ length: 64 }),
     sortOrder: integer().notNull().default(0),
     isActive: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index().on(t.kind, t.isActive)],
+);
+
+// The daily quests shown on each UTC day, picked from the active daily
+// catalog when the day is first requested and kept, so the day's set stays
+// the same even if the catalog changes.
+export const dailyQuestSchedule = pgTable(
+  'daily_quest_schedule',
+  {
+    day: date({ mode: 'string' }).notNull(),
+    position: integer().notNull(),
+    questId: integer()
+      .notNull()
+      .references(() => quests.id),
+  },
+  (t) => [
+    primaryKey({ columns: [t.day, t.position] }),
+    uniqueIndex().on(t.day, t.questId),
+  ],
 );
 
 export const questCompletions = pgTable(

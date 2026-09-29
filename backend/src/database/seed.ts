@@ -48,6 +48,36 @@ const PARTNERS: SeedPartner[] = [
   },
 ];
 
+// Amount quests come in $1 / $5 / $10 variants, each 10 XP more than the
+// last. They share a group, so the daily rotation picks only one of them a
+// day. The $1 variant keeps the original slug and its completion history.
+const AMOUNT_TIERS = [1, 5, 10];
+const TIER_BONUS_XP = 10;
+
+const tiered = (quest: {
+  slug: string;
+  title: (usd: number) => string;
+  description: (usd: number) => string;
+  actionUrl: string;
+  points: number;
+  sortOrder: number;
+  verifier: string;
+}): SeedQuest[] =>
+  AMOUNT_TIERS.map((usd, i) => ({
+    slug: i === 0 ? quest.slug : `${quest.slug}-${usd}usd`,
+    kind: 'daily',
+    title: quest.title(usd),
+    description: quest.description(usd),
+    actionUrl: quest.actionUrl,
+    points: quest.points + i * TIER_BONUS_XP,
+    sortOrder: quest.sortOrder,
+    verifier: quest.verifier,
+    minUsd: usd,
+    groupKey: quest.slug,
+  }));
+
+// The daily pool: each day shows 3 of these (see catalog/rotation.ts), from
+// 3 different groups.
 const QUESTS: SeedQuest[] = [
   {
     slug: 'daily-gm',
@@ -59,52 +89,48 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 1,
     verifier: 'ink-gm',
   },
-  {
+  ...tiered({
     slug: 'daily-inkyswap-swap',
-    kind: 'daily',
-    title: 'Swap on InkySwap',
-    description:
-      'Swap at least $1 worth on InkySwap to complete this daily quest.',
+    title: (usd) => `Swap $${usd} on InkySwap`,
+    description: (usd) =>
+      `Swap at least $${usd} worth on InkySwap to complete this daily quest.`,
     actionUrl: 'https://inkyswap.com/swap',
     points: 30,
     sortOrder: 2,
     verifier: 'inkyswap-swap',
-  },
-  {
+  }),
+  ...tiered({
     slug: 'daily-tydro-supply-weth',
-    kind: 'daily',
-    title: 'Supply WETH on Tydro',
-    description:
-      'Supply at least $1 of WETH (or ETH) to the Tydro lending market to complete this daily quest.',
+    title: (usd) => `Supply $${usd} of WETH on Tydro`,
+    description: (usd) =>
+      `Supply at least $${usd} of WETH (or ETH) to the Tydro lending market to complete this daily quest.`,
     actionUrl:
       'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3',
     points: 30,
     sortOrder: 4,
     verifier: 'tydro-supply-weth',
-  },
-  {
+  }),
+  ...tiered({
     slug: 'daily-tydro-supply-usdt',
-    kind: 'daily',
-    title: 'Supply USDT on Tydro',
-    description:
-      'Supply at least 1 USDT to the Tydro lending market to complete this daily quest.',
+    title: (usd) => `Supply ${usd} USDT on Tydro`,
+    description: (usd) =>
+      `Supply at least ${usd} USDT to the Tydro lending market to complete this daily quest.`,
     actionUrl:
       'https://app.tydro.com/reserve-overview/?underlyingAsset=0x0200c29006150606b650577bbe7b6248f58470c1&marketName=proto_ink_v3',
     points: 30,
     sortOrder: 5,
     verifier: 'tydro-supply-usdt',
-  },
-  {
+  }),
+  ...tiered({
     slug: 'daily-relay-bridge',
-    kind: 'daily',
-    title: 'Bridge to Ink with Relay',
-    description:
-      'Bridge at least $1 to Ink from Ethereum, Base, Arbitrum or Robinhood Chain with Relay.',
+    title: (usd) => `Bridge $${usd} to Ink with Relay`,
+    description: (usd) =>
+      `Bridge at least $${usd} to Ink from Ethereum, Base, Arbitrum or Robinhood Chain with Relay.`,
     actionUrl: 'https://relay.link/bridge/ink',
     points: 50,
     sortOrder: 9,
     verifier: 'relay-bridge-to-ink',
-  },
+  }),
   {
     slug: 'daily-hold-templars-of-the-storm',
     kind: 'daily',

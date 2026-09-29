@@ -4,6 +4,8 @@ import type { RelayRequest } from './relay.client';
 import {
   findMatchingTx,
   matchingRelayBridge,
+  minUsdOf,
+  withMinUsd,
   USD_PRICE_UNIT,
   VERIFIERS,
   type VerifierSpec,
@@ -13,6 +15,7 @@ const POOL = '0x2816cf15f6d2a220e789aa011d5ee4eb6c47feba';
 const GATEWAY = '0xde090efcd6ef4b86792e2d84e55a5fa8d49d25d2';
 const WETH = '4200000000000000000000000000000000000006';
 const USDT = '0200c29006150606b650577bbe7b6248f58470c1';
+const USDT_ADDR = '0200c29006150606b650577bbe7b6248f58470c1';
 const USDC = '2d270e6886d130d724215a266106e6832161eaed';
 
 const ETH_USD = 2500n;
@@ -203,5 +206,35 @@ describe('relay-bridge-to-ink', () => {
 
   it('rejects bridges from before today', () => {
     expect(match(request({ createdAt: '2026-09-27T23:59:59Z' }))).toBeNull();
+  });
+});
+
+describe('withMinUsd', () => {
+  it('sets the amount on every amount check and keeps the rest', () => {
+    for (const key of [
+      'tydro-supply-weth',
+      'tydro-supply-usdt',
+      'inkyswap-swap',
+      'relay-bridge-to-ink',
+    ]) {
+      const specs = withMinUsd(VERIFIERS[key], 10);
+      expect(minUsdOf(specs)).toBe(10);
+      expect(minUsdOf(VERIFIERS[key])).toBe(1);
+    }
+  });
+
+  it('leaves verifiers without amounts, and null, untouched', () => {
+    expect(withMinUsd(VERIFIERS['ink-gm'], 5)).toEqual(VERIFIERS['ink-gm']);
+    expect(withMinUsd(VERIFIERS['inkyswap-swap'], null)).toBe(
+      VERIFIERS['inkyswap-swap'],
+    );
+  });
+
+  it('a $10 supply quest rejects $5 and accepts $10', async () => {
+    const specs = withMinUsd(VERIFIERS['tydro-supply-usdt'], 10);
+    const usdt = (units: bigint) =>
+      tx(POOL, supply(USDT_ADDR, units * 10n ** 6n));
+    expect(await matches(specs, usdt(5n))).toBe(false);
+    expect(await matches(specs, usdt(10n))).toBe(true);
   });
 });
