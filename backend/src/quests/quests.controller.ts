@@ -7,6 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import type { AuthUser } from '../auth/auth.service';
 import { QuestsService } from './quests.service';
@@ -21,6 +22,8 @@ export class QuestsController {
     return { questIds: await this.quests.completedQuestIds(user.id) };
   }
 
+  // Each claim spends explorer API credits.
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('quests/:id/claim')
   @HttpCode(200)
   claim(

@@ -14,6 +14,9 @@ const envSchema = z.object({
   EXPLORER_API_KEY: z.string().min(1).optional(),
   // Overrides the Blockscout API base picked from the key above.
   EXPLORER_API_URL: z.url().optional(),
+  // Reverse proxies in front of the API (1 on Railway, 0 locally), so rate
+  // limits key on the real client IP.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   // Relay's public API, used to verify bridges to Ink.
   RELAY_API_URL: z.url().default('https://api.relay.link'),
 });

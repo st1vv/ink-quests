@@ -46,3 +46,63 @@ Containers keep their own Linux `node_modules` in named volumes, separate from t
 `docker compose down` / `up` don't copy them again. After installing a package
 (`cd frontend && npm i some-package`) or pulling a `package.json` change, run `npm run deps`:
 it recreates those volumes so the containers pick the new packages up.
+
+## Deploy
+
+Production runs on two services under one domain, so the session cookie (`SameSite=Lax`) works:
+
+| What     | Where            | Address                     |
+| -------- | ---------------- | --------------------------- |
+| Frontend | Cloudflare Pages | `https://inkquests.xyz`     |
+| Backend  | Railway (Docker) | `https://api.inkquests.xyz` |
+| Database | Railway Postgres | private network only        |
+
+Every push to `main` redeploys both. Each backend deploy applies pending migrations and re-applies
+the quest catalog from `seed.ts` before the API starts (see `backend/Dockerfile`).
+
+### Backend on Railway
+
+1. New project → **Deploy from GitHub repo** → this repo.
+2. In the service **Settings**, set **Root Directory** to `backend`. The build and health check come
+   from `backend/railway.json` (`Dockerfile`, `GET /health`); if Railway doesn't pick it up, set
+   **Config file path** to `/backend/railway.json`.
+3. In the same project, **+ New → Database → PostgreSQL**.
+4. Service **Variables**:
+
+   | Variable           | Value                                                          |
+   | ------------------ | -------------------------------------------------------------- |
+   | `DATABASE_URL`     | `${{Postgres.DATABASE_URL}}` (reference to the database above) |
+   | `FRONTEND_ORIGIN`  | `https://inkquests.xyz`                                        |
+   | `EXPLORER_API_KEY` | Blockscout PRO key (dev.blockscout.com)                        |
+   | `TRUST_PROXY_HOPS` | `1` (Railway's proxy), so rate limits see the client IP        |
+   | `INK_RPC_URL`      | Recommended: a dedicated Ink RPC (the public one rate-limits)  |
+
+   `PORT` is set by Railway.
+
+5. **Settings → Networking → Custom Domain** → `api.inkquests.xyz`. Railway shows a CNAME target;
+   add it in Cloudflare **DNS** as `CNAME api → <target>`, proxy status **DNS only**.
+
+### Frontend on Cloudflare Pages
+
+1. **Workers & Pages → Create → Pages → Connect to Git** → this repo.
+2. Build settings: root directory `frontend`, build command `npm run build`, output directory
+   `dist`.
+3. **Environment variables** (Production), read at build time, so redeploy after changing them:
+
+   | Variable                        | Value                                |
+   | ------------------------------- | ------------------------------------ |
+   | `VITE_API_URL`                  | `https://api.inkquests.xyz`          |
+   | `VITE_WALLETCONNECT_PROJECT_ID` | Reown project id                     |
+   | `NODE_VERSION`                  | `24` (Vite 8 needs a recent Node.js) |
+
+4. **Custom domains** → `inkquests.xyz`. Also add `www.inkquests.xyz` and redirect it to the apex
+   (Cloudflare **Rules → Redirect Rules**): the API only allows `https://inkquests.xyz` via CORS.
+5. On dashboard.reown.com, add `https://inkquests.xyz` to the project's domain allowlist.
+
+Pages serves `index.html` for unknown paths, so direct links like `/leaderboard` work.
+
+### After the first deploy
+
+- `https://api.inkquests.xyz/health` → `{"status":"ok","db":"up"}`.
+- Open `https://inkquests.xyz`, connect a wallet, sign in, check in.
+- Turn on backups for the Railway Postgres database.
