@@ -7,6 +7,7 @@ import {
 import { ink } from "viem/chains";
 import { createSiweMessage } from "viem/siwe";
 import { apiFetch } from "@/lib/api";
+import { notifyError, toast } from "@/lib/notify";
 import { clearStoredReferral, storedReferral } from "@/app/auth/referral";
 import {
   sessionQueryKey,
@@ -57,8 +58,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             // Used or not (an existing account ignores it), it's done.
             clearStoredReferral();
             queryClient.setQueryData(sessionQueryKey, session);
+            toast.success("Signed in");
             return true;
-          } catch {
+          } catch (err) {
+            // RainbowKit only says "retry"; the toast says why.
+            notifyError(err);
             return false;
           }
         },

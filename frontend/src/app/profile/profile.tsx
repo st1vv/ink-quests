@@ -15,6 +15,7 @@ import {
   formatNumber,
   shortAddress,
 } from "@/lib/format";
+import { toast } from "@/lib/notify";
 import { useAuth } from "@/app/auth/use-auth";
 import { useProgress } from "@/app/home/use-progress";
 import { useMyRank } from "@/app/leaderboard/use-leaderboard";
@@ -115,9 +116,11 @@ const CopyButton = ({ text, label }: { text: string; label: string }) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      toast.success(`Copied ${label}`);
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard blocked (e.g. insecure context): nothing to do.
+      // Clipboard blocked (e.g. insecure context or no permission).
+      toast.error(`Couldn't copy the ${label}`);
     }
   };
 

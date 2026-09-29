@@ -105,12 +105,6 @@ export const HomeProgress = () => {
                   : "Daily Check-in"}
             </Button>
           )}
-
-          {checkIn.isError && (
-            <p role="alert" className="text-center text-sm text-rose-300">
-              Couldn't check in. Try again.
-            </p>
-          )}
         </div>
       </div>
     </Surface>

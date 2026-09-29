@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
+import { toast } from "@/lib/notify";
+
+type CheckInResult = { day: string; points: number; bonusPoints: number };
 
 export type Progress = {
   totalXp: number;
@@ -40,19 +43,33 @@ export const useCheckIn = () => {
   return useMutation({
     mutationFn: async () => {
       try {
-        await apiFetch("/me/check-in", { method: "POST" });
+        return await apiFetch<CheckInResult>("/me/check-in", {
+          method: "POST",
+        });
       } catch (err) {
         // Checked in from another tab: the refetch below shows it.
-        if (!(err instanceof ApiError && err.status === 409)) throw err;
+        if (err instanceof ApiError && err.status === 409) return null;
+        throw err;
       }
     },
-    onSuccess: () =>
-      Promise.all([
+    onSuccess: (result) => {
+      if (!result) toast.info("Already checked in today");
+      else if (result.bonusPoints > 0) {
+        toast.success(
+          `Checked in · +${result.points + result.bonusPoints} XP`,
+          {
+            description: `Includes +${result.bonusPoints} XP for a full week of check-ins 🔥`,
+          },
+        );
+      } else toast.success(`Checked in · +${result.points} XP`);
+
+      return Promise.all([
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),
-      ]),
+      ]);
+    },
   });
 };

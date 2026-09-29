@@ -5,7 +5,6 @@ import { Badge } from "@/shared/ui/badge";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useDailyQuests, type Quest } from "@/app/quests/catalog";
 import { useClaimQuest, useCompletions } from "@/app/quests/claims";
-import { ApiError } from "@/lib/api";
 
 // Completed comes from the server; the rest is the in-page flow of opening
 // the quest and waiting a moment before the claim button appears.
@@ -189,14 +188,6 @@ const QuestRow = ({ step, quest, onStart }: QuestRowProps) => {
           <p className="mt-1 text-sm leading-6 text-white/60">
             {quest.description}
           </p>
-
-          {claim.isError && !isCompleted && (
-            <p role="alert" className="mt-2 text-sm text-rose-300">
-              {claim.error instanceof ApiError
-                ? claim.error.message
-                : "Couldn't reach the server. Try again."}
-            </p>
-          )}
         </div>
       </div>
 
@@ -225,7 +216,9 @@ const QuestRow = ({ step, quest, onStart }: QuestRowProps) => {
         {quest.status === "claim_ready" && quest.claimable && (
           <Button
             variant="secondary"
-            onClick={requireAuth(() => claim.mutate(quest.id))}
+            onClick={requireAuth(() =>
+              claim.mutate({ questId: quest.id, title: quest.title }),
+            )}
             disabled={claim.isPending}
             className="w-full md:w-auto"
           >

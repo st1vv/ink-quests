@@ -1,5 +1,4 @@
-const API_URL: string =
-  import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -26,7 +25,15 @@ export const apiFetch = async <T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.message ?? res.statusText);
+    const message: unknown = body?.message;
+    throw new ApiError(
+      res.status,
+      Array.isArray(message)
+        ? message.join(". ")
+        : typeof message === "string"
+          ? message
+          : res.statusText,
+    );
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
 };

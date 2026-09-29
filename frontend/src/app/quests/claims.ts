@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
+import { toast } from "@/lib/notify";
 
 type CompletionsResponse = { questIds: number[] };
 
@@ -25,7 +26,7 @@ export const useCompletions = () => {
 export const useClaimQuest = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (questId: number) => {
+    mutationFn: async ({ questId }: { questId: number; title: string }) => {
       try {
         return await apiFetch<ClaimResult>(`/quests/${questId}/claim`, {
           method: "POST",
@@ -36,14 +37,18 @@ export const useClaimQuest = () => {
         throw err;
       }
     },
-    onSuccess: () =>
-      Promise.all([
+    onSuccess: (result, { title }) => {
+      if (result) toast.success(`+${result.points} XP · ${title}`);
+      else toast.info(`${title}: already claimed today`);
+
+      return Promise.all([
         queryClient.invalidateQueries({ queryKey: ["completions"] }),
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),
-      ]),
+      ]);
+    },
   });
 };
