@@ -155,15 +155,17 @@ const QUESTS: SeedQuest[] = [
   // is paid once all of them are verified. Follows on X need a linked X
   // account and are taken on trust; the rest are checked.
   {
+    // The slug keeps the old handle on purpose: renaming it would make a new
+    // task and send everyone who already verified it back to redo it.
     slug: 'inkquests-follow-stanislav1w',
     kind: 'partner',
     partner: 'inkquests',
-    title: 'Follow @stanislav1w on X',
+    title: 'Follow @stivcrypto on X',
     description: 'Follow the builder behind InkQuests on X.',
-    actionUrl: 'https://x.com/intent/follow?screen_name=stanislav1w',
+    actionUrl: 'https://x.com/intent/follow?screen_name=stivcrypto',
     points: 0,
     sortOrder: 1,
-    verifier: 'x-follow-stanislav1w',
+    verifier: 'x-follow-stivcrypto',
   },
   {
     slug: 'inkquests-follow-inkquests',

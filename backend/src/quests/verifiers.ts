@@ -166,7 +166,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
 
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
-  'x-follow-stanislav1w': [{ type: 'x-follow', handle: 'stanislav1w' }],
+  'x-follow-stivcrypto': [{ type: 'x-follow', handle: 'stivcrypto' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
 
   'hold-templars-of-the-storm': [
