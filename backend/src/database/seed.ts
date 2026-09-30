@@ -101,9 +101,9 @@ const QUESTS: SeedQuest[] = [
   }),
   ...tiered({
     slug: 'daily-tydro-supply-weth',
-    title: (usd) => `Supply $${usd} of WETH on Tydro`,
+    title: (usd) => `Supply $${usd} of ETH on Tydro`,
     description: (usd) =>
-      `Supply at least $${usd} of WETH (or ETH) to the Tydro lending market to complete this daily quest.`,
+      `Supply at least $${usd} of ETH (or WETH) to the Tydro lending market to complete this daily quest.`,
     actionUrl:
       'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3',
     points: 30,
