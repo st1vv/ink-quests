@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq, sql } from 'drizzle-orm';
+import { and, count, eq, gt, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
-import { questCompletions, users } from '../database/schema';
+import { campaignRewards, questCompletions, users } from '../database/schema';
 
 export const ACTIVITY_LIMIT = 10;
 
@@ -27,12 +27,23 @@ export class ProfileService {
       .from(users)
       .where(eq(users.id, userId));
 
-    const [{ questsCompleted }] = await this.db
-      .select({ questsCompleted: count() })
+    // Quests that paid XP (daily ones), plus finished campaigns: a campaign
+    // counts once, not once per 0 XP task.
+    const [{ quests }] = await this.db
+      .select({ quests: count() })
       .from(questCompletions)
-      .where(eq(questCompletions.userId, userId));
+      .where(
+        and(
+          eq(questCompletions.userId, userId),
+          gt(questCompletions.points, 0),
+        ),
+      );
+    const [{ campaigns }] = await this.db
+      .select({ campaigns: count() })
+      .from(campaignRewards)
+      .where(eq(campaignRewards.userId, userId));
 
-    return { joinedAt: user.joinedAt, questsCompleted };
+    return { joinedAt: user.joinedAt, questsCompleted: quests + campaigns };
   }
 
   // Latest XP-earning actions, newest first.
@@ -52,7 +63,9 @@ export class ProfileService {
         select 'quest', q.title, c.points, 0, c.completed_at, c.tx_hash
         from quest_completions c
         join quests q on q.id = c.quest_id
-        where c.user_id = ${userId}
+        -- Campaign tasks are worth 0 XP on their own; the campaign's reward
+        -- shows up as its own row.
+        where c.user_id = ${userId} and c.points > 0
         union all
         select 'referral', u.address, r.points, 0, r.created_at, null
         from referral_rewards r
