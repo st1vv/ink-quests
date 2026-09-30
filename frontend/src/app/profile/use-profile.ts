@@ -8,9 +8,9 @@ export type ProfileStats = {
 };
 
 export type Activity = {
-  type: "check-in" | "quest" | "referral";
-  // Quest title, the invited friend's address for referrals, null for
-  // check-ins.
+  type: "check-in" | "quest" | "referral" | "campaign";
+  // Quest or campaign title, the invited friend's address for referrals,
+  // null for check-ins.
   title: string | null;
   points: number;
   // Full-week bonus paid with a Sunday check-in.

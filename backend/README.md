@@ -144,8 +144,9 @@ bundler can't claim yet.
 
 `GET /me/progress` (signed in) returns `{ totalXp, level, levelXp, nextLevelXp, streak,
 checkedInToday, week, checkInXp, fullWeekBonusXp }`; `week` is Monday to Sunday of the current UTC
-week, true where the user checked in. `totalXp` sums quest completions and check-ins.
-`levelXp` / `nextLevelXp` are the total XP at which the current and next level start.
+week, true where the user checked in. `totalXp` sums quest completions, check-ins, referral
+rewards and campaign rewards. `levelXp` / `nextLevelXp` are the total XP at which the current and
+next level start.
 
 - **Level**: reaching level L takes `125 · L · (L − 1)` XP in total (0, 250, 750, 1500, 2500, …),
   so each level needs 250 XP more than the previous one. The curve lives in
@@ -189,3 +190,38 @@ Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
   unique `referred_id`). Waiting for an onchain quest keeps free sign-ups from farming it.
 - `GET /me/referrals`: `{ code, invited, rewarded, xpEarned, rewardXp }`. Referral XP counts in
   `/me/progress`, the leaderboard and `/me/activity` (type `referral`).
+
+## X accounts and partner quests
+
+Wallets link an X account with OAuth 2.0 + PKCE: `GET /auth/x/start` (signed in, opened as a
+full-page navigation) redirects to X, X redirects back to `GET /auth/x/callback`, which stores the
+X user id and handle and sends the browser to `<frontend>/profile?x=<result>`. No tokens are kept.
+One X account per wallet (unique `x_user_id`), and a wallet can't switch to another X account, so
+X tasks can't be farmed across wallets. `GET /me/x` → `{ available, username }`.
+
+### Partner quests (campaigns)
+
+The Quests page lists campaigns: partners (`PARTNERS` in `seed.ts`) with one-time tasks, which are
+`kind: 'partner'` quests with `partner: '<slug>'`. `GET /partners` returns only partners with active
+tasks, plus `tasks` and `rewardXp`; `GET /partners/:slug` returns the tasks with a `type` for the UI
+(`x-follow`, `nft-holder`, `daily-quest`, `onchain`). A task uses any verifier; two are campaign
+specific:
+
+- `{ type: 'x-follow', handle }`: follow an X account. Not checked with X (its API charges per read
+  and has no cheap "does A follow B" lookup): the claim needs a linked X account and is taken on
+  trust.
+- `{ type: 'daily-quest-done' }`: the user has completed at least one daily quest.
+
+Neither is an onchain action by the user, so they don't pay referral rewards. A partner with an
+empty `imageUrl` gets a gradient banner on the frontend.
+
+**Reward.** Tasks are worth 0 XP and are only verified one by one (the usual
+`POST /quests/:id/claim`, recording a 0 XP completion). The campaign pays the partner's
+`rewardXp` once, when every active task is verified: `POST /partners/:slug/claim` (422 with how many
+tasks are left, 409 if already claimed). Rewards live in `campaign_rewards` and count toward XP, the
+leaderboard and activity (type `campaign`); `GET /me/campaigns` → `{ claimed: slug[] }`.
+
+Setup: create a project and app on developer.x.com, turn on **OAuth 2.0** as a **Web App**
+(confidential client), set the callback URL to `X_REDIRECT_URI` and the website to the frontend,
+then set `X_CLIENT_ID`, `X_CLIENT_SECRET` and `X_REDIRECT_URI`. Linking reads `/2/users/me` once,
+which X bills under its pay-per-use pricing.

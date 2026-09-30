@@ -8,7 +8,12 @@ import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
-import { CheckIcon, CopyIcon, ExternalLinkIcon } from "@/shared/ui/icons";
+import {
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  XLogoIcon,
+} from "@/shared/ui/icons";
 import {
   formatDate,
   formatDateTime,
@@ -17,6 +22,7 @@ import {
 } from "@/lib/format";
 import { toast } from "@/lib/notify";
 import { useAuth } from "@/app/auth/use-auth";
+import { connectX, useXAccount, useXLinkResult } from "@/app/x/use-x";
 import { useProgress } from "@/app/home/use-progress";
 import { useMyRank } from "@/app/leaderboard/use-leaderboard";
 import {
@@ -58,6 +64,8 @@ const SignedOutProfile = ({ loading }: { loading: boolean }) => {
 };
 
 const SignedInProfile = ({ address }: { address: Address }) => {
+  // Back from X's consent page: toast the outcome.
+  useXLinkResult();
   const { data: progress } = useProgress();
   const { data: rank } = useMyRank();
   const { data: stats } = useProfileStats();
@@ -92,6 +100,8 @@ const SignedInProfile = ({ address }: { address: Address }) => {
           />
         </div>
       </PageIntro>
+
+      <XAccountCard />
 
       <ReferralCard />
 
@@ -137,6 +147,53 @@ const CopyButton = ({ text, label }: { text: string; label: string }) => {
         <CopyIcon className="h-4 w-4" />
       )}
     </button>
+  );
+};
+
+const XAccountCard = () => {
+  const { data: x } = useXAccount();
+
+  return (
+    <Surface>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/5 text-white">
+            <XLogoIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-white md:text-xl">
+              X account
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-white/60">
+              {x?.username
+                ? "Linked to this wallet. Social quests on the Quests page are open to you."
+                : "Link your X account to take part in social quests. One X account per wallet."}
+            </p>
+          </div>
+        </div>
+
+        {x?.username ? (
+          <a
+            href={`https://x.com/${x.username}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 font-mono text-sm text-white transition hover:bg-white/10"
+          >
+            @{x.username}
+            <ExternalLinkIcon className="h-3.5 w-3.5 text-white/50" />
+          </a>
+        ) : (
+          <Button
+            onClick={connectX}
+            disabled={!x || !x.available}
+            className="w-full md:w-auto"
+          >
+            <XLogoIcon className="h-4 w-4" />
+            {x && !x.available ? "Coming soon" : "Connect X"}
+          </Button>
+        )}
+      </div>
+    </Surface>
   );
 };
 
@@ -253,10 +310,12 @@ const ACTIVITY_ICONS: Record<
   "check-in": { icon: "🔥", style: "bg-ink/20" },
   quest: { icon: "✓", style: "bg-emerald-400/15 text-emerald-300" },
   referral: { icon: "🤝", style: "bg-sky-400/15" },
+  campaign: { icon: "🏆", style: "bg-amber-400/15" },
 };
 
 const activityTitle = (item: Activity) => {
   if (item.type === "check-in") return "Daily check-in";
+  if (item.type === "campaign") return `Completed the ${item.title} quest`;
   if (item.type === "referral" && item.title) {
     return `Friend ${shortAddress(item.title)} completed a quest`;
   }

@@ -3,6 +3,7 @@ import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import {
+  campaignRewards,
   checkIns,
   questCompletions,
   referralRewards,
@@ -49,7 +50,14 @@ export class ProgressService {
     const days = await this.recentCheckInDays(userId, now);
     const checkedIn = new Set(days);
 
-    const totalXp = questXp + checkInXp + referralXp;
+    const [{ campaignXp }] = await this.db
+      .select({
+        campaignXp: sql<number>`coalesce(sum(${campaignRewards.points}), 0)::int`,
+      })
+      .from(campaignRewards)
+      .where(eq(campaignRewards.userId, userId));
+
+    const totalXp = questXp + checkInXp + referralXp + campaignXp;
     return {
       totalXp,
       ...levelProgress(totalXp),

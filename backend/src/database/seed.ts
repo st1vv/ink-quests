@@ -23,28 +23,14 @@ type SeedQuest = Omit<
 
 const PARTNERS: SeedPartner[] = [
   {
-    slug: 'nado',
-    title: 'Nado',
+    slug: 'inkquests',
+    title: 'InkQuests',
     description:
-      'All-in-one CLOB DEX for spot, perps & money markets powered by unified margin. From the team that brought you Kraken.',
-    imageUrl:
-      'https://pbs.twimg.com/profile_banners/1947417601333989377/1763398031/1500x500',
-  },
-  {
-    slug: 'tydro',
-    title: 'Tydro',
-    description:
-      'A decentralized, non-custodial liquidity protocol built on Ink and powered by Aave.',
-    imageUrl:
-      'https://pbs.twimg.com/profile_banners/1927683015334928384/1755613697/1500x500',
-  },
-  {
-    slug: 'inkyswap',
-    title: 'InkySwap',
-    description:
-      "The decentralized exchange on Ink, where InkyPump's tokens get their liquidity once they reach the threshold. InkySwap handles the token trading and liquidity pools for Ink Network's DeFi ecosystem.",
-    imageUrl:
-      'https://pbs.twimg.com/profile_banners/1869047804196237312/1736419659/1500x500',
+      'Get started with InkQuests: follow us on X and complete your first daily quest.',
+    // No banner yet: the Quests page shows a branded gradient instead.
+    imageUrl: '',
+    websiteUrl: 'https://inkquests.xyz',
+    rewardXp: 100,
   },
 ];
 
@@ -164,6 +150,43 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 8,
     verifier: 'hold-ink-bunnies',
   },
+  // Campaigns (partner quests): one-time tasks grouped under a partner,
+  // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
+  // is paid once all of them are verified. Follows on X need a linked X
+  // account and are taken on trust; the rest are checked.
+  {
+    slug: 'inkquests-follow-stanislav1w',
+    kind: 'partner',
+    partner: 'inkquests',
+    title: 'Follow @stanislav1w on X',
+    description: 'Follow the builder behind InkQuests on X.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=stanislav1w',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'x-follow-stanislav1w',
+  },
+  {
+    slug: 'inkquests-follow-inkquests',
+    kind: 'partner',
+    partner: 'inkquests',
+    title: 'Follow @inkquests on X',
+    description: 'Follow InkQuests on X for news, new quests and rewards.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=inkquests',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-inkquests',
+  },
+  {
+    slug: 'inkquests-complete-daily-quest',
+    kind: 'partner',
+    partner: 'inkquests',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.
@@ -183,8 +206,8 @@ const validate = () => {
     if (q.kind === 'partner' && !q.partner) {
       errors.push(`quest "${q.slug}": partner quests need a partner`);
     }
-    if (q.kind === 'daily' && q.partner) {
-      errors.push(`quest "${q.slug}": daily quests can't have a partner`);
+    if (q.kind !== 'partner' && q.partner) {
+      errors.push(`quest "${q.slug}": only partner quests have a partner`);
     }
     if (q.verifier && !(q.verifier in VERIFIERS)) {
       errors.push(`quest "${q.slug}": unknown verifier "${q.verifier}"`);

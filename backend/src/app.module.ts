@@ -3,11 +3,13 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProgressModule } from './progress/progress.module';
 import { ReferralsModule } from './referrals/referrals.module';
+import { XModule } from './x/x.module';
 import { QuestsModule } from './quests/quests.module';
 import { validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
@@ -26,6 +28,8 @@ import { HealthController } from './health/health.controller';
     LeaderboardModule,
     ProfileModule,
     ReferralsModule,
+    XModule,
+    CampaignsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

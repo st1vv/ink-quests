@@ -38,7 +38,9 @@ export const useClaimQuest = () => {
       }
     },
     onSuccess: (result, { title }) => {
-      if (result) toast.success(`+${result.points} XP`, { description: title });
+      if (result && result.points > 0) {
+        toast.success(`+${result.points} XP`, { description: title });
+      } else if (result) toast.success("Task verified", { description: title });
       else toast.info(`${title}: already claimed today`);
 
       return Promise.all([
@@ -49,6 +51,38 @@ export const useClaimQuest = () => {
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),
       ]);
+    },
+  });
+};
+
+// Campaigns whose reward the signed-in user has claimed.
+export const useClaimedCampaigns = () => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["campaigns", address],
+    queryFn: () => apiFetch<{ claimed: string[] }>("/me/campaigns"),
+    enabled: Boolean(address),
+    select: (data) => new Set(data.claimed),
+  });
+};
+
+// A campaign's XP, once all of its tasks are verified.
+export const useClaimCampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slug }: { slug: string; title: string }) =>
+      apiFetch<{ points: number }>(`/partners/${slug}/claim`, {
+        method: "POST",
+      }),
+    onSuccess: (result, { title }) => {
+      toast.success(`+${result.points} XP`, {
+        description: `${title} quest completed 🎉`,
+      });
+      return Promise.all(
+        ["campaigns", "progress", "leaderboard", "rank", "activity"].map(
+          (key) => queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      );
     },
   });
 };

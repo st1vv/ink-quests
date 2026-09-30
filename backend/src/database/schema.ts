@@ -28,6 +28,22 @@ export const users = pgTable('users', {
   referredById: integer().references((): AnyPgColumn => users.id, {
     onDelete: 'set null',
   }),
+  // The linked X account. One X account per wallet (unique), so social
+  // quests can't be farmed across wallets.
+  xUserId: varchar({ length: 32 }).unique(),
+  xUsername: varchar({ length: 32 }),
+  xLinkedAt: timestamp({ withTimezone: true }),
+});
+
+// In-flight X OAuth logins: the PKCE verifier waits here between the
+// redirect to X and the callback. Single use, short-lived.
+export const xOauthStates = pgTable('x_oauth_states', {
+  state: varchar({ length: 64 }).primaryKey(),
+  userId: integer()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  codeVerifier: varchar({ length: 128 }).notNull(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
 });
 
 // XP paid to a referrer, once per invited user, when that user completes
@@ -94,9 +110,30 @@ export const partners = pgTable('partners', {
   description: text().notNull(),
   imageUrl: text().notNull(),
   websiteUrl: text(),
+  // XP for finishing every task of the campaign; the tasks themselves are
+  // worth nothing on their own.
+  rewardXp: integer().notNull().default(0),
   isActive: boolean().notNull().default(true),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+// A user's reward for finishing all of a campaign's tasks, once per campaign.
+export const campaignRewards = pgTable(
+  'campaign_rewards',
+  {
+    id: serial().primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    partnerId: integer()
+      .notNull()
+      .references(() => partners.id),
+    // Copied at claim time so changing the reward doesn't rewrite history.
+    points: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex().on(t.userId, t.partnerId)],
+);
 
 export const quests = pgTable(
   'quests',

@@ -7,7 +7,7 @@ import { questCompletions, users } from '../database/schema';
 export const ACTIVITY_LIMIT = 10;
 
 type ActivityRow = {
-  type: 'check-in' | 'quest' | 'referral';
+  type: 'check-in' | 'quest' | 'referral' | 'campaign';
   title: string | null;
   points: number;
   bonus_points: number;
@@ -58,6 +58,11 @@ export class ProfileService {
         from referral_rewards r
         join users u on u.id = r.referred_id
         where r.referrer_id = ${userId}
+        union all
+        select 'campaign', p.title, cr.points, 0, cr.created_at, null
+        from campaign_rewards cr
+        join partners p on p.id = cr.partner_id
+        where cr.user_id = ${userId}
       ) a
       order by at desc
       limit ${ACTIVITY_LIMIT}

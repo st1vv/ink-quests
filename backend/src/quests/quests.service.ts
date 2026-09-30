@@ -12,13 +12,14 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Address } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
 import { DailyScheduleService } from '../catalog/daily-schedule.service';
+import { XService } from '../x/x.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { questCompletions, quests } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
 import { VerificationService, type Verification } from './verification.service';
-import { minUsdOf, VERIFIERS, withMinUsd } from './verifiers';
+import { isOffchain, minUsdOf, VERIFIERS, withMinUsd } from './verifiers';
 
 // Explorers and Relay index a few seconds behind the chain, so a fresh
 // transaction may not be visible on the first try.
@@ -44,6 +45,7 @@ export class QuestsService {
     @Inject(DB) private readonly db: Database,
     private readonly verification: VerificationService,
     private readonly schedule: DailyScheduleService,
+    private readonly x: XService,
     private readonly referrals: ReferralsService,
   ) {}
 
@@ -108,14 +110,32 @@ export class QuestsService {
 
     const windowStart =
       quest.kind === 'daily' ? startOfUtcDay(now) : quest.createdAt;
+    // Follows on X are taken on trust (X's API charges per read), but the
+    // user needs a linked X account, one per wallet.
+    const follow = spec.every((s) => s.type === 'x-follow');
+    if (follow && !(await this.x.isLinked(user.id))) {
+      throw new UnprocessableEntityException(
+        'Connect your X account on your profile first',
+      );
+    }
+    const dailyDone = spec.every((s) => s.type === 'daily-quest-done');
+    if (dailyDone && !(await this.hasDoneADailyQuest(user.id))) {
+      throw new UnprocessableEntityException(
+        'Complete any daily quest first, then come back to claim',
+      );
+    }
+
     let result: Verification;
     try {
-      result = await this.verification.verify(
-        spec,
-        user.address as Address,
-        windowStart,
-        now,
-      );
+      result =
+        follow || dailyDone
+          ? { done: true, txHash: null }
+          : await this.verification.verify(
+              spec,
+              user.address as Address,
+              windowStart,
+              now,
+            );
     } catch (err) {
       this.logger.warn(`Quest check failed: ${(err as Error).message}`);
       throw new ServiceUnavailableException(
@@ -143,13 +163,24 @@ export class QuestsService {
       .returning({ points: questCompletions.points });
     if (!completion) throw new ConflictException('Already claimed');
 
-    // A verified onchain quest is what makes an invited user count.
-    await this.referrals.rewardReferrer(user.id);
+    // A verified onchain quest is what makes an invited user count; a follow
+    // or a check in our own records doesn't.
+    if (!isOffchain(spec)) await this.referrals.rewardReferrer(user.id);
 
     return {
       questId: quest.id,
       points: completion.points,
       txHash: result.txHash,
     };
+  }
+
+  private async hasDoneADailyQuest(userId: number) {
+    const [row] = await this.db
+      .select({ id: questCompletions.id })
+      .from(questCompletions)
+      .innerJoin(quests, eq(quests.id, questCompletions.questId))
+      .where(and(eq(questCompletions.userId, userId), eq(quests.kind, 'daily')))
+      .limit(1);
+    return Boolean(row);
   }
 }

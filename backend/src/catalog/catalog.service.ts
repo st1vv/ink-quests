@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { partners, quests } from '../database/schema';
+import { taskTypeOf } from '../quests/verifiers';
 import { DailyScheduleService } from './daily-schedule.service';
 
 // Public shape of a quest. The verifier key stays server-side; the client
@@ -23,6 +24,8 @@ const partnerFields = {
   description: partners.description,
   imageUrl: partners.imageUrl,
   websiteUrl: partners.websiteUrl,
+  // Paid once all tasks are verified.
+  rewardXp: partners.rewardXp,
 };
 
 @Injectable()
@@ -45,11 +48,21 @@ export class CatalogService {
     return ids.flatMap((id) => rows.filter((q) => q.id === id));
   }
 
+  // Campaigns for the Quests page: active partners with at least one active
+  // task, with the task count.
   partners() {
     return this.db
-      .select(partnerFields)
+      .select({
+        ...partnerFields,
+        tasks: sql<number>`count(${quests.id})::int`,
+      })
       .from(partners)
+      .innerJoin(
+        quests,
+        and(eq(quests.partnerId, partners.id), eq(quests.isActive, true)),
+      )
       .where(eq(partners.isActive, true))
+      .groupBy(partners.id)
       .orderBy(asc(partners.id));
   }
 
@@ -62,13 +75,20 @@ export class CatalogService {
       .limit(1);
     if (!partner) return null;
 
-    const partnerQuests = await this.db
-      .select(questFields)
+    const tasks = await this.db
+      .select({ ...questFields, verifier: quests.verifier })
       .from(quests)
       .innerJoin(partners, eq(partners.id, quests.partnerId))
       .where(and(eq(partners.slug, slug), eq(quests.isActive, true)))
       .orderBy(asc(quests.sortOrder), asc(quests.id));
 
-    return { ...partner, quests: partnerQuests };
+    // The verifier key stays server-side; its kind is enough for the UI.
+    return {
+      ...partner,
+      quests: tasks.map(({ verifier, ...task }) => ({
+        ...task,
+        type: taskTypeOf(verifier),
+      })),
+    };
   }
 }

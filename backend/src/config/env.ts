@@ -19,6 +19,16 @@ const envSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   // Relay's public API, used to verify bridges to Ink.
   RELAY_API_URL: z.url().default('https://api.relay.link'),
+  // X (Twitter) OAuth 2.0 app from developer.x.com, for linking X accounts.
+  // Without the id, secret and redirect URI, linking is turned off.
+  X_CLIENT_ID: z.string().min(1).optional(),
+  X_CLIENT_SECRET: z.string().min(1).optional(),
+  // Must match the app's callback URL exactly, e.g.
+  // https://api.inkquests.xyz/auth/x/callback
+  X_REDIRECT_URI: z.url().optional(),
+  // Overridable so the OAuth flow can be tested against a fake X.
+  X_AUTHORIZE_URL: z.url().default('https://x.com/i/oauth2/authorize'),
+  X_API_URL: z.url().default('https://api.x.com'),
 });
 
 export type Env = z.infer<typeof envSchema>;

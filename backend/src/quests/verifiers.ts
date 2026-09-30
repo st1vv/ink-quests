@@ -56,11 +56,26 @@ export type InkySwapSpec = {
   minUsd: number;
 };
 
+// Follow an X account. Not checked with X (its API charges per read and
+// has no cheap "does A follow B"): the user needs a linked X account, and
+// the follow itself is taken on trust.
+export type XFollowSpec = {
+  type: 'x-follow';
+  handle: string;
+};
+
+// Having completed at least one daily quest, checked in our own database.
+export type DailyQuestDoneSpec = {
+  type: 'daily-quest-done';
+};
+
 export type VerifierSpec =
   | ContractCallSpec
   | NftHolderSpec
   | RelayBridgeSpec
-  | InkySwapSpec;
+  | InkySwapSpec
+  | XFollowSpec
+  | DailyQuestDoneSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -148,6 +163,11 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   ],
 
   'inkyswap-swap': [{ type: 'inkyswap-swap', minUsd: MIN_QUEST_USD }],
+
+  // Campaign tasks (partner quests).
+  'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
+  'x-follow-stanislav1w': [{ type: 'x-follow', handle: 'stanislav1w' }],
+  'any-daily-quest': [{ type: 'daily-quest-done' }],
 
   'hold-templars-of-the-storm': [
     {
@@ -297,3 +317,20 @@ export const minUsdOf = (specs: VerifierSpec[]) => {
   }
   return MIN_QUEST_USD;
 };
+
+// What kind of task a quest is, for the frontend's buttons: follow on X,
+// hold an NFT, do a daily quest, or some onchain action.
+export type TaskType = 'x-follow' | 'nft-holder' | 'daily-quest' | 'onchain';
+
+export const taskTypeOf = (verifier: string | null): TaskType => {
+  const type = verifier ? VERIFIERS[verifier]?.[0]?.type : undefined;
+  if (type === 'x-follow') return 'x-follow';
+  if (type === 'nft-holder') return 'nft-holder';
+  if (type === 'daily-quest-done') return 'daily-quest';
+  return 'onchain';
+};
+
+// Checks that aren't an onchain action by the user; they don't count for
+// referral rewards.
+export const isOffchain = (specs: VerifierSpec[]) =>
+  specs.every((s) => s.type === 'x-follow' || s.type === 'daily-quest-done');

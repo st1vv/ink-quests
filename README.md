@@ -69,13 +69,16 @@ the quest catalog from `seed.ts` before the API starts (see `backend/Dockerfile`
 3. In the same project, **+ New → Database → PostgreSQL**.
 4. Service **Variables**:
 
-   | Variable           | Value                                                          |
-   | ------------------ | -------------------------------------------------------------- |
-   | `DATABASE_URL`     | `${{Postgres.DATABASE_URL}}` (reference to the database above) |
-   | `FRONTEND_ORIGIN`  | `https://inkquests.xyz`                                        |
-   | `EXPLORER_API_KEY` | Blockscout PRO key (dev.blockscout.com)                        |
-   | `TRUST_PROXY_HOPS` | `1` (Railway's proxy), so rate limits see the client IP        |
-   | `INK_RPC_URL`      | Recommended: a dedicated Ink RPC (the public one rate-limits)  |
+   | Variable           | Value                                                            |
+   | ------------------ | ---------------------------------------------------------------- |
+   | `DATABASE_URL`     | `${{Postgres.DATABASE_URL}}` (reference to the database above)   |
+   | `FRONTEND_ORIGIN`  | `https://inkquests.xyz`                                          |
+   | `EXPLORER_API_KEY` | Blockscout PRO key (dev.blockscout.com)                          |
+   | `TRUST_PROXY_HOPS` | `1` (Railway's proxy), so rate limits see the client IP          |
+   | `INK_RPC_URL`      | Recommended: a dedicated Ink RPC (the public one rate-limits)    |
+   | `X_CLIENT_ID`      | X OAuth 2.0 app (developer.x.com), for linking X accounts        |
+   | `X_CLIENT_SECRET`  | Its client secret                                                |
+   | `X_REDIRECT_URI`   | `https://api.inkquests.xyz/auth/x/callback` (the app's callback) |
 
    `PORT` is set by Railway.
 
