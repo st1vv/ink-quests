@@ -231,7 +231,7 @@ const CampaignCard = ({
       {completed ? (
         <div className="mt-6 flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-emerald-300">
-            Completed ✓
+            Completed
           </span>
           <span className={buttonStyles({ variant: "ghost" })}>View</span>
         </div>

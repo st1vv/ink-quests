@@ -208,8 +208,9 @@ tasks, plus `tasks` and `rewardXp`; `GET /partners/:slug` returns the tasks with
 specific:
 
 - `{ type: 'x-follow', handle }`: follow an X account. Not checked with X (its API charges per read
-  and has no cheap "does A follow B" lookup): the claim needs a linked X account and is taken on
-  trust.
+  and has no cheap "does A follow B" lookup): the follow is taken on trust. Once X linking is set
+  up (`X_CLIENT_*`), the claim also needs a linked X account; without it, follows verify with no X
+  account and the profile hides the X card.
 - `{ type: 'daily-quest-done' }`: the user has completed at least one daily quest.
 
 Neither is an onchain action by the user, so they don't pay referral rewards. A partner with an

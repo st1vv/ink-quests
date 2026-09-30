@@ -110,10 +110,11 @@ export class QuestsService {
 
     const windowStart =
       quest.kind === 'daily' ? startOfUtcDay(now) : quest.createdAt;
-    // Follows on X are taken on trust (X's API charges per read), but the
-    // user needs a linked X account, one per wallet.
+    // Follows on X are taken on trust (X's API charges per read). Once X
+    // linking is set up (X_CLIENT_* env), the user also needs a linked X
+    // account, one per wallet; until then anyone can verify a follow.
     const follow = spec.every((s) => s.type === 'x-follow');
-    if (follow && !(await this.x.isLinked(user.id))) {
+    if (follow && this.x.available && !(await this.x.isLinked(user.id))) {
       throw new UnprocessableEntityException(
         'Connect your X account on your profile first',
       );

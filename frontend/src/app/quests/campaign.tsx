@@ -92,14 +92,11 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
   const allVerified = total > 0 && done === total;
   const rewardClaimed = claimedCampaigns.data?.has(campaign.slug) ?? false;
 
-  // Signed in without a linked X account: X tasks ask to link it first.
+  // With X linking set up, X tasks ask a signed-in user to link X first.
+  // Without it, follows are verified on trust, no X account needed.
   const xBlocker =
-    address && x && !x.username
-      ? {
-          label: x.available ? "Connect X" : "X coming soon",
-          onClick: connectX,
-          disabled: !x.available,
-        }
+    address && x?.available && !x.username
+      ? { label: "Connect X", onClick: connectX }
       : undefined;
 
   return (
@@ -188,7 +185,7 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
               </p>
             </div>
             {rewardClaimed ? (
-              <Badge className="px-3 py-1.5">Claimed ✓</Badge>
+              <Badge className="px-3 py-1.5">Claimed</Badge>
             ) : (
               <Button
                 variant={allVerified ? "secondary" : "primary"}

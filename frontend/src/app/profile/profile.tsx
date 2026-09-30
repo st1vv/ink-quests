@@ -69,6 +69,7 @@ const SignedInProfile = ({ address }: { address: Address }) => {
   const { data: progress } = useProgress();
   const { data: rank } = useMyRank();
   const { data: stats } = useProfileStats();
+  const { data: x } = useXAccount();
 
   return (
     <div className="flex flex-col gap-4">
@@ -101,7 +102,8 @@ const SignedInProfile = ({ address }: { address: Address }) => {
         </div>
       </PageIntro>
 
-      <XAccountCard />
+      {/* Only once X linking is set up on the backend (X_CLIENT_* env). */}
+      {x?.available && <XAccountCard />}
 
       <ReferralCard />
 
