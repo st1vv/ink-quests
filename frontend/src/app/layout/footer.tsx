@@ -9,13 +9,10 @@ export const LayoutFooter = () => {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 text-sm text-white/50 sm:flex-row">
         <span>© {new Date().getFullYear()} InkQuests</span>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Link to="/faq" className="transition hover:text-white">
             FAQ
           </Link>
-          <span aria-hidden className="text-white/20">
-            ·
-          </span>
           <a
             href={X_URL}
             target="_blank"

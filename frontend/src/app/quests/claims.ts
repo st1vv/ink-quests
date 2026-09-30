@@ -38,7 +38,7 @@ export const useClaimQuest = () => {
       }
     },
     onSuccess: (result, { title }) => {
-      if (result) toast.success(`+${result.points} XP · ${title}`);
+      if (result) toast.success(`+${result.points} XP`, { description: title });
       else toast.info(`${title}: already claimed today`);
 
       return Promise.all([

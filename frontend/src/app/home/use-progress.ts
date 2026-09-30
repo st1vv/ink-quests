@@ -55,13 +55,10 @@ export const useCheckIn = () => {
     onSuccess: (result) => {
       if (!result) toast.info("Already checked in today");
       else if (result.bonusPoints > 0) {
-        toast.success(
-          `Checked in · +${result.points + result.bonusPoints} XP`,
-          {
-            description: `Includes +${result.bonusPoints} XP for a full week of check-ins 🔥`,
-          },
-        );
-      } else toast.success(`Checked in · +${result.points} XP`);
+        toast.success(`Checked in: +${result.points + result.bonusPoints} XP`, {
+          description: `Includes +${result.bonusPoints} XP for a full week of check-ins 🔥`,
+        });
+      } else toast.success(`Checked in: +${result.points} XP`);
 
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
