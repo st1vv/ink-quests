@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { Link, NavLink } from "react-router";
 import { ConnectWallet } from "@/app/layout/connect-wallet";
+import logoUrl from "@/img/logo.svg";
 import {
   HomeIcon,
   QuestsIcon,
@@ -42,10 +43,12 @@ export const LayoutHeader = () => {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4">
         <Link
           to="/"
-          className="flex items-center gap-2 text-base font-semibold tracking-tight text-white"
+          // Keeps the link named on phones, where only the logo is shown.
+          aria-label="InkQuests"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white"
         >
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-ink shadow-[0_0_12px_2px] shadow-ink/60" />
-          InkQuests
+          <img src={logoUrl} alt="" className="h-8 w-8" />
+          <span className="hidden sm:inline">InkQuests</span>
         </Link>
 
         {/* The labelled links don't fit next to the logo and wallet button
