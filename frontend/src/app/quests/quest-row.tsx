@@ -20,6 +20,10 @@ type QuestRowProps = {
   doneLabel?: string;
 };
 
+// The main button keeps one width (about "Go to quest ↗") through Claim in Ns,
+// Claim and Completed, so the row doesn't jump as the quest moves along.
+const ACTION_WIDTH = "w-full md:w-auto md:min-w-32";
+
 export const QuestRow = ({
   quest,
   marker,
@@ -87,12 +91,12 @@ export const QuestRow = ({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center">
         {quest.status === "idle" && blocker && (
           <Button
             onClick={blocker.onClick}
             disabled={blocker.disabled}
-            className="w-full md:w-auto"
+            className={ACTION_WIDTH}
           >
             {blocker.label}
           </Button>
@@ -101,21 +105,15 @@ export const QuestRow = ({
         {quest.status === "idle" && !blocker && (
           <Button
             onClick={() => onStart(quest.id, quest.actionUrl)}
-            className="w-full md:w-auto"
+            className={ACTION_WIDTH}
           >
             {actionLabel}
           </Button>
         )}
 
         {quest.status === "started" && (
-          <Button disabled className="w-full tabular-nums md:w-auto">
-            Claim in {secondsLeft}s
-          </Button>
-        )}
-
-        {quest.status === "claim_ready" && !quest.claimable && (
-          <Button disabled className="w-full md:w-auto">
-            Verification soon
+          <Button disabled className={`${ACTION_WIDTH} tabular-nums`}>
+            {claimLabel ?? "Claim"} in {secondsLeft}s
           </Button>
         )}
 
@@ -128,7 +126,7 @@ export const QuestRow = ({
               claim.mutate({ questId: quest.id, title: quest.title }),
             )}
             disabled={claim.isPending}
-            className="w-full md:w-auto"
+            className={ACTION_WIDTH}
           >
             {claim.isPending
               ? "Checking…"
@@ -137,7 +135,9 @@ export const QuestRow = ({
         )}
 
         {isCompleted && (
-          <span className="w-full text-center text-sm font-semibold text-emerald-300 md:w-auto md:px-4">
+          <span
+            className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
+          >
             {doneLabel}
           </span>
         )}
