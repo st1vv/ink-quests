@@ -32,11 +32,11 @@ const connectors = projectId
         {
           groupName: "Popular",
           wallets: [
-            metaMaskWallet,
+            rabbyWallet,
             okxWallet,
             binanceWallet,
+            metaMaskWallet,
             coinbaseWallet,
-            rabbyWallet,
           ],
         },
         {
