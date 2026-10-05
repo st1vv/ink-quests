@@ -109,7 +109,7 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
       </Link>
 
       <Surface className="p-0 md:p-0">
-        <div className="aspect-[4/1] w-full overflow-hidden border-b border-white/10">
+        <div className="aspect-[3/1] w-full overflow-hidden border-b border-white/10">
           <CampaignCover src={campaign.imageUrl} title={campaign.title} />
         </div>
         <div className="flex flex-col gap-6 p-5 md:flex-row md:items-end md:justify-between md:p-8">

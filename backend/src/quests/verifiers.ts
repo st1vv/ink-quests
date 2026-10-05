@@ -167,6 +167,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
   'x-follow-stivcrypto': [{ type: 'x-follow', handle: 'stivcrypto' }],
+  'x-follow-inkhornet': [{ type: 'x-follow', handle: 'inkthehornet' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
 
   'hold-templars-of-the-storm': [
@@ -185,6 +186,12 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     {
       type: 'nft-holder',
       contract: '0x4443970B315d3c08C2f962fe00770c52396AFDb7',
+    },
+  ],
+  'hold-ink-hornet': [
+    {
+      type: 'nft-holder',
+      contract: '0x4d243f15743f6df7c832fcd5ee9a3e8453d47a4b',
     },
   ],
 };

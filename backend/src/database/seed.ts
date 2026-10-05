@@ -32,6 +32,14 @@ const PARTNERS: SeedPartner[] = [
     websiteUrl: 'https://inkquests.xyz',
     rewardXp: 100,
   },
+  {
+    slug: 'inkhornet',
+    title: 'Ink Hornet',
+    description: '2,222 Hornets on Ink Chain. Angry. Unfriendly. Unexplained.',
+    imageUrl: '/campaigns/inkhornet.webp',
+    websiteUrl: 'https://www.inkhornet.com/',
+    rewardXp: 100,
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants, each 10 XP more than the
@@ -150,6 +158,17 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 8,
     verifier: 'hold-ink-bunnies',
   },
+  {
+    slug: 'daily-hold-ink-hornet',
+    kind: 'daily',
+    title: 'Hold an Ink Hornet NFT',
+    description:
+      'Hold at least one Ink Hornet NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/ink-hornet',
+    points: 50,
+    sortOrder: 10,
+    verifier: 'hold-ink-hornet',
+  },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
   // is paid once all of them are verified. Follows on X need a linked X
@@ -182,6 +201,40 @@ const QUESTS: SeedQuest[] = [
     slug: 'inkquests-complete-daily-quest',
     kind: 'partner',
     partner: 'inkquests',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // Ink Hornet
+  {
+    slug: 'inkhornet-hold-inkhornet',
+    kind: 'partner',
+    partner: 'inkhornet',
+    title: 'Hold an Ink Hornet NFT',
+    description: 'Hold at least one Ink Hornet NFT in your wallet.',
+    actionUrl: 'https://opensea.io/collection/ink-hornet',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-ink-hornet',
+  },
+  {
+    slug: 'inkhornet-follow-inkhornet',
+    kind: 'partner',
+    partner: 'inkhornet',
+    title: 'Follow @inkthehornet on X',
+    description: 'Follow Ink Hornet on X for news, new quests and rewards.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=inkthehornet',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-inkhornet',
+  },
+  {
+    slug: 'inkhornet-complete-daily-quest',
+    kind: 'partner',
+    partner: 'inkhornet',
     title: 'Complete any daily quest',
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
