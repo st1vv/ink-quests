@@ -48,7 +48,7 @@ export const Leaderboard = () => {
               Global leaderboard
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/60">
-              Top players ranked by total XP.
+              Top 100 players ranked by total XP.
             </p>
           </div>
 
