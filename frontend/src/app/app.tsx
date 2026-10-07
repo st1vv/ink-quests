@@ -6,6 +6,7 @@ import { Quests } from "@/app/quests/quests";
 import { Campaign } from "@/app/quests/campaign";
 import { Faq } from "@/app/faq/faq";
 import { Profile } from "@/app/profile/profile";
+import { Statistics } from "@/app/statistics/statistics";
 
 export const App = () => {
   return (
@@ -17,6 +18,7 @@ export const App = () => {
         <Route path="/quests/:slug" element={<Campaign />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/statistics" element={<Statistics />} />
       </Routes>
     </Layout>
   );

@@ -50,6 +50,7 @@ See `.env.example`. The app refuses to start if a variable is missing or invalid
 | `EXPLORER_API_KEY` | Blockscout PRO API key for quest checks; required in production |
 | `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                |
 | `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)   |
+| `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the `/statistics` page   |
 
 ## Auth (Sign-In with Ethereum)
 
@@ -177,6 +178,19 @@ Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
 - `GET /me/stats`: `{ joinedAt, questsCompleted }`.
 - `GET /me/activity`: the latest 10 XP-earning actions, newest first, as
   `{ type: 'check-in' | 'quest', title, points, bonusPoints, at, txHash }[]`.
+
+## Statistics
+
+Open only to signed-in wallets listed in `ADMIN_ADDRESSES`; everyone else gets a 404. The
+frontend shows them at `/statistics`, which isn't linked anywhere.
+
+- `GET /statistics`: `{ users, usersWithXp, questsCompleted, dailyQuestsCompleted,
+  partnerQuestsCompleted, checkIns, transactions, transactionUsers }`. A partner quest counts
+  once its whole campaign is done, so `questsCompleted` is daily + finished campaigns;
+  `transactions` counts completions with a `tx_hash`.
+- `GET /statistics/transactions?page=&address=`: those completions, newest first, 50 per page, as
+  `{ total, page, pageSize, items: { id, address, quest, kind, partner, points, txHash,
+  completedAt }[] }`. `address` narrows it to one wallet.
 
 ## Referrals
 

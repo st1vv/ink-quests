@@ -9,7 +9,7 @@ import type { Request } from 'express';
 import { AuthService, type AuthUser } from './auth.service';
 import { SESSION_COOKIE } from './session-cookie';
 
-type AuthedRequest = Request & { user?: AuthUser };
+export type AuthedRequest = Request & { user?: AuthUser };
 
 // Protect a route with @UseGuards(AuthGuard), then read the user with @CurrentUser().
 @Injectable()

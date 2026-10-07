@@ -20,6 +20,7 @@ import {
   formatNumber,
   shortAddress,
 } from "@/lib/format";
+import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { toast } from "@/lib/notify";
 import { useAuth } from "@/app/auth/use-auth";
 import { connectX, useXAccount, useXLinkResult } from "@/app/x/use-x";
@@ -32,7 +33,6 @@ import {
   type Activity,
 } from "@/app/profile/use-profile";
 
-const EXPLORER_TX_URL = "https://explorer.inkonchain.com/tx/";
 const PLACEHOLDER = "—";
 
 export const Profile = () => {

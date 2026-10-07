@@ -29,6 +29,18 @@ const envSchema = z.object({
   // Overridable so the OAuth flow can be tested against a fake X.
   X_AUTHORIZE_URL: z.url().default('https://x.com/i/oauth2/authorize'),
   X_API_URL: z.url().default('https://api.x.com'),
+  // Comma-separated wallets allowed to open the /statistics page. Empty means
+  // nobody can.
+  ADMIN_ADDRESSES: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((address) => address.trim().toLowerCase())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().regex(/^0x[0-9a-f]{40}$/, 'Not an address'))),
 });
 
 export type Env = z.infer<typeof envSchema>;

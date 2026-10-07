@@ -8,27 +8,30 @@ import { levelForXp } from '../progress/level';
 export const LEADERBOARD_SIZE = 100;
 
 // Total XP per user from quests, check-ins, referrals and campaign rewards,
-// the same sum as GET /me/progress. Users without XP aren't ranked. Every
-// user gets their own place: on equal XP, whoever reached it first (the
-// earlier last XP-earning action) is ahead, then whoever signed up first.
+// the same sum as GET /me/progress. Only users with any XP get a row.
+export const userXp = sql`
+  select
+    user_id,
+    sum(points)::int as xp,
+    max(earned_at) filter (where points > 0) as reached_at
+  from (
+    select user_id, points, completed_at as earned_at from quest_completions
+    union all
+    select user_id, points + bonus_points, created_at from check_ins
+    union all
+    select referrer_id, points, created_at from referral_rewards
+    union all
+    select user_id, points, created_at from campaign_rewards
+  ) p
+  group by user_id
+  having sum(points) > 0
+`;
+
+// Every user with XP gets their own place: on equal XP, whoever reached it
+// first (the earlier last XP-earning action) is ahead, then whoever signed
+// up first.
 const rankedUsers = sql`
-  with xp as (
-    select
-      user_id,
-      sum(points)::int as xp,
-      max(earned_at) filter (where points > 0) as reached_at
-    from (
-      select user_id, points, completed_at as earned_at from quest_completions
-      union all
-      select user_id, points + bonus_points, created_at from check_ins
-      union all
-      select referrer_id, points, created_at from referral_rewards
-      union all
-      select user_id, points, created_at from campaign_rewards
-    ) p
-    group by user_id
-    having sum(points) > 0
-  )
+  with xp as (${userXp})
   select
     u.id as user_id,
     u.address,
