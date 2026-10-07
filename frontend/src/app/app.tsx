@@ -7,6 +7,7 @@ import { Campaign } from "@/app/quests/campaign";
 import { Faq } from "@/app/faq/faq";
 import { Profile } from "@/app/profile/profile";
 import { Statistics } from "@/app/statistics/statistics";
+import { NotFound } from "@/app/not-found/not-found";
 
 export const App = () => {
   return (
@@ -19,6 +20,7 @@ export const App = () => {
         <Route path="/faq" element={<Faq />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/statistics" element={<Statistics />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
   );

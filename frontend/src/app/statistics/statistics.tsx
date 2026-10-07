@@ -8,6 +8,7 @@ import { ExternalLinkIcon } from "@/shared/ui/icons";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { useAuth } from "@/app/auth/use-auth";
+import { NotFound } from "@/app/not-found/not-found";
 import {
   isNotFound,
   useStatsSummary,
@@ -38,14 +39,6 @@ export const Statistics = () => {
     </div>
   );
 };
-
-const NotFound = () => (
-  <PageIntro
-    eyebrow="404"
-    title="Page not found"
-    description="There's nothing here."
-  />
-);
 
 type StatsOverviewProps = {
   stats: StatsSummary | undefined;

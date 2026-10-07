@@ -20,6 +20,7 @@ import {
 } from "@/app/quests/claims";
 import { CampaignCover } from "@/app/quests/campaign-cover";
 import { QuestRow } from "@/app/quests/quest-row";
+import { NotFound } from "@/app/not-found/not-found";
 import { useQuestStatuses } from "@/app/quests/quest-status";
 import { connectX, useXAccount } from "@/app/x/use-x";
 
@@ -44,24 +45,31 @@ export const Campaign = () => {
     );
   }
 
+  if (campaign.error instanceof ApiError && campaign.error.status === 404) {
+    return (
+      <NotFound
+        title="Quest not found"
+        description="This quest doesn't exist or is no longer running. Plenty of others are waiting for you."
+        primary={{ to: "/quests", label: "All quests" }}
+        secondary={{ to: "/", label: "Go home" }}
+      />
+    );
+  }
+
   if (campaign.isError) {
-    const notFound =
-      campaign.error instanceof ApiError && campaign.error.status === 404;
     return (
       <Surface className="text-center md:p-12">
         <h1 className="text-2xl font-semibold text-white">
-          {notFound ? "Quest not found" : "Couldn't load this quest"}
+          Couldn't load this quest
         </h1>
         <div className="mt-6 flex justify-center gap-3">
-          {!notFound && (
-            <button
-              type="button"
-              onClick={() => campaign.refetch()}
-              className={buttonStyles()}
-            >
-              Try again
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => campaign.refetch()}
+            className={buttonStyles()}
+          >
+            Try again
+          </button>
           <Link to="/quests" className={buttonStyles({ variant: "ghost" })}>
             All quests
           </Link>
