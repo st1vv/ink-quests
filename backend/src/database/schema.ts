@@ -13,27 +13,39 @@ import {
   varchar,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 export const questKind = pgEnum('quest_kind', ['daily', 'partner']);
 
-export const users = pgTable('users', {
-  id: serial().primaryKey(),
-  // Always stored lowercased so lookups don't depend on checksum casing.
-  address: varchar({ length: 42 }).notNull().unique(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  lastLoginAt: timestamp({ withTimezone: true }),
-  // The user's own invite code; created the first time they ask for it.
-  referralCode: varchar({ length: 16 }).unique(),
-  // Who invited this user. Set only when the account is created.
-  referredById: integer().references((): AnyPgColumn => users.id, {
-    onDelete: 'set null',
-  }),
-  // The linked X account. One X account per wallet (unique), so social
-  // quests can't be farmed across wallets.
-  xUserId: varchar({ length: 32 }).unique(),
-  xUsername: varchar({ length: 32 }),
-  xLinkedAt: timestamp({ withTimezone: true }),
-});
+export const users = pgTable(
+  'users',
+  {
+    id: serial().primaryKey(),
+    // Always stored lowercased so lookups don't depend on checksum casing.
+    address: varchar({ length: 42 }).notNull().unique(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    lastLoginAt: timestamp({ withTimezone: true }),
+    // The user's own invite code; created the first time they ask for it.
+    referralCode: varchar({ length: 16 }).unique(),
+    // Who invited this user. Set only when the account is created.
+    referredById: integer().references((): AnyPgColumn => users.id, {
+      onDelete: 'set null',
+    }),
+    // The linked X account. One X account per wallet (unique), so social
+    // quests can't be farmed across wallets.
+    xUserId: varchar({ length: 32 }).unique(),
+    xUsername: varchar({ length: 32 }),
+    xLinkedAt: timestamp({ withTimezone: true }),
+    // Shown instead of the address on the leaderboard; null shows the address.
+    displayName: varchar({ length: 20 }),
+  },
+  // Names are unique ignoring case, so "Bob" and "bob" can't both exist.
+  (t) => [
+    uniqueIndex('users_display_name_lower_index').on(
+      sql`lower(${t.displayName})`,
+    ),
+  ],
+);
 
 // In-flight X OAuth logins: the PKCE verifier waits here between the
 // redirect to X and the callback. Single use, short-lived.

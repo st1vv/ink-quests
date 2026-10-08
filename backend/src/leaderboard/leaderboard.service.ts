@@ -35,6 +35,7 @@ const rankedUsers = sql`
   select
     u.id as user_id,
     u.address,
+    u.display_name,
     xp.xp,
     row_number() over (
       order by xp.xp desc, xp.reached_at asc, u.id asc
@@ -46,6 +47,7 @@ const rankedUsers = sql`
 type RankedRow = {
   user_id: number;
   address: string;
+  display_name: string | null;
   xp: number;
   rank: number;
 };
@@ -63,6 +65,8 @@ export class LeaderboardService {
     return rows.map((r) => ({
       rank: r.rank,
       address: getAddress(r.address),
+      // Shown instead of the address when set.
+      name: r.display_name,
       xp: r.xp,
       level: levelForXp(r.xp),
     }));
@@ -74,20 +78,22 @@ export class LeaderboardService {
   async rankOf(userId: number) {
     const { rows } = await this.db.execute<{
       rank: number;
+      display_name: string | null;
       xp: number;
       above_xp: number | null;
     }>(sql`
       with r as (${rankedUsers})
-      select me.rank, me.xp, above.xp as above_xp
+      select me.rank, me.display_name, me.xp, above.xp as above_xp
       from r me
       left join r above on above.rank = me.rank - 1
       where me.user_id = ${userId}
     `);
 
     const me = rows[0];
-    if (!me) return { rank: null, xp: 0, xpToNextRank: null };
+    if (!me) return { rank: null, name: null, xp: 0, xpToNextRank: null };
     return {
       rank: me.rank,
+      name: me.display_name,
       xp: me.xp,
       xpToNextRank: me.above_xp === null ? null : me.above_xp - me.xp + 1,
     };

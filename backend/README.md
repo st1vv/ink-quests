@@ -161,10 +161,10 @@ next level start.
 ## Leaderboard
 
 - `GET /leaderboard` (public): top 100 users by total XP (quests + check-ins) as
-  `{ rank, address, xp, level }[]`. Every user has their own rank: on equal XP, whoever reached
+  `{ rank, address, name, xp, level }[]` (`name` is the display name, null when unset). Every user has their own rank: on equal XP, whoever reached
   it first (earlier last XP-earning action) is ahead, then whoever signed up first. Users without
   XP aren't listed.
-- `GET /me/rank` (signed in): `{ rank, xp, xpToNextRank }`, also for users outside the top.
+- `GET /me/rank` (signed in): `{ rank, name, xp, xpToNextRank }`, also for users outside the top.
   `rank` is null until the user has XP; `xpToNextRank` is what it takes to pass the user one
   place above (1 XP if they have the same XP), null for first place.
 
@@ -175,7 +175,11 @@ totals once that gets slow.
 
 Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
 
-- `GET /me/stats`: `{ joinedAt, questsCompleted }`.
+- `GET /me/stats`: `{ joinedAt, displayName, questsCompleted }`.
+- `PUT /me/name` with `{ name }`: sets the display name shown instead of the address on the
+  leaderboard; an empty name clears it. 3-20 of `A-Z a-z 0-9 _ -`, unique ignoring case (409 when
+  taken), and names that could pass for the team (`admin`, `support`, `kraken`, …) are refused.
+  Rules live in `src/profile/display-name.ts`.
 - `GET /me/activity`: the latest 10 XP-earning actions, newest first, as
   `{ type: 'check-in' | 'quest', title, points, bonusPoints, at, txHash }[]`.
 
