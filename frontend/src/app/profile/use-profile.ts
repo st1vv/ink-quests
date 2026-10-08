@@ -1,10 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/app/auth/use-auth";
 import { apiFetch } from "@/lib/api";
 
 export type ProfileStats = {
   joinedAt: string;
+  // Shown instead of the address on the leaderboard; null shows the address.
+  displayName: string | null;
   questsCompleted: number;
+};
+
+// 3-20 letters, digits, _ or -; the backend has the final say (taken and
+// reserved names).
+export const DISPLAY_NAME_PATTERN = /^[A-Za-z0-9_-]{3,20}$/;
+
+// An empty name clears it.
+export const useSetDisplayName = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) =>
+      apiFetch<{ displayName: string | null }>("/me/name", {
+        method: "PUT",
+        body: JSON.stringify({ name }),
+      }),
+    onSuccess: () =>
+      Promise.all(
+        ["stats", "leaderboard", "rank"].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      ),
+  });
 };
 
 export type Activity = {

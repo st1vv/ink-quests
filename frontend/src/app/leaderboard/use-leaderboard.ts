@@ -6,6 +6,8 @@ import { apiFetch } from "@/lib/api";
 export type LeaderboardEntry = {
   rank: number;
   address: Address;
+  // Shown instead of the address when set.
+  name: string | null;
   xp: number;
   level: number;
 };
@@ -13,6 +15,7 @@ export type LeaderboardEntry = {
 export type MyRank = {
   // Null until the user has any XP.
   rank: number | null;
+  name: string | null;
   xp: number;
   // XP needed to pass the closest user above; null when already first.
   xpToNextRank: number | null;

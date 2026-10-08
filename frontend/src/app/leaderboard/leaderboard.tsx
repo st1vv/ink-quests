@@ -34,7 +34,12 @@ export const Leaderboard = () => {
     myRank.data?.rank != null &&
     myRank.data.rank > (entries.at(-1)?.rank ?? 0) &&
     !entries.some((e) => isMe(e.address))
-      ? { address, rank: myRank.data.rank, xp: myRank.data.xp }
+      ? {
+          address,
+          name: myRank.data.name,
+          rank: myRank.data.rank,
+          xp: myRank.data.xp,
+        }
       : null;
 
   return (
@@ -55,7 +60,7 @@ export const Leaderboard = () => {
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/20">
             <div className="grid grid-cols-[56px_1fr_auto] gap-4 border-b border-white/10 px-4 py-3 text-xs font-medium uppercase tracking-wide text-white/40 md:grid-cols-[80px_1fr_auto]">
               <span>Rank</span>
-              <span>Wallet</span>
+              <span>Player</span>
               <span className="text-right">XP</span>
             </div>
 
@@ -94,6 +99,7 @@ export const Leaderboard = () => {
                   key={entry.address}
                   rank={entry.rank}
                   address={entry.address}
+                  name={entry.name}
                   xp={entry.xp}
                   isCurrentUser={isMe(entry.address)}
                 />
@@ -185,6 +191,7 @@ const LeaderboardIntro = ({ signedIn, myRank }: LeaderboardIntroProps) => {
 type LeaderboardRowProps = {
   rank: number;
   address: string;
+  name: string | null;
   xp: number;
   isCurrentUser: boolean;
 };
@@ -192,6 +199,7 @@ type LeaderboardRowProps = {
 const LeaderboardRow = ({
   rank,
   address,
+  name,
   xp,
   isCurrentUser,
 }: LeaderboardRowProps) => (
@@ -211,11 +219,12 @@ const LeaderboardRow = ({
     </span>
 
     <span className="flex min-w-0 items-center gap-2">
+      {/* The name replaces the address; hovering still shows the wallet. */}
       <span
         title={address}
-        className={`truncate font-mono text-sm ${isCurrentUser ? "text-white" : "text-white/55"}`}
+        className={`truncate text-sm ${name ? "font-semibold" : "font-mono"} ${isCurrentUser ? "text-white" : name ? "text-white/85" : "text-white/55"}`}
       >
-        {shortAddress(address)}
+        {name ?? shortAddress(address)}
       </span>
       {isCurrentUser && (
         <span className="hidden sm:block">

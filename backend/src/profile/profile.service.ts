@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { and, count, eq, gt, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
@@ -23,7 +23,7 @@ export class ProfileService {
 
   async stats(userId: number) {
     const [user] = await this.db
-      .select({ joinedAt: users.createdAt })
+      .select({ joinedAt: users.createdAt, displayName: users.displayName })
       .from(users)
       .where(eq(users.id, userId));
 
@@ -43,7 +43,27 @@ export class ProfileService {
       .from(campaignRewards)
       .where(eq(campaignRewards.userId, userId));
 
-    return { joinedAt: user.joinedAt, questsCompleted: quests + campaigns };
+    return {
+      joinedAt: user.joinedAt,
+      displayName: user.displayName,
+      questsCompleted: quests + campaigns,
+    };
+  }
+
+  // null clears the name. The unique index settles a race for the same name.
+  async setDisplayName(userId: number, displayName: string | null) {
+    try {
+      await this.db
+        .update(users)
+        .set({ displayName })
+        .where(eq(users.id, userId));
+    } catch (err) {
+      if ((err as { cause?: { code?: string } }).cause?.code === '23505') {
+        throw new ConflictException('This name is taken');
+      }
+      throw err;
+    }
+    return { displayName };
   }
 
   // Latest XP-earning actions, newest first.

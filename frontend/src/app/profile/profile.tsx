@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import type { Address } from "viem";
@@ -10,8 +10,10 @@ import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import {
   CheckIcon,
+  CloseIcon,
   CopyIcon,
   ExternalLinkIcon,
+  PencilIcon,
   XLogoIcon,
 } from "@/shared/ui/icons";
 import {
@@ -27,9 +29,11 @@ import { connectX, useXAccount, useXLinkResult } from "@/app/x/use-x";
 import { useProgress } from "@/app/home/use-progress";
 import { useMyRank } from "@/app/leaderboard/use-leaderboard";
 import {
+  DISPLAY_NAME_PATTERN,
   useActivity,
   useProfileStats,
   useReferrals,
+  useSetDisplayName,
   type Activity,
 } from "@/app/profile/use-profile";
 
@@ -70,14 +74,50 @@ const SignedInProfile = ({ address }: { address: Address }) => {
   const { data: rank } = useMyRank();
   const { data: stats } = useProfileStats();
   const { data: x } = useXAccount();
+  // The name being typed; null when not editing.
+  const [draft, setDraft] = useState<string | null>(null);
+  const name = stats?.displayName;
+  const draftInvalid =
+    draft !== null &&
+    draft.trim() !== "" &&
+    !DISPLAY_NAME_PATTERN.test(draft.trim());
 
   return (
     <div className="flex flex-col gap-4">
       <PageIntro
         eyebrow="Profile"
-        title={<AddressTitle address={address} />}
+        title={
+          draft !== null && stats ? (
+            <NameInput
+              value={draft}
+              current={stats.displayName}
+              invalid={draftInvalid}
+              onChange={setDraft}
+              onClose={() => setDraft(null)}
+            />
+          ) : (
+            <ProfileTitle
+              address={address}
+              name={name}
+              onEdit={stats ? () => setDraft(name ?? "") : undefined}
+            />
+          )
+        }
         description={
-          stats ? `Member since ${formatDate(stats.joinedAt)}` : undefined
+          draft !== null ? (
+            <span className={draftInvalid ? "text-red-300" : undefined}>
+              Shown instead of your address on the leaderboard. 3-20 letters,
+              digits, _ or -. Leave empty to show the address.
+            </span>
+          ) : stats ? (
+            [
+              // The name hides the address in the title; keep it in sight.
+              name && shortAddress(address),
+              `Member since ${formatDate(stats.joinedAt)}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")
+          ) : undefined
         }
       >
         <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:grid-cols-4">
@@ -112,13 +152,119 @@ const SignedInProfile = ({ address }: { address: Address }) => {
   );
 };
 
-const AddressTitle = ({ address }: { address: Address }) => (
-  <span className="inline-flex items-center gap-3">
-    <span title={address} className="font-mono">
-      {shortAddress(address)}
+type ProfileTitleProps = {
+  address: Address;
+  name: string | null | undefined;
+  onEdit?: () => void;
+};
+
+// The display name when set; the copy button always copies the wallet.
+const ProfileTitle = ({ address, name, onEdit }: ProfileTitleProps) => (
+  <span className="inline-flex max-w-full min-w-0 items-center gap-3">
+    <span title={address} className={`truncate ${name ? "" : "font-mono"}`}>
+      {name ?? shortAddress(address)}
     </span>
     <CopyButton text={address} label="address" />
+    {onEdit && (
+      <IconButton
+        onClick={onEdit}
+        label={name ? "Change display name" : "Set a display name"}
+      >
+        <PencilIcon className="h-4 w-4" />
+      </IconButton>
+    )}
   </span>
+);
+
+type NameInputProps = {
+  value: string;
+  current: string | null;
+  invalid: boolean;
+  onChange: (value: string) => void;
+  onClose: () => void;
+};
+
+// Takes the title's place while editing: Enter saves, Escape cancels, and an
+// empty name removes it. Failed saves (taken, reserved) toast like every
+// other action.
+const NameInput = ({
+  value,
+  current,
+  invalid,
+  onChange,
+  onClose,
+}: NameInputProps) => {
+  const setName = useSetDisplayName();
+  const trimmed = value.trim();
+
+  const save = () => {
+    if (trimmed === (current ?? "")) return onClose();
+    if (invalid || setName.isPending) return;
+    setName.mutate(trimmed, {
+      onSuccess: ({ displayName }) => {
+        toast.success(displayName ? "Name saved" : "Name removed");
+        onClose();
+      },
+    });
+  };
+
+  return (
+    <span className="inline-flex max-w-full min-w-0 items-center gap-3">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") onClose();
+        }}
+        maxLength={20}
+        size={20}
+        placeholder="Your name"
+        aria-label="Display name"
+        aria-invalid={invalid}
+        disabled={setName.isPending}
+        autoFocus
+        autoComplete="off"
+        spellCheck={false}
+        className="w-full min-w-0 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm font-normal tracking-normal text-white placeholder:text-white/30 focus:border-ink-light focus:outline-none aria-invalid:border-red-400/60 disabled:opacity-60 sm:max-w-xs"
+      />
+      <IconButton
+        onClick={save}
+        label="Save name"
+        disabled={invalid || setName.isPending}
+      >
+        <CheckIcon className="h-4 w-4" />
+      </IconButton>
+      <IconButton onClick={onClose} label="Cancel" disabled={setName.isPending}>
+        <CloseIcon className="h-4 w-4" />
+      </IconButton>
+    </span>
+  );
+};
+
+type IconButtonProps = {
+  onClick: () => void;
+  label: string;
+  disabled?: boolean;
+  children: ReactNode;
+};
+
+const IconButton = ({
+  onClick,
+  label,
+  disabled,
+  children,
+}: IconButtonProps) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={label}
+    title={label}
+    disabled={disabled}
+    className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-ink-light disabled:pointer-events-none disabled:opacity-40"
+  >
+    {children}
+  </button>
 );
 
 const CopyButton = ({ text, label }: { text: string; label: string }) => {
