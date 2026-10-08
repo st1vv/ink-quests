@@ -97,6 +97,15 @@ export const PencilIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const GiftIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="3" y="8" width="18" height="4" rx="1" />
+    <path d="M12 8v13" />
+    <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+    <path d="M7.5 8a2.5 2.5 0 0 1 0-5C9.5 3 12 5 12 8c0-3 2.5-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+  </Icon>
+);
+
 export const CloseIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M18 6 6 18" />
