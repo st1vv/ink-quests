@@ -247,6 +247,11 @@ describe('withMinUsd', () => {
     }
   });
 
+  it('has no minimum for verifiers without amounts', () => {
+    expect(minUsdOf(VERIFIERS['ink-gm'])).toBeNull();
+    expect(minUsdOf(VERIFIERS['ink-gm-to-inkquests'])).toBeNull();
+  });
+
   it('leaves verifiers without amounts, and null, untouched', () => {
     expect(withMinUsd(VERIFIERS['ink-gm'], 5)).toEqual(VERIFIERS['ink-gm']);
     expect(withMinUsd(VERIFIERS['inkyswap-swap'], null)).toBe(

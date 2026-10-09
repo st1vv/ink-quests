@@ -373,8 +373,9 @@ export const withMinUsd = (
         return spec;
       });
 
-// The minimum a verifier asks for, for messages; $1 if it has none.
-export const minUsdOf = (specs: VerifierSpec[]) => {
+// The minimum a verifier asks for, for messages; null if it has no amount
+// check (e.g. a GM).
+export const minUsdOf = (specs: VerifierSpec[]): number | null => {
   for (const spec of specs) {
     if (spec.type === 'contract-call' && spec.minUsd) return spec.minUsd.usd;
     if (
@@ -385,7 +386,7 @@ export const minUsdOf = (specs: VerifierSpec[]) => {
       return spec.minUsd;
     }
   }
-  return MIN_QUEST_USD;
+  return null;
 };
 
 // What kind of task a quest is, for the frontend's buttons: follow on X,

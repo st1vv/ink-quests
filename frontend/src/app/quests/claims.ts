@@ -41,7 +41,8 @@ export const useClaimQuest = () => {
       if (result && result.points > 0) {
         toast.success(`+${result.points} XP`, { description: title });
       } else if (result) toast.success("Task verified", { description: title });
-      else toast.info(`${title}: already claimed today`);
+      // Daily quests and one-time partner tasks both land here.
+      else toast.info(`${title}: already claimed`);
 
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: ["completions"] }),

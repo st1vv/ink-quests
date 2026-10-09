@@ -25,11 +25,13 @@ import { isOffchain, minUsdOf, VERIFIERS, withMinUsd } from './verifiers';
 // transaction may not be visible on the first try.
 const missingMessage = (
   missing: Extract<Verification, { done: false }>['missing'],
-  minUsd: number,
+  minUsd: number | null,
 ) => {
   switch (missing) {
     case 'transaction':
-      return `No matching transaction worth at least $${minUsd} found yet. If you just made it, try again in a minute`;
+      return minUsd === null
+        ? 'No matching transaction found yet. If you just made it, try again in a minute'
+        : `No matching transaction worth at least $${minUsd} found yet. If you just made it, try again in a minute`;
     case 'nft':
       return 'No NFT from this collection found in your wallet';
     case 'bridge':
