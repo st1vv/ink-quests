@@ -3,6 +3,7 @@ import { ink } from 'viem/chains';
 import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
 import { inkySwapWethValue } from './swap';
+import { velodromeSwapValue } from './velodrome';
 
 // A minimum USD value the transaction has to move.
 export type MinUsd = {
@@ -56,6 +57,13 @@ export type InkySwapSpec = {
   minUsd: number;
 };
 
+// A successful swap on Velodrome (its UniversalRouter) worth at least
+// `minUsd`, valued by its WETH or USD₮0 side (see velodrome.ts).
+export type VelodromeSwapSpec = {
+  type: 'velodrome-swap';
+  minUsd: number;
+};
+
 // Follow an X account. Not checked with X (its API charges per read and
 // has no cheap "does A follow B"): the user needs a linked X account, and
 // the follow itself is taken on trust.
@@ -74,6 +82,7 @@ export type VerifierSpec =
   | NftHolderSpec
   | RelayBridgeSpec
   | InkySwapSpec
+  | VelodromeSwapSpec
   | XFollowSpec
   | DailyQuestDoneSpec;
 
@@ -163,6 +172,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   ],
 
   'inkyswap-swap': [{ type: 'inkyswap-swap', minUsd: MIN_QUEST_USD }],
+  'velodrome-swap': [{ type: 'velodrome-swap', minUsd: MIN_QUEST_USD }],
 
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
@@ -262,6 +272,14 @@ const txMatches = async (
     if (wei === 0n) return false;
     return worthAtLeast(wei, 18, await priceOf(WETH), spec.minUsd);
   }
+  if (spec.type === 'velodrome-swap') {
+    const value = velodromeSwapValue(tx);
+    if (!value) return false;
+    // USD₮0 counts at exactly $1, like the Tydro USDT quest.
+    if (worthAtLeast(value.usdt0, 6, USD_PRICE_UNIT, spec.minUsd)) return true;
+    if (value.weth === 0n) return false;
+    return worthAtLeast(value.weth, 18, await priceOf(WETH), spec.minUsd);
+  }
   // Holding and bridge specs aren't about the user's own transactions.
   return false;
 };
@@ -315,7 +333,11 @@ export const withMinUsd = (
         if (spec.type === 'contract-call' && spec.minUsd) {
           return { ...spec, minUsd: { ...spec.minUsd, usd } };
         }
-        if (spec.type === 'relay-bridge' || spec.type === 'inkyswap-swap') {
+        if (
+          spec.type === 'relay-bridge' ||
+          spec.type === 'inkyswap-swap' ||
+          spec.type === 'velodrome-swap'
+        ) {
           return { ...spec, minUsd: usd };
         }
         return spec;
@@ -325,7 +347,11 @@ export const withMinUsd = (
 export const minUsdOf = (specs: VerifierSpec[]) => {
   for (const spec of specs) {
     if (spec.type === 'contract-call' && spec.minUsd) return spec.minUsd.usd;
-    if (spec.type === 'relay-bridge' || spec.type === 'inkyswap-swap') {
+    if (
+      spec.type === 'relay-bridge' ||
+      spec.type === 'inkyswap-swap' ||
+      spec.type === 'velodrome-swap'
+    ) {
       return spec.minUsd;
     }
   }

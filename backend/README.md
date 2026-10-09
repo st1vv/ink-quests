@@ -128,6 +128,13 @@ pools. The swap is valued by its ETH/WETH side (ETH sent, WETH in, or the guaran
 Tydro's oracle price; token-to-token swaps without WETH and V4 swaps paid in tokens can't be valued
 and don't count. See `src/quests/swap.ts`.
 
+The Velodrome swap quest uses `{ type: 'velodrome-swap', minUsd: 1 }`: a successful swap through
+Velodrome's UniversalRouter `0xcAF2…7c67`, the address its app is built with for Ink (the older
+router in Velodrome's `deployment-addresses/ink.json` isn't used by the app). Slipstream (V3) and
+V2 pools both count. The swap is valued by its WETH side at Tydro's oracle price or its USD₮0 side
+at $1, whichever passes; swaps with neither token can't be valued and don't count. See
+`src/quests/velodrome.ts`.
+
 Holder quests use `{ type: 'nft-holder', contract: '0x…' }` instead: the claim passes when the
 wallet holds at least one token of that ERC-721 collection (`balanceOf` over RPC), with no
 transaction to find. Only the balance counts, so one NFT moved between wallets can be claimed by

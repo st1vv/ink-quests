@@ -59,7 +59,10 @@ export class VerificationService {
     }
 
     const hasCallSpecs = specs.some(
-      (s) => s.type === 'contract-call' || s.type === 'inkyswap-swap',
+      (s) =>
+        s.type === 'contract-call' ||
+        s.type === 'inkyswap-swap' ||
+        s.type === 'velodrome-swap',
     );
     if (!hasCallSpecs) {
       return { done: false, missing: bridges.length ? 'bridge' : 'nft' };

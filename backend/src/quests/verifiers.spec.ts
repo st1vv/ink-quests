@@ -215,6 +215,7 @@ describe('withMinUsd', () => {
       'tydro-supply-weth',
       'tydro-supply-usdt',
       'inkyswap-swap',
+      'velodrome-swap',
       'relay-bridge-to-ink',
     ]) {
       const specs = withMinUsd(VERIFIERS[key], 10);

@@ -101,6 +101,16 @@ const QUESTS: SeedQuest[] = [
     verifier: 'inkyswap-swap',
   }),
   ...tiered({
+    slug: 'daily-velodrome-swap',
+    title: (usd) => `Swap $${usd} on Velodrome`,
+    description: (usd) =>
+      `Swap at least $${usd} worth on Velodrome to complete this daily quest. Swaps to or from ETH or USDT0 count.`,
+    actionUrl: 'https://velo.drome.eth.limo/swap?chain0=57073&chain1=57073',
+    points: 30,
+    sortOrder: 3,
+    verifier: 'velodrome-swap',
+  }),
+  ...tiered({
     slug: 'daily-tydro-supply-weth',
     title: (usd) => `Supply $${usd} of ETH on Tydro`,
     description: (usd) =>
