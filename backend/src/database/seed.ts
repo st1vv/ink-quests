@@ -27,8 +27,7 @@ const PARTNERS: SeedPartner[] = [
     title: 'InkQuests',
     description:
       'Get started with InkQuests: follow us on X and complete your first daily quest.',
-    // No banner yet: the Quests page shows a branded gradient instead.
-    imageUrl: '',
+    imageUrl: '/campaigns/inkquests.webp',
     websiteUrl: 'https://inkquests.xyz',
     rewardXp: 100,
   },
@@ -38,6 +37,14 @@ const PARTNERS: SeedPartner[] = [
     description: '2,222 Hornets on Ink Chain. Angry. Unfriendly. Unexplained.',
     imageUrl: '/campaigns/inkhornet.webp',
     websiteUrl: 'https://www.inkhornet.com/',
+    rewardXp: 100,
+  },
+  {
+    slug: 'boink',
+    title: 'Boink',
+    description: 'Collection of 777 Boinks.',
+    imageUrl: '/campaigns/boink.webp',
+    websiteUrl: 'https://www.boinkverse.ink/',
     rewardXp: 100,
   },
 ];
@@ -169,6 +176,17 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 10,
     verifier: 'hold-ink-hornet',
   },
+  {
+    slug: 'daily-hold-boink',
+    kind: 'daily',
+    title: 'Hold a Boink NFT',
+    description:
+      'Hold at least one Boink NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/boinknfts',
+    points: 50,
+    sortOrder: 11,
+    verifier: 'hold-boink',
+  },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
   // is paid once all of them are verified. Follows on X need a linked X
@@ -225,7 +243,8 @@ const QUESTS: SeedQuest[] = [
     kind: 'partner',
     partner: 'inkhornet',
     title: 'Follow @inkthehornet on X',
-    description: 'Follow Ink Hornet on X for news, new quests and rewards.',
+    description:
+      'Follow Ink Hornet on X to keep up with announcements and community news.',
     actionUrl: 'https://x.com/intent/follow?screen_name=inkthehornet',
     points: 0,
     sortOrder: 2,
@@ -235,6 +254,41 @@ const QUESTS: SeedQuest[] = [
     slug: 'inkhornet-complete-daily-quest',
     kind: 'partner',
     partner: 'inkhornet',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // Boink
+  {
+    slug: 'boink-hold-boink',
+    kind: 'partner',
+    partner: 'boink',
+    title: 'Hold a Boink NFT',
+    description: 'Hold at least one Boink NFT in your wallet.',
+    actionUrl: 'https://opensea.io/collection/boinknfts',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-boink',
+  },
+  {
+    slug: 'boink-follow-boinkverse',
+    kind: 'partner',
+    partner: 'boink',
+    title: 'Follow @boinkverse on X',
+    description:
+      'Follow Boink on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=boinkverse',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-boinkverse',
+  },
+  {
+    slug: 'boink-complete-daily-quest',
+    kind: 'partner',
+    partner: 'boink',
     title: 'Complete any daily quest',
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
