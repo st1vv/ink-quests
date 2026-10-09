@@ -57,11 +57,17 @@ export type InkySwapSpec = {
   minUsd: number;
 };
 
-// A successful swap on Velodrome (its UniversalRouter) worth at least
-// `minUsd`, valued by its WETH or USD₮0 side (see velodrome.ts).
-export type VelodromeSwapSpec = {
-  type: 'velodrome-swap';
+// A successful swap through a DEX's router worth at least `minUsd`, valued
+// by its WETH side (oracle price) or USD₮0 side ($1), whichever passes. See
+// velodrome.ts for how its router's calldata is read.
+export type DexSwapSpec = {
+  type: 'dex-swap';
+  dex: 'velodrome';
   minUsd: number;
+};
+
+const SWAP_VALUE_OF = {
+  velodrome: velodromeSwapValue,
 };
 
 // Follow an X account. Not checked with X (its API charges per read and
@@ -82,7 +88,7 @@ export type VerifierSpec =
   | NftHolderSpec
   | RelayBridgeSpec
   | InkySwapSpec
-  | VelodromeSwapSpec
+  | DexSwapSpec
   | XFollowSpec
   | DailyQuestDoneSpec;
 
@@ -172,7 +178,9 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   ],
 
   'inkyswap-swap': [{ type: 'inkyswap-swap', minUsd: MIN_QUEST_USD }],
-  'velodrome-swap': [{ type: 'velodrome-swap', minUsd: MIN_QUEST_USD }],
+  'velodrome-swap': [
+    { type: 'dex-swap', dex: 'velodrome', minUsd: MIN_QUEST_USD },
+  ],
 
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
@@ -272,8 +280,8 @@ const txMatches = async (
     if (wei === 0n) return false;
     return worthAtLeast(wei, 18, await priceOf(WETH), spec.minUsd);
   }
-  if (spec.type === 'velodrome-swap') {
-    const value = velodromeSwapValue(tx);
+  if (spec.type === 'dex-swap') {
+    const value = SWAP_VALUE_OF[spec.dex](tx);
     if (!value) return false;
     // USD₮0 counts at exactly $1, like the Tydro USDT quest.
     if (worthAtLeast(value.usdt0, 6, USD_PRICE_UNIT, spec.minUsd)) return true;
@@ -336,7 +344,7 @@ export const withMinUsd = (
         if (
           spec.type === 'relay-bridge' ||
           spec.type === 'inkyswap-swap' ||
-          spec.type === 'velodrome-swap'
+          spec.type === 'dex-swap'
         ) {
           return { ...spec, minUsd: usd };
         }
@@ -350,7 +358,7 @@ export const minUsdOf = (specs: VerifierSpec[]) => {
     if (
       spec.type === 'relay-bridge' ||
       spec.type === 'inkyswap-swap' ||
-      spec.type === 'velodrome-swap'
+      spec.type === 'dex-swap'
     ) {
       return spec.minUsd;
     }

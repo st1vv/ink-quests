@@ -15,6 +15,11 @@ export const INKYSWAP_UNIVERSAL_ROUTER =
 export const INKYSWAP_V2_ROUTER = '0xA8C1C38FF57428e5C3a34E0899Be5Cb385476507';
 const WETH = '0x4200000000000000000000000000000000000006';
 
+// What a swap is known to have moved in the two assets we can price: WETH
+// (ETH counts as WETH; priced by the oracle) and USD₮0 (at $1). Wei and
+// 6-decimal units. Used by the Velodrome check.
+export type SwapValue = { weth: bigint; usdt0: bigint };
+
 const universalRouterAbi = parseAbi([
   'function execute(bytes commands, bytes[] inputs, uint256 deadline)',
   'function execute(bytes commands, bytes[] inputs)',

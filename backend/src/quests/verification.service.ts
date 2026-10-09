@@ -62,7 +62,7 @@ export class VerificationService {
       (s) =>
         s.type === 'contract-call' ||
         s.type === 'inkyswap-swap' ||
-        s.type === 'velodrome-swap',
+        s.type === 'dex-swap',
     );
     if (!hasCallSpecs) {
       return { done: false, missing: bridges.length ? 'bridge' : 'nft' };

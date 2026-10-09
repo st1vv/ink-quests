@@ -5,6 +5,7 @@ import {
   type Hex,
 } from 'viem';
 import type { ExplorerTx } from './explorer.client';
+import type { SwapValue } from './swap';
 
 // Velodrome's UniversalRouter, the one its app (velo.drome.eth.limo) sends
 // swaps to on Ink: VITE_UNIVERSAL_ROUTER_ADDRESS_57073 in the app's build. The same address on every Superchain
@@ -63,17 +64,13 @@ const pathTokens = (path: Hex, stride: number) => {
   return tokens;
 };
 
-// What a swap is known to have moved in the two assets we can price: WETH
-// (by its oracle price) and USD₮0 (at $1). Wei and 6-decimal units.
-export type VelodromeSwapValue = { weth: bigint; usdt0: bigint };
-
 const max = (a: bigint, b: bigint) => (a > b ? a : b);
 
 // Counts only amounts known to have moved: what went in on an exact-in swap
 // (unless it's the router's balance), the guaranteed minimum out, or the
 // exact amount out. amountInMax is only a cap, so it doesn't count.
 // Exact-out V3 paths run backwards (output token first).
-const addLegs = (value: VelodromeSwapValue, command: number, input: Hex) => {
+const addLegs = (value: SwapValue, command: number, input: Hex) => {
   const [, amount, bound, path, , isUni] = decodeAbiParameters(
     swapParams,
     input,
@@ -102,9 +99,7 @@ const addLegs = (value: VelodromeSwapValue, command: number, input: Hex) => {
 // The WETH and USD₮0 a successful Velodrome swap moved, or null when the
 // transaction isn't one. ETH sent with it counts as WETH. A token-to-token
 // swap with neither asset gives zeros: its value can't be told.
-export const velodromeSwapValue = (
-  tx: ExplorerTx,
-): VelodromeSwapValue | null => {
+export const velodromeSwapValue = (tx: ExplorerTx): SwapValue | null => {
   if (tx.isError !== '0') return null;
   if (tx.to.toLowerCase() !== VELODROME_UNIVERSAL_ROUTER.toLowerCase()) {
     return null;
