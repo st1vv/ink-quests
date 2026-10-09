@@ -100,6 +100,13 @@ const WETH: Address = '0x4200000000000000000000000000000000000006';
 const USDT0: Address = '0x0200C29006150606B650577BBE7B6248F58470c1';
 const MIN_QUEST_USD = 1;
 
+// gm.ink (formerly gm.inkonchain.com): ERC1967 proxy, implementation
+// GMV2Buyback. Re-check the selectors if the proxy is upgraded.
+const GM_CONTRACT: Address = '0x14Aec24CE62258FECDe22E928D8F37dD47165d4F';
+// The wallet "send us a GM" quests point at.
+const INKQUESTS_GM_RECIPIENT: Address =
+  '0x99014f787Fa9b21112194E9C8C0A3E4a22D33670';
+
 // Tydro (Aave V3 on Ink). The pool takes any listed asset, so each supply
 // quest pins the asset as supply()'s first argument.
 const TYDRO_POOL = '0x2816cf15F6d2A220E789aA011D5EE4eB6c47FEbA'; // Pool proxy
@@ -120,17 +127,32 @@ const tydroSupply = (
 // arguments): anyone can deploy a contract named after a project, so
 // explorer search results alone are not a source.
 export const VERIFIERS: Record<string, VerifierSpec[]> = {
-  // gm.inkonchain.com: ERC1967 proxy, implementation GMV2. Only a plain GM
-  // from the wallet itself counts, not GMs sent to someone else or relayed
-  // by an agent. Re-check the selectors if the proxy is upgraded.
+  // Only a plain GM from the wallet itself counts, not GMs sent to someone
+  // else or relayed by an agent.
   'ink-gm': [
     {
       type: 'contract-call',
-      contracts: ['0x14Aec24CE62258FECDe22E928D8F37dD47165d4F'],
+      contracts: [GM_CONTRACT],
       methods: [
         '0xc0129d43', // gm()
         '0x50915b89', // gmPlus()
       ],
+    },
+  ],
+
+  // A GM sent to us from the wallet itself (not by an agent), recipient
+  // first. gmTo shares the plain GM's 24h cooldown; gmUnlimitedTo (free)
+  // and gmPlusTo (paid) don't, so the quest stays doable after a Say GM.
+  'ink-gm-to-inkquests': [
+    {
+      type: 'contract-call',
+      contracts: [GM_CONTRACT],
+      methods: [
+        '0xe884624b', // gmTo(address)
+        '0xe9c1b8bb', // gmUnlimitedTo(address)
+        '0x96c32612', // gmPlusTo(address)
+      ],
+      firstArg: INKQUESTS_GM_RECIPIENT,
     },
   ],
 

@@ -89,6 +89,21 @@ const QUESTS: SeedQuest[] = [
     points: 20,
     sortOrder: 1,
     verifier: 'ink-gm',
+    // Shares a group with the GM to InkQuests: a plain GM and a gmTo share
+    // one 24h cooldown on the GM contract, so they never show together.
+    groupKey: 'daily-gm',
+  },
+  {
+    slug: 'daily-gm-to-inkquests',
+    kind: 'daily',
+    title: 'Send a GM to InkQuests',
+    description: 'Send a GM to the InkQuests wallet on the official platform.',
+    actionUrl:
+      'https://www.gm.ink?to=0x99014f787Fa9b21112194E9C8C0A3E4a22D33670',
+    points: 20,
+    sortOrder: 1,
+    verifier: 'ink-gm-to-inkquests',
+    groupKey: 'daily-gm',
   },
   ...tiered({
     slug: 'daily-inkyswap-swap',

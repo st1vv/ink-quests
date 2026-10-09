@@ -135,6 +135,29 @@ describe('ink-gm', () => {
   });
 });
 
+describe('ink-gm-to-inkquests', () => {
+  const GM = '0x14aec24ce62258fecde22e928d8f37dd47165d4f';
+  const US = '99014f787fa9b21112194e9c8c0a3e4a22d33670';
+  const SOMEONE = '1111111111111111111111111111111111111111';
+  const specs = VERIFIERS['ink-gm-to-inkquests'];
+
+  it('matches gmTo, gmUnlimitedTo and gmPlusTo sent to us', async () => {
+    for (const selector of ['0xe884624b', '0xe9c1b8bb', '0x96c32612']) {
+      expect(await matches(specs, tx(GM, selector + word(US)))).toBe(true);
+    }
+  });
+
+  it('rejects GMs to someone else, by an agent, or without a recipient', async () => {
+    expect(await matches(specs, tx(GM, '0xe884624b' + word(SOMEONE)))).toBe(
+      false,
+    );
+    // agentGmTo(address)
+    expect(await matches(specs, tx(GM, '0xbae80488' + word(US)))).toBe(false);
+    // gm()
+    expect(await matches(specs, tx(GM, '0xc0129d43'))).toBe(false);
+  });
+});
+
 describe('relay-bridge-to-ink', () => {
   const [spec] = VERIFIERS['relay-bridge-to-ink'];
   if (spec.type !== 'relay-bridge') throw new Error('unexpected spec type');
