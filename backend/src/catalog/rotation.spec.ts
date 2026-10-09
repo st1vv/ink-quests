@@ -1,6 +1,7 @@
 import { pickDailyQuests, type RotationCandidate } from './rotation';
 
-// 8 groups like the real catalog; three of them come in $1/$5/$10 variants.
+// 8 groups like the real catalog; three of them come in $1/$5/$10 variants
+// and three are NFT holder quests.
 const CATALOG: RotationCandidate[] = [
   { id: 1, group: 'gm' },
   { id: 2, group: 'swap' },
@@ -9,15 +10,16 @@ const CATALOG: RotationCandidate[] = [
   { id: 5, group: 'weth' },
   { id: 6, group: 'weth' },
   { id: 7, group: 'weth' },
-  { id: 8, group: 'templars' },
-  { id: 9, group: 'rekt' },
-  { id: 10, group: 'bunnies' },
+  { id: 8, group: 'templars', nft: true },
+  { id: 9, group: 'rekt', nft: true },
+  { id: 10, group: 'bunnies', nft: true },
   { id: 11, group: 'relay' },
   { id: 12, group: 'relay' },
   { id: 13, group: 'relay' },
   { id: 14, group: 'usdt' },
 ];
 const groupOf = (id: number) => CATALOG.find((c) => c.id === id)!.group;
+const isNft = (id: number) => Boolean(CATALOG.find((c) => c.id === id)!.nft);
 const none = new Set<string>();
 
 const days = (n: number) =>
@@ -72,6 +74,25 @@ describe('pickDailyQuests', () => {
     const tiny = CATALOG.filter((c) => c.group === 'swap');
     expect(pickDailyQuests(tiny, '2026-10-01', none)).toHaveLength(1);
     expect(pickDailyQuests([], '2026-10-01', none)).toEqual([]);
+  });
+
+  it('shows at most one NFT quest a day, and still shows them', () => {
+    const nftPerDay = days(120).map(
+      (day) => pickDailyQuests(CATALOG, day, none).filter(isNft).length,
+    );
+    expect(Math.max(...nftPerDay)).toBe(1);
+    expect(nftPerDay.filter((n) => n === 1).length).toBeGreaterThan(30);
+  });
+
+  it('keeps the NFT cap even when that leaves fewer than 3 quests', () => {
+    const nftHeavy = CATALOG.filter((c) =>
+      ['gm', 'templars', 'rekt', 'bunnies'].includes(c.group),
+    );
+    for (const day of days(30)) {
+      const ids = pickDailyQuests(nftHeavy, day, none);
+      expect(ids).toHaveLength(2);
+      expect(ids.filter(isNft)).toHaveLength(1);
+    }
   });
 
   it('uses every variant of a group over time', () => {
