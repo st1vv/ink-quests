@@ -27,9 +27,13 @@ export const userXp = sql`
   having sum(points) > 0
 `;
 
+// Our own wallets: they keep their XP but take no place on the
+// leaderboard. Lowercase, as users.address is stored.
+const HIDDEN_ADDRESSES = ['0x99014f787fa9b21112194e9c8c0a3e4a22d33670'];
+
 // Every user with XP gets their own place: on equal XP, whoever reached it
 // first (the earlier last XP-earning action) is ahead, then whoever signed
-// up first.
+// up first. Hidden wallets are left out, so nobody's place has a gap.
 const rankedUsers = sql`
   with xp as (${userXp})
   select
@@ -42,6 +46,10 @@ const rankedUsers = sql`
     )::int as rank
   from xp
   join users u on u.id = xp.user_id
+  where u.address not in (${sql.join(
+    HIDDEN_ADDRESSES.map((a) => sql`${a}`),
+    sql`, `,
+  )})
 `;
 
 type RankedRow = {
