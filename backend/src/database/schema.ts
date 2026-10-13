@@ -125,6 +125,9 @@ export const partners = pgTable('partners', {
   // XP for finishing every task of the campaign; the tasks themselves are
   // worth nothing on their own.
   rewardXp: integer().notNull().default(0),
+  // What the partner is about (e.g. NFTs, Token), shown as badges on its
+  // card. Set in seed.ts.
+  tags: text().array().notNull().default([]),
   isActive: boolean().notNull().default(true),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

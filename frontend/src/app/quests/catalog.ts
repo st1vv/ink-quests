@@ -21,6 +21,8 @@ export type Partner = {
   websiteUrl: string | null;
   // Paid once all tasks are verified.
   rewardXp: number;
+  // What the partner is about, e.g. "NFTs"; shown as badges on its card.
+  tags?: string[];
 };
 
 // Campaign card on the Quests page.

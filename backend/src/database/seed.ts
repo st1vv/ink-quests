@@ -11,7 +11,14 @@ import { VERIFIERS } from '../quests/verifiers';
 
 loadEnvFile();
 
-type SeedPartner = Omit<typeof partners.$inferInsert, 'id' | 'createdAt'>;
+// Badges on a partner's card. Add new ones here so every partner spells
+// them the same way.
+type PartnerTag = 'NFTs' | 'Token';
+
+type SeedPartner = Omit<
+  typeof partners.$inferInsert,
+  'id' | 'createdAt' | 'tags'
+> & { tags?: PartnerTag[] };
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -38,6 +45,7 @@ const PARTNERS: SeedPartner[] = [
     imageUrl: '/campaigns/ink-hornet.webp',
     websiteUrl: 'https://www.inkhornet.com/',
     rewardXp: 100,
+    tags: ['NFTs'],
   },
   {
     slug: 'boink',
@@ -46,6 +54,7 @@ const PARTNERS: SeedPartner[] = [
     imageUrl: '/campaigns/boink.webp',
     websiteUrl: 'https://www.boinkverse.ink/',
     rewardXp: 100,
+    tags: ['NFTs'],
   },
   {
     slug: 'inky-squad',
@@ -54,6 +63,7 @@ const PARTNERS: SeedPartner[] = [
       "A bunch of drippy sea punks having fun. We're here to ink the game, not play it.",
     imageUrl: '/campaigns/inky-squad.webp',
     rewardXp: 100,
+    tags: ['NFTs'],
   },
 ];
 

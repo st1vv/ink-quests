@@ -64,6 +64,13 @@
       "when": 1791382372183,
       "tag": "0008_display_names",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791874793119,
+      "tag": "0009_partner_tags",
+      "breakpoints": true
     }
   ]
 }

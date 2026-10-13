@@ -3,12 +3,28 @@ import type { ReactNode } from "react";
 interface BadgeProps {
   children: ReactNode;
   className?: string;
+  // "ink" for highlights like XP; the rest for labels like partner tags.
+  variant?: BadgeVariant;
 }
 
-export const Badge = ({ children, className = "" }: BadgeProps) => {
+const VARIANTS = {
+  ink: "border-ink/30 bg-ink/10 text-ink-light",
+  neutral: "border-white/15 bg-white/5 text-white/70",
+  pink: "border-pink-400/30 bg-pink-400/10 text-pink-300",
+  // Close to OpenSea's blue (#2081E2), for NFTs.
+  blue: "border-blue-500/40 bg-blue-500/15 text-blue-400",
+};
+
+export type BadgeVariant = keyof typeof VARIANTS;
+
+export const Badge = ({
+  children,
+  className = "",
+  variant = "ink",
+}: BadgeProps) => {
   return (
     <div
-      className={`inline-flex text-nowrap rounded-full border border-ink/30 bg-ink/10 text-sm font-medium text-ink-light ${className}`}
+      className={`inline-flex text-nowrap rounded-full border text-sm font-medium ${VARIANTS[variant]} ${className}`}
     >
       {children}
     </div>

@@ -26,6 +26,7 @@ const partnerFields = {
   websiteUrl: partners.websiteUrl,
   // Paid once all tasks are verified.
   rewardXp: partners.rewardXp,
+  tags: partners.tags,
 };
 
 @Injectable()

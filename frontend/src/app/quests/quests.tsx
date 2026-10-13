@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { PageIntro } from "@/shared/ui/page-intro";
-import { Badge } from "@/shared/ui/badge";
+import { Badge, type BadgeVariant } from "@/shared/ui/badge";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { formatNumber } from "@/lib/format";
 import { usePartners, type CampaignSummary } from "@/app/quests/catalog";
@@ -193,6 +193,13 @@ const EmptyState = ({
   </div>
 );
 
+// Partner tags (set in the backend's seed.ts) and their badge colors; a tag
+// missing here shows in grey.
+const TAG_COLORS: Record<string, BadgeVariant> = {
+  NFTs: "blue",
+  Token: "pink",
+};
+
 const CampaignCard = ({
   campaign,
   completed,
@@ -219,6 +226,15 @@ const CampaignCard = ({
           <Badge className="px-2 py-0.5 text-xs">
             +{formatNumber(campaign.rewardXp)} XP
           </Badge>
+          {(campaign.tags ?? []).map((tag) => (
+            <Badge
+              key={tag}
+              variant={TAG_COLORS[tag] ?? "neutral"}
+              className="px-2 py-0.5 text-xs"
+            >
+              {tag}
+            </Badge>
+          ))}
         </div>
         <p className="mt-3 line-clamp-3 text-sm leading-6 text-white/60">
           {campaign.description}
