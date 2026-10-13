@@ -8,7 +8,7 @@ const TAG_COLORS: Record<string, BadgeVariant> = {
   GM: "amber",
   Swap: "orange",
   Lending: "teal",
-  Bridge: "violet",
+  Bridge: "cyan",
 };
 
 // An API deployed before tags existed sends none.
