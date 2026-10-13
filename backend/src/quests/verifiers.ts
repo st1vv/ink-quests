@@ -209,6 +209,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-stivcrypto': [{ type: 'x-follow', handle: 'stivcrypto' }],
   'x-follow-inkhornet': [{ type: 'x-follow', handle: 'inkthehornet' }],
   'x-follow-boinkverse': [{ type: 'x-follow', handle: 'boinkverse' }],
+  'x-follow-squidsonink': [{ type: 'x-follow', handle: 'squidsonink' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
 
   'hold-templars-of-the-storm': [
@@ -239,6 +240,13 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     {
       type: 'nft-holder',
       contract: '0x3132e1e8c7a46638b2df26b9252ac5d88d9e04c5',
+    },
+  ],
+  // InkySquad (ISQD), not on OpenSea yet.
+  'hold-inky-squad': [
+    {
+      type: 'nft-holder',
+      contract: '0xe4e5d5170ba5cae36d1876893d4b218e8ed19c91',
     },
   ],
 };

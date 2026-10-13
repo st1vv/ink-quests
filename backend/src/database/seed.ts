@@ -35,7 +35,7 @@ const PARTNERS: SeedPartner[] = [
     slug: 'inkhornet',
     title: 'Ink Hornet',
     description: '2,222 Hornets on Ink Chain. Angry. Unfriendly. Unexplained.',
-    imageUrl: '/campaigns/inkhornet.webp',
+    imageUrl: '/campaigns/ink-hornet.webp',
     websiteUrl: 'https://www.inkhornet.com/',
     rewardXp: 100,
   },
@@ -45,6 +45,14 @@ const PARTNERS: SeedPartner[] = [
     description: 'Collection of 777 Boinks.',
     imageUrl: '/campaigns/boink.webp',
     websiteUrl: 'https://www.boinkverse.ink/',
+    rewardXp: 100,
+  },
+  {
+    slug: 'inky-squad',
+    title: 'Inky Squad',
+    description:
+      "A bunch of drippy sea punks having fun. We're here to ink the game, not play it.",
+    imageUrl: '/campaigns/inky-squad.webp',
     rewardXp: 100,
   },
 ];
@@ -314,6 +322,43 @@ const QUESTS: SeedQuest[] = [
     slug: 'boink-complete-daily-quest',
     kind: 'partner',
     partner: 'boink',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // Inky Squad
+  {
+    slug: 'inky-squad-hold-inky-squad',
+    kind: 'partner',
+    partner: 'inky-squad',
+    title: 'Hold an Inky Squad NFT',
+    description: 'Hold at least one Inky Squad NFT in your wallet.',
+    // Not listed on OpenSea yet.
+    actionUrl:
+      'https://explorer.inkonchain.com/token/0xe4e5d5170ba5cae36d1876893d4b218e8ed19c91',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-inky-squad',
+  },
+  {
+    slug: 'inky-squad-follow-squidsonink',
+    kind: 'partner',
+    partner: 'inky-squad',
+    title: 'Follow @squidsonink on X',
+    description:
+      'Follow Inky Squad on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=squidsonink',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-squidsonink',
+  },
+  {
+    slug: 'inky-squad-complete-daily-quest',
+    kind: 'partner',
+    partner: 'inky-squad',
     title: 'Complete any daily quest',
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
