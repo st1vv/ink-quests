@@ -3,6 +3,7 @@ import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useClaimQuest } from "@/app/quests/claims";
+import { TagBadges } from "@/app/quests/tag-badges";
 import { CLAIM_DELAY_S, type QuestItem } from "@/app/quests/quest-status";
 
 type QuestRowProps = {
@@ -83,6 +84,8 @@ export const QuestRow = ({
             {quest.points > 0 && (
               <Badge className="px-2 py-0.5 text-xs">+{quest.points} XP</Badge>
             )}
+            {/* Only daily quests have tags; campaign tasks have none. */}
+            <TagBadges tags={quest.tags} />
           </div>
 
           <p className="mt-1 text-sm leading-6 text-white/60">

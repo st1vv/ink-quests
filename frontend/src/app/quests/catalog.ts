@@ -8,6 +8,9 @@ export type Quest = {
   description: string;
   actionUrl: string;
   points: number;
+  // What the quest is about, e.g. "Swap"; shown as badges on daily quests.
+  // Missing from an API deployed before tags existed.
+  tags?: string[];
   // False until the backend has an onchain check for this quest.
   claimable: boolean;
 };

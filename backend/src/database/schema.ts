@@ -172,6 +172,9 @@ export const quests = pgTable(
     // daily rotation never shows two of them on the same day. Null means
     // the quest is its own group.
     groupKey: varchar({ length: 64 }),
+    // What the quest is about (e.g. Swap, NFTs), shown as badges on daily
+    // quests. Set in seed.ts.
+    tags: text().array().notNull().default([]),
     sortOrder: integer().notNull().default(0),
     isActive: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

@@ -15,6 +15,7 @@ const questFields = {
   description: quests.description,
   actionUrl: quests.actionUrl,
   points: quests.points,
+  tags: quests.tags,
   claimable: isNotNull(quests.verifier),
 };
 

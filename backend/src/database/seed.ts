@@ -20,12 +20,17 @@ type SeedPartner = Omit<
   'id' | 'createdAt' | 'tags'
 > & { tags?: PartnerTag[] };
 
+// Badges on a daily quest: what the user does. Add new ones here so every
+// quest spells them the same way.
+type QuestTag = 'GM' | 'Swap' | 'Lending' | 'Bridge' | 'NFTs';
+
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
-  'id' | 'createdAt' | 'partnerId'
+  'id' | 'createdAt' | 'partnerId' | 'tags'
 > & {
   // Slug of the partner, required for kind 'partner'.
   partner?: string;
+  tags?: QuestTag[];
 };
 
 const PARTNERS: SeedPartner[] = [
@@ -81,6 +86,7 @@ const tiered = (quest: {
   points: number;
   sortOrder: number;
   verifier: string;
+  tags: QuestTag[];
 }): SeedQuest[] =>
   AMOUNT_TIERS.map((usd, i) => ({
     slug: i === 0 ? quest.slug : `${quest.slug}-${usd}usd`,
@@ -93,6 +99,7 @@ const tiered = (quest: {
     verifier: quest.verifier,
     minUsd: usd,
     groupKey: quest.slug,
+    tags: quest.tags,
   }));
 
 // The daily pool: each day shows 3 of these (see catalog/rotation.ts), from
@@ -107,6 +114,7 @@ const QUESTS: SeedQuest[] = [
     points: 20,
     sortOrder: 1,
     verifier: 'ink-gm',
+    tags: ['GM'],
     // Shares a group with the GM to InkQuests: a plain GM and a gmTo share
     // one 24h cooldown on the GM contract, so they never show together.
     groupKey: 'daily-gm',
@@ -121,6 +129,7 @@ const QUESTS: SeedQuest[] = [
     points: 20,
     sortOrder: 1,
     verifier: 'ink-gm-to-inkquests',
+    tags: ['GM'],
     groupKey: 'daily-gm',
   },
   ...tiered({
@@ -132,6 +141,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 2,
     verifier: 'inkyswap-swap',
+    tags: ['Swap'],
   }),
   ...tiered({
     slug: 'daily-velodrome-swap',
@@ -142,6 +152,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 3,
     verifier: 'velodrome-swap',
+    tags: ['Swap'],
   }),
   ...tiered({
     slug: 'daily-tydro-supply-weth',
@@ -153,6 +164,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 4,
     verifier: 'tydro-supply-weth',
+    tags: ['Lending'],
   }),
   ...tiered({
     slug: 'daily-tydro-supply-usdt',
@@ -164,6 +176,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 5,
     verifier: 'tydro-supply-usdt',
+    tags: ['Lending'],
   }),
   ...tiered({
     slug: 'daily-relay-bridge',
@@ -174,6 +187,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 9,
     verifier: 'relay-bridge-to-ink',
+    tags: ['Bridge'],
   }),
   {
     slug: 'daily-hold-templars-of-the-storm',
@@ -185,6 +199,7 @@ const QUESTS: SeedQuest[] = [
     points: 100,
     sortOrder: 6,
     verifier: 'hold-templars-of-the-storm',
+    tags: ['NFTs'],
   },
   {
     slug: 'daily-hold-rekt-ink',
@@ -196,6 +211,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 7,
     verifier: 'hold-rekt-ink',
+    tags: ['NFTs'],
   },
   {
     slug: 'daily-hold-ink-bunnies',
@@ -207,6 +223,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 8,
     verifier: 'hold-ink-bunnies',
+    tags: ['NFTs'],
   },
   {
     slug: 'daily-hold-ink-hornet',
@@ -218,6 +235,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 10,
     verifier: 'hold-ink-hornet',
+    tags: ['NFTs'],
   },
   {
     slug: 'daily-hold-boink',
@@ -229,6 +247,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 11,
     verifier: 'hold-boink',
+    tags: ['NFTs'],
   },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
