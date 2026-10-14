@@ -197,7 +197,7 @@ const StatsList = (props: ListProps) => {
           title="Users"
           description="Every wallet that signed in, newest first."
           empty="No users yet."
-          grid="md:grid-cols-[170px_110px_1fr_1fr_150px]"
+          grid="md:grid-cols-[170px_110px_110px_1fr_1fr_150px]"
           columns={USER_COLUMNS}
         />
       );
@@ -509,6 +509,19 @@ const USER_COLUMNS: Column<StatsUser>[] = [
       <>
         <Strong>{formatNumber(u.xp)}</Strong>
         <p className="text-xs text-white/40">Level {u.level}</p>
+      </>
+    ),
+  },
+  {
+    label: "Referrals",
+    cell: (u) => (
+      <>
+        <Strong>{formatNumber(u.referrals)}</Strong>
+        {u.referrals > 0 && (
+          <p className="text-xs text-white/40">
+            {formatNumber(u.rewardedReferrals)} rewarded
+          </p>
+        )}
       </>
     ),
   },

@@ -89,7 +89,11 @@ const LISTS: Record<StatsView, ListSpec> = {
       select
         u.id, u.address, u.display_name, coalesce(x.xp, 0)::int as xp,
         u.created_at, u.last_login_at, r.address as referrer,
-        r.display_name as referrer_name
+        r.display_name as referrer_name,
+        (select count(*)::int from users i where i.referred_by_id = u.id)
+          as referrals,
+        (select count(*)::int from referral_rewards rr
+          where rr.referrer_id = u.id) as rewarded_referrals
       from users u
       left join (${userXp}) x on x.user_id = u.id
       left join users r on r.id = u.referred_by_id
@@ -105,6 +109,10 @@ const LISTS: Record<StatsView, ListSpec> = {
       lastLoginAt: iso(r.last_login_at),
       referrer: r.referrer ? getAddress(r.referrer as string) : null,
       referrerName: r.referrer_name,
+      // Users they invited, and how many of those paid them a referral
+      // reward (did an onchain quest).
+      referrals: r.referrals,
+      rewardedReferrals: r.rewarded_referrals,
     }),
   },
 

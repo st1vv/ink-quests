@@ -39,6 +39,10 @@ export type StatsUser = {
   // Who invited them.
   referrer: Address | null;
   referrerName: string | null;
+  // Users they invited, and how many of those did an onchain quest (which
+  // pays the referral reward).
+  referrals: number;
+  rewardedReferrals: number;
 };
 
 export type StatsRankedUser = {
