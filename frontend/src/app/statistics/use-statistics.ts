@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -17,23 +17,83 @@ export type StatsSummary = {
   transactionUsers: number;
 };
 
-export type StatsTransaction = {
+// The lists behind the stat cards, one per card (GET /statistics/:view).
+export type StatsView =
+  | "users"
+  | "users-with-xp"
+  | "quests"
+  | "daily-quests"
+  | "partner-quests"
+  | "check-ins"
+  | "transactions"
+  | "transaction-wallets";
+
+export type StatsUser = {
   id: number;
   address: Address;
+  name: string | null;
+  xp: number;
+  level: number;
+  createdAt: string;
+  lastLoginAt: string | null;
+  // Who invited them.
+  referrer: Address | null;
+  referrerName: string | null;
+};
+
+export type StatsRankedUser = {
+  id: number;
+  // Overall place, our own wallets included.
+  rank: number;
+  address: Address;
+  name: string | null;
+  xp: number;
+  level: number;
+  lastXpAt: string;
+};
+
+// A daily quest completion, a finished partner quest, or (in the
+// transactions list) any completion proven onchain.
+export type StatsCompletion = {
+  id: string;
+  address: Address;
+  name: string | null;
+  // Quest title; the partner's title for a finished partner quest.
   quest: string;
   kind: "daily" | "partner";
-  // Campaign title for partner quests.
+  // Campaign title for a partner task.
   partner: string | null;
   points: number;
-  txHash: string;
+  txHash: string | null;
   completedAt: string;
 };
 
-export type StatsTransactions = {
+export type StatsCheckIn = {
+  id: number;
+  address: Address;
+  name: string | null;
+  // UTC day, YYYY-MM-DD.
+  day: string;
+  points: number;
+  bonusPoints: number;
+  createdAt: string;
+};
+
+export type StatsTransactionWallet = {
+  id: number;
+  address: Address;
+  name: string | null;
+  transactions: number;
+  // XP from those transactions.
+  xp: number;
+  lastTxAt: string;
+};
+
+export type StatsPage<T> = {
   total: number;
   page: number;
   pageSize: number;
-  items: StatsTransaction[];
+  items: T[];
 };
 
 // The backend answers 404 to wallets that aren't admins; retrying won't help.
@@ -53,18 +113,24 @@ export const useStatsSummary = () => {
   });
 };
 
-export const useStatsTransactions = (page: number, filter: string | null) => {
+// The caller picks T to match the view.
+export const useStatsList = <T>(
+  view: StatsView,
+  page: number,
+  filter: string | null,
+) => {
   const { address } = useAuth();
   const params = new URLSearchParams({ page: String(page) });
   if (filter) params.set("address", filter);
 
   return useQuery({
-    queryKey: ["statistics", "transactions", address, page, filter],
-    queryFn: () =>
-      apiFetch<StatsTransactions>(`/statistics/transactions?${params}`),
+    queryKey: ["statistics", view, address, page, filter],
+    queryFn: () => apiFetch<StatsPage<T>>(`/statistics/${view}?${params}`),
     enabled: Boolean(address),
     retry: retryUnlessNotFound,
-    // Keeps the current page on screen while the next one loads.
-    placeholderData: keepPreviousData,
+    // Keeps the current page on screen while the next one of the same list
+    // loads; another list's rows have other fields, so not across lists.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === view ? previous : undefined,
   });
 };
