@@ -36,7 +36,22 @@ export const Quests = () => {
       <PageIntro
         eyebrow="Ecosystem"
         title="Partner quests"
-        description="Explore apps on Ink and complete their quests for extra XP. Each quest is a set of one-time tasks."
+        description={
+          <>
+            Explore apps on Ink and complete their quests for extra XP. Each
+            quest is a set of one-time tasks. Want a quest for your project?
+            Message{" "}
+            <a
+              href={`https://t.me/${TELEGRAM_CONTACT}`}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-ink-light transition hover:text-white"
+            >
+              @{TELEGRAM_CONTACT}
+            </a>{" "}
+            on Telegram.
+          </>
+        }
       />
 
       <div
@@ -138,6 +153,8 @@ export const Quests = () => {
     </div>
   );
 };
+
+const TELEGRAM_CONTACT = "cryptostiv";
 
 type TabButtonProps = {
   selected: boolean;
