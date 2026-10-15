@@ -23,11 +23,12 @@ const PODIUM_STYLES: Record<number, string> = {
 
 // The current challenge: its top places win the prize. Set to null once
 // it's over to hide the note and the badges.
-const CHALLENGE: { places: number; prize: string; postUrl: string } | null = {
-  places: 3,
-  prize: "1 Ink Hornet NFT",
-  postUrl: "https://x.com/inkquests/status/2108118410152268029",
-};
+// The last one: { places: 3, prize: "1 Ink Hornet NFT",
+// postUrl: "https://x.com/inkquests/status/2108118410152268029" }.
+type Challenge = { places: number; prize: string; postUrl: string };
+// `as` keeps the type open: a plain `null` would make TypeScript treat the
+// challenge code below as unreachable and flag it.
+const CHALLENGE = null as Challenge | null;
 
 const prizeFor = (rank: number) =>
   CHALLENGE && rank <= CHALLENGE.places ? CHALLENGE.prize : null;
@@ -203,7 +204,7 @@ const LeaderboardIntro = ({ signedIn, myRank }: LeaderboardIntroProps) => {
   );
 };
 
-type ChallengeNoteProps = { challenge: NonNullable<typeof CHALLENGE> };
+type ChallengeNoteProps = { challenge: Challenge };
 
 const ChallengeNote = ({ challenge }: ChallengeNoteProps) => (
   <div className="flex flex-col gap-3 rounded-3xl border border-amber-400/20 bg-amber-400/[0.06] p-4 sm:flex-row sm:items-center">
