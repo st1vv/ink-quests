@@ -34,6 +34,9 @@ const missingMessage = (
         : `No matching transaction worth at least $${minUsd} found yet. If you just made it, try again in a minute`;
     case 'nft':
       return 'No NFT from this collection found in your wallet';
+    // Nado's own stats run up to ~20 minutes behind its trades.
+    case 'futures':
+      return `No Nado futures trades of at least $${minUsd} found yet. Nado's trading stats can take up to 20 minutes to update, so if you just traded, try again a bit later`;
     case 'bridge':
       return `No Relay bridge of at least $${minUsd} to Ink found yet today (from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute`;
   }
@@ -127,11 +130,13 @@ export class QuestsService {
         'Complete any daily quest first, then come back to claim',
       );
     }
+    // Opening a page has nothing to check.
+    const visit = spec.every((s) => s.type === 'visit');
 
     let result: Verification;
     try {
       result =
-        follow || dailyDone
+        follow || dailyDone || visit
           ? { done: true, txHash: null }
           : await this.verification.verify(
               spec,

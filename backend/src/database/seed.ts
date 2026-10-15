@@ -13,7 +13,7 @@ loadEnvFile();
 
 // Badges on a partner's card. Add new ones here so every partner spells
 // them the same way.
-type PartnerTag = 'NFTs' | 'Token';
+type PartnerTag = 'NFTs' | 'Token' | 'Futures';
 
 type SeedPartner = Omit<
   typeof partners.$inferInsert,
@@ -22,7 +22,7 @@ type SeedPartner = Omit<
 
 // Badges on a daily quest: what the user does. Add new ones here so every
 // quest spells them the same way.
-type QuestTag = 'GM' | 'Swap' | 'Lending' | 'Bridge' | 'NFTs';
+type QuestTag = 'GM' | 'Swap' | 'Lending' | 'Bridge' | 'NFTs' | 'Futures';
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -32,6 +32,9 @@ type SeedQuest = Omit<
   partner?: string;
   tags?: QuestTag[];
 };
+
+// Every Nado link carries our referral code.
+const NADO_URL = 'https://app.nado.xyz?join=inkquests';
 
 const PARTNERS: SeedPartner[] = [
   {
@@ -70,11 +73,22 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFTs'],
   },
+  {
+    slug: 'nado',
+    title: 'Nado',
+    description:
+      'All in one CLOB DEX on Ink: spot, perps and money markets with unified margin.',
+    imageUrl: '/campaigns/nado.webp',
+    websiteUrl: NADO_URL,
+    rewardXp: 100,
+    tags: ['Futures'],
+  },
 ];
 
-// Amount quests come in $1 / $5 / $10 variants, each 10 XP more than the
-// last. They share a group, so the daily rotation picks only one of them a
-// day. The $1 variant keeps the original slug and its completion history.
+// Amount quests come in $1 / $5 / $10 variants (or the quest's own
+// `tiers`), each 10 XP more than the last. They share a group, so the daily
+// rotation picks only one of them a day. The first variant keeps the
+// original slug and its completion history.
 const AMOUNT_TIERS = [1, 5, 10];
 const TIER_BONUS_XP = 10;
 
@@ -87,8 +101,9 @@ const tiered = (quest: {
   sortOrder: number;
   verifier: string;
   tags: QuestTag[];
+  tiers?: number[];
 }): SeedQuest[] =>
-  AMOUNT_TIERS.map((usd, i) => ({
+  (quest.tiers ?? AMOUNT_TIERS).map((usd, i) => ({
     slug: i === 0 ? quest.slug : `${quest.slug}-${usd}usd`,
     kind: 'daily',
     title: quest.title(usd),
@@ -188,6 +203,18 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 9,
     verifier: 'relay-bridge-to-ink',
     tags: ['Bridge'],
+  }),
+  ...tiered({
+    slug: 'daily-nado-futures',
+    title: (usd) => `Trade $${usd} of futures on Nado`,
+    description: (usd) =>
+      `Trade at least $${usd} of futures (perps) on Nado today. Volume counts with leverage. Nado's stats can take up to 20 minutes to update.`,
+    actionUrl: NADO_URL,
+    points: 50,
+    sortOrder: 12,
+    verifier: 'nado-perp-trade',
+    tags: ['Futures'],
+    tiers: [100, 150, 200],
   }),
   {
     slug: 'daily-hold-templars-of-the-storm',
@@ -393,6 +420,53 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // Nado
+  {
+    slug: 'nado-follow-nadohq',
+    kind: 'partner',
+    partner: 'nado',
+    title: 'Follow @nadoHQ on X',
+    description:
+      'Follow Nado on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=nadoHQ',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'x-follow-nadohq',
+  },
+  {
+    slug: 'nado-trade-futures',
+    kind: 'partner',
+    partner: 'nado',
+    title: 'Trade futures on Nado',
+    description:
+      "Make any futures (perps) trade on Nado. Nado's stats can take up to 20 minutes to update.",
+    actionUrl: NADO_URL,
+    points: 0,
+    sortOrder: 2,
+    verifier: 'nado-perp-trade',
+  },
+  {
+    slug: 'nado-explore-arcade',
+    kind: 'partner',
+    partner: 'nado',
+    title: 'Explore Nado Arcade',
+    description: 'Open Nado Arcade and take a look around.',
+    actionUrl: 'https://arcade.nado.xyz/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-nado-arcade',
+  },
+  {
+    slug: 'nado-complete-daily-quest',
+    kind: 'partner',
+    partner: 'nado',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
 ];

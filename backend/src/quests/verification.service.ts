@@ -4,11 +4,13 @@ import { erc721Abi, type Address, type Hex } from 'viem';
 import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import { ExplorerClient } from './explorer.client';
+import { NadoClient } from './nado.client';
 import { PriceService } from './price.service';
 import { RelayClient } from './relay.client';
 import {
   findMatchingTx,
   matchingRelayBridge,
+  type NadoPerpVolumeSpec,
   type NftHolderSpec,
   type RelayBridgeSpec,
   type VerifierSpec,
@@ -17,8 +19,9 @@ import {
 export type Verification =
   // Done; txHash is the matching transaction, null for holding checks.
   | { done: true; txHash: Hex | null }
-  // Not done: no matching transaction, no token held, or no bridge.
-  | { done: false; missing: 'transaction' | 'nft' | 'bridge' };
+  // Not done: no matching transaction, no token held, no bridge, or not
+  // enough futures volume on Nado.
+  | { done: false; missing: 'transaction' | 'nft' | 'bridge' | 'futures' };
 
 // Checks whether a user has done what a quest's verifier asks for. Throws
 // when the explorer, the RPC or the oracle can't be reached.
@@ -30,6 +33,7 @@ export class VerificationService {
     private readonly explorer: ExplorerClient,
     private readonly prices: PriceService,
     private readonly relay: RelayClient,
+    private readonly nado: NadoClient,
     config: ConfigService<Env, true>,
   ) {
     this.client = createInkClient(config.get('INK_RPC_URL', { infer: true }));
@@ -58,6 +62,17 @@ export class VerificationService {
       if (txHash) return { done: true, txHash };
     }
 
+    const nado = specs.filter(
+      (s): s is NadoPerpVolumeSpec => s.type === 'nado-perp-volume',
+    );
+    if (nado.length) {
+      const volume = await this.nado.perpVolume(user, windowStart, now);
+      if (nado.some((s) => volume >= s.minUsd)) {
+        // Nado's orderbook trades have no transaction of the user's own.
+        return { done: true, txHash: null };
+      }
+    }
+
     const hasCallSpecs = specs.some(
       (s) =>
         s.type === 'contract-call' ||
@@ -65,7 +80,12 @@ export class VerificationService {
         s.type === 'dex-swap',
     );
     if (!hasCallSpecs) {
-      return { done: false, missing: bridges.length ? 'bridge' : 'nft' };
+      const missing = nado.length
+        ? 'futures'
+        : bridges.length
+          ? 'bridge'
+          : 'nft';
+      return { done: false, missing };
     }
 
     const txs = await this.explorer.sentTransactions(user, windowStart, now);

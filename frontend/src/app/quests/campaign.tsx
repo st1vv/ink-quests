@@ -16,6 +16,7 @@ import {
 import {
   useClaimCampaign,
   useClaimedCampaigns,
+  useClaimQuest,
   useCompletions,
 } from "@/app/quests/claims";
 import { CampaignCover } from "@/app/quests/campaign-cover";
@@ -264,6 +265,8 @@ const CampaignTaskRow = ({
           }
         />
       );
+    case "visit":
+      return <VisitTaskRow task={task} step={step} onStart={onStart} />;
     case "daily-quest":
       return (
         <QuestRow
@@ -290,4 +293,30 @@ const CampaignTaskRow = ({
         />
       );
   }
+};
+
+// Opening the page is the whole task: one click opens it and verifies the
+// task right away, with no wait and no Verify step. If the claim fails,
+// the usual Verify button shows up after the wait.
+const VisitTaskRow = ({
+  task,
+  step,
+  onStart,
+}: Omit<CampaignTaskRowProps, "xBlocker">) => {
+  const requireAuth = useRequireAuth();
+  const claim = useClaimQuest();
+
+  return (
+    <QuestRow
+      quest={task}
+      claimLabel="Verify"
+      doneLabel="Verified"
+      marker={step}
+      actionLabel="Explore ↗"
+      onStart={requireAuth((questId: number, actionUrl: string) => {
+        onStart(questId, actionUrl);
+        claim.mutate({ questId, title: task.title });
+      })}
+    />
+  );
 };

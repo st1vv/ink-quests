@@ -50,7 +50,8 @@ export const usePartners = () =>
   });
 
 // A campaign's task kind, which decides its buttons.
-export type TaskType = "x-follow" | "nft-holder" | "daily-quest" | "onchain";
+export type TaskType =
+  "x-follow" | "nft-holder" | "daily-quest" | "visit" | "onchain";
 
 export type CampaignTask = Quest & { type: TaskType };
 

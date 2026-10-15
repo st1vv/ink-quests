@@ -41,16 +41,17 @@ Check it: `GET http://localhost:3000/health` → `{"status":"ok","db":"up"}`.
 
 See `.env.example`. The app refuses to start if a variable is missing or invalid.
 
-| Variable           | Description                                                     |
-| ------------------ | --------------------------------------------------------------- |
-| `PORT`             | HTTP port (default 3000)                                        |
-| `DATABASE_URL`     | Postgres connection string                                      |
-| `FRONTEND_ORIGIN`  | Origin allowed by CORS, with credentials; also the SIWE domain  |
-| `INK_RPC_URL`      | Optional Ink RPC for smart-wallet signature checks              |
-| `EXPLORER_API_KEY` | Blockscout PRO API key for quest checks; required in production |
-| `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                |
-| `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)   |
-| `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the `/statistics` page   |
+| Variable           | Description                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `PORT`             | HTTP port (default 3000)                                                            |
+| `DATABASE_URL`     | Postgres connection string                                                          |
+| `FRONTEND_ORIGIN`  | Origin allowed by CORS, with credentials; also the SIWE domain                      |
+| `INK_RPC_URL`      | Optional Ink RPC for smart-wallet signature checks                                  |
+| `EXPLORER_API_KEY` | Blockscout PRO API key for quest checks; required in production                     |
+| `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                                    |
+| `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)                       |
+| `NADO_ARCHIVE_URL` | Nado archive API for futures quests (default: https://api.prod.nado.xyz/archive/v1) |
+| `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the `/statistics` page                       |
 
 ## Auth (Sign-In with Ethereum)
 
@@ -145,6 +146,12 @@ Relay's API (`RELAY_API_URL`) for today's bridges to Ink that involve the wallet
 successful one received by that wallet, from one of `fromChains`, worth at least `minUsd`. The Ink
 transaction Relay names must also be found as successful over RPC, and its hash is stored.
 
+Futures quests use `{ type: 'nado-perp-volume', minUsd: 50 }`: the claim asks Nado's archive API
+(`NADO_ARCHIVE_URL`, `portfolio_calendar`) for the perp volume the wallet traded since the start of
+the quest's window, summed over its four app subaccounts (`default` … `default_3`). Nado's stats can
+run ~20 minutes behind its trades, and orderbook trades have no transaction of the user's own, so
+no hash is stored.
+
 Only transactions the wallet sent itself are found, so smart wallets that go through an ERC-4337
 bundler can't claim yet.
 
@@ -195,13 +202,16 @@ Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
 Open only to signed-in wallets listed in `ADMIN_ADDRESSES`; everyone else gets a 404. The
 frontend shows them at `/statistics`, which isn't linked anywhere.
 
-- `GET /statistics`: `{ users, usersWithXp, questsCompleted, dailyQuestsCompleted,
-  partnerQuestsCompleted, checkIns, transactions, transactionUsers }`. A partner quest counts
-  once its whole campaign is done, so `questsCompleted` is daily + finished campaigns;
-  `transactions` counts completions with a `tx_hash`.
-- `GET /statistics/transactions?page=&address=`: those completions, newest first, 50 per page, as
-  `{ total, page, pageSize, items: { id, address, quest, kind, partner, points, txHash,
-  completedAt }[] }`. `address` narrows it to one wallet.
+- `GET /statistics`: the counts on the stat cards (`users`, `usersWithXp`, `questsCompleted`,
+  `dailyQuestsCompleted`, `partnerQuestsCompleted`, `checkIns`, `transactions`,
+  `transactionUsers`). A partner quest counts once its whole campaign is done, so
+  `questsCompleted` is daily + finished campaigns; `transactions` counts completions with a
+  `tx_hash`.
+- `GET /statistics/:view?page=&address=`: the list behind one card, 50 per page, as
+  `{ total, page, pageSize, items }`. `view` is one of `users`, `users-with-xp`, `quests`,
+  `daily-quests`, `partner-quests`, `check-ins`, `transactions`, `transaction-wallets` (see
+  `STATS_VIEWS` in `statistics.service.ts` for each list's fields). `address` narrows it to one
+  wallet.
 
 ## Referrals
 

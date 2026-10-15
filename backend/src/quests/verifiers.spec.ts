@@ -3,8 +3,10 @@ import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
 import {
   findMatchingTx,
+  isOffchain,
   matchingRelayBridge,
   minUsdOf,
+  taskTypeOf,
   withMinUsd,
   USD_PRICE_UNIT,
   VERIFIERS,
@@ -265,5 +267,17 @@ describe('withMinUsd', () => {
       tx(POOL, supply(USDT_ADDR, units * 10n ** 6n));
     expect(await matches(specs, usdt(5n))).toBe(false);
     expect(await matches(specs, usdt(10n))).toBe(true);
+  });
+});
+
+describe('task types', () => {
+  it('treats opening a page as a visit that pays no referral reward', () => {
+    expect(taskTypeOf('visit-nado-arcade')).toBe('visit');
+    expect(isOffchain(VERIFIERS['visit-nado-arcade'])).toBe(true);
+  });
+
+  it('counts a Nado futures trade as an onchain action for referrals', () => {
+    expect(taskTypeOf('nado-perp-trade')).toBe('onchain');
+    expect(isOffchain(VERIFIERS['nado-perp-trade'])).toBe(false);
   });
 });

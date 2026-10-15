@@ -19,6 +19,8 @@ const envSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   // Relay's public API, used to verify bridges to Ink.
   RELAY_API_URL: z.url().default('https://api.relay.link'),
+  // Nado's archive (indexer) API, used to verify futures trades.
+  NADO_ARCHIVE_URL: z.url().default('https://api.prod.nado.xyz/archive/v1'),
   // X (Twitter) OAuth 2.0 app from developer.x.com, for linking X accounts.
   // Without the id, secret and redirect URI, linking is turned off.
   X_CLIENT_ID: z.string().min(1).optional(),

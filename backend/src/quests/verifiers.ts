@@ -66,6 +66,14 @@ export type DexSwapSpec = {
   minUsd: number;
 };
 
+// At least `minUsd` of futures (perp) volume traded on Nado during the
+// quest's window, read from Nado's API (see nado.client.ts). Trades go
+// through Nado's orderbook, so there's no transaction of the user's own.
+export type NadoPerpVolumeSpec = {
+  type: 'nado-perp-volume';
+  minUsd: number;
+};
+
 const SWAP_VALUE_OF = {
   velodrome: velodromeSwapValue,
 };
@@ -83,14 +91,22 @@ export type DailyQuestDoneSpec = {
   type: 'daily-quest-done';
 };
 
+// Opening a page, e.g. a partner's site. Nothing to check: clicking the
+// task's link is taken as done.
+export type VisitSpec = {
+  type: 'visit';
+};
+
 export type VerifierSpec =
   | ContractCallSpec
   | NftHolderSpec
   | RelayBridgeSpec
   | InkySwapSpec
   | DexSwapSpec
+  | NadoPerpVolumeSpec
   | XFollowSpec
-  | DailyQuestDoneSpec;
+  | DailyQuestDoneSpec
+  | VisitSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -204,13 +220,19 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     { type: 'dex-swap', dex: 'velodrome', minUsd: MIN_QUEST_USD },
   ],
 
+  // Futures on Nado. Its smallest order is $100 of notional, so that's the
+  // lowest daily tier; the partner task takes any trade at all.
+  'nado-perp-trade': [{ type: 'nado-perp-volume', minUsd: MIN_QUEST_USD }],
+
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
   'x-follow-stivcrypto': [{ type: 'x-follow', handle: 'stivcrypto' }],
   'x-follow-inkhornet': [{ type: 'x-follow', handle: 'inkthehornet' }],
   'x-follow-boinkverse': [{ type: 'x-follow', handle: 'boinkverse' }],
   'x-follow-squidsonink': [{ type: 'x-follow', handle: 'squidsonink' }],
+  'x-follow-nadohq': [{ type: 'x-follow', handle: 'nadoHQ' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
+  'visit-nado-arcade': [{ type: 'visit' }],
 
   'hold-templars-of-the-storm': [
     {
@@ -374,7 +396,8 @@ export const withMinUsd = (
         if (
           spec.type === 'relay-bridge' ||
           spec.type === 'inkyswap-swap' ||
-          spec.type === 'dex-swap'
+          spec.type === 'dex-swap' ||
+          spec.type === 'nado-perp-volume'
         ) {
           return { ...spec, minUsd: usd };
         }
@@ -389,7 +412,8 @@ export const minUsdOf = (specs: VerifierSpec[]): number | null => {
     if (
       spec.type === 'relay-bridge' ||
       spec.type === 'inkyswap-swap' ||
-      spec.type === 'dex-swap'
+      spec.type === 'dex-swap' ||
+      spec.type === 'nado-perp-volume'
     ) {
       return spec.minUsd;
     }
@@ -398,18 +422,29 @@ export const minUsdOf = (specs: VerifierSpec[]): number | null => {
 };
 
 // What kind of task a quest is, for the frontend's buttons: follow on X,
-// hold an NFT, do a daily quest, or some onchain action.
-export type TaskType = 'x-follow' | 'nft-holder' | 'daily-quest' | 'onchain';
+// hold an NFT, do a daily quest, open a page, or some onchain action.
+export type TaskType =
+  | 'x-follow'
+  | 'nft-holder'
+  | 'daily-quest'
+  | 'visit'
+  | 'onchain';
 
 export const taskTypeOf = (verifier: string | null): TaskType => {
   const type = verifier ? VERIFIERS[verifier]?.[0]?.type : undefined;
   if (type === 'x-follow') return 'x-follow';
   if (type === 'nft-holder') return 'nft-holder';
   if (type === 'daily-quest-done') return 'daily-quest';
+  if (type === 'visit') return 'visit';
   return 'onchain';
 };
 
 // Checks that aren't an onchain action by the user; they don't count for
 // referral rewards.
 export const isOffchain = (specs: VerifierSpec[]) =>
-  specs.every((s) => s.type === 'x-follow' || s.type === 'daily-quest-done');
+  specs.every(
+    (s) =>
+      s.type === 'x-follow' ||
+      s.type === 'daily-quest-done' ||
+      s.type === 'visit',
+  );
