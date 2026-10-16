@@ -43,6 +43,8 @@ export type StatsUser = {
   // pays the referral reward).
   referrals: number;
   rewardedReferrals: number;
+  // The linked X handle, without the @; null when not linked.
+  xUsername: string | null;
 };
 
 export type StatsRankedUser = {

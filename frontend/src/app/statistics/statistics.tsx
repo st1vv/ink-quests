@@ -197,7 +197,7 @@ const StatsList = (props: ListProps) => {
           title="Users"
           description="Every wallet that signed in, newest first."
           empty="No users yet."
-          grid="md:grid-cols-[170px_110px_110px_1fr_1fr_150px]"
+          grid="md:grid-cols-[170px_110px_110px_140px_1fr_1fr_150px]"
           columns={USER_COLUMNS}
         />
       );
@@ -524,6 +524,23 @@ const USER_COLUMNS: Column<StatsUser>[] = [
         )}
       </>
     ),
+  },
+  {
+    label: "X",
+    cell: (u) =>
+      u.xUsername ? (
+        <a
+          href={`https://x.com/${u.xUsername}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex max-w-full items-center gap-1 text-sm text-ink-light transition hover:text-white"
+        >
+          <span className="truncate">@{u.xUsername}</span>
+          <ExternalLinkIcon className="h-3 w-3 shrink-0" />
+        </a>
+      ) : (
+        <span className="text-xs text-white/40">{PLACEHOLDER}</span>
+      ),
   },
   { label: "Joined", cell: (u) => <When at={u.createdAt} /> },
   { label: "Last sign-in", cell: (u) => <When at={u.lastLoginAt} /> },

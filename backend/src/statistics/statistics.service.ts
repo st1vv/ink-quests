@@ -87,7 +87,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   users: {
     query: sql`
       select
-        u.id, u.address, u.display_name, coalesce(x.xp, 0)::int as xp,
+        u.id, u.address, u.display_name, u.x_username,
+        coalesce(x.xp, 0)::int as xp,
         u.created_at, u.last_login_at, r.address as referrer,
         r.display_name as referrer_name,
         (select count(*)::int from users i where i.referred_by_id = u.id)
@@ -113,6 +114,8 @@ const LISTS: Record<StatsView, ListSpec> = {
       // reward (did an onchain quest).
       referrals: r.referrals,
       rewardedReferrals: r.rewarded_referrals,
+      // The linked X handle, without the @.
+      xUsername: r.x_username,
     }),
   },
 
