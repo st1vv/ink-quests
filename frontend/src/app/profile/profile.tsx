@@ -304,18 +304,25 @@ const XAccountCard = () => {
   return (
     <Surface>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/5 text-white">
             <XLogoIcon className="h-5 w-5" />
           </span>
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-white md:text-xl">
-              X account
-            </h2>
+          <div className="min-w-0 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold tracking-tight text-white md:text-xl">
+                {x?.username ? "Verified with X" : "Verify with X"}
+              </h2>
+              {x?.available && !x.username && (
+                <Badge variant="amber" className="px-2 py-0.5 text-xs">
+                  Required
+                </Badge>
+              )}
+            </div>
             <p className="mt-1 text-sm leading-6 text-white/60">
               {x?.username
-                ? "Linked to this wallet. Social quests on the Quests page are open to you."
-                : "Link your X account to take part in social quests. One X account per wallet."}
+                ? "Your wallet is verified. Social quests are open to you, and your sign-up counts for the friend who invited you."
+                : "Connect your X account to verify your wallet. It's required for social quests and for your sign-up to count for the friend who invited you. One X account per wallet."}
             </p>
           </div>
         </div>
@@ -325,7 +332,7 @@ const XAccountCard = () => {
             href={`https://x.com/${x.username}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 font-mono text-sm text-white transition hover:bg-white/10"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 px-4 py-2 font-mono text-sm text-white transition hover:bg-white/10"
           >
             @{x.username}
             <ExternalLinkIcon className="h-3.5 w-3.5 text-white/50" />
@@ -334,10 +341,10 @@ const XAccountCard = () => {
           <Button
             onClick={connectX}
             disabled={!x || !x.available}
-            className="w-full md:w-auto"
+            className="w-full shrink-0 md:w-auto"
           >
+            {x && !x.available ? "Coming soon" : "Connect"}
             <XLogoIcon className="h-4 w-4" />
-            {x && !x.available ? "Coming soon" : "Connect X"}
           </Button>
         )}
       </div>
