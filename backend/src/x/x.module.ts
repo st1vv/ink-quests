@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { ReferralsModule } from '../referrals/referrals.module';
 import { XController } from './x.controller';
 import { XService } from './x.service';
 
 // Linking an X (Twitter) account to a wallet, for social quests.
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, ReferralsModule],
   controllers: [XController],
   providers: [XService],
   exports: [XService],

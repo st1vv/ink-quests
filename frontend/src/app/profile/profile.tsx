@@ -347,6 +347,8 @@ const XAccountCard = () => {
 
 const ReferralCard = () => {
   const { data: referrals } = useReferrals();
+  // A linked X account is also required once X linking is set up.
+  const { data: x } = useXAccount();
   const link = referrals
     ? `${window.location.origin}/?ref=${referrals.code}`
     : null;
@@ -360,7 +362,9 @@ const ReferralCard = () => {
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/60">
             Get +{referrals?.rewardXp ?? 50} XP for every friend who signs up
-            with your link and completes their first onchain quest.
+            with your link
+            {x?.available ? ", connects X" : ""} and completes their first
+            onchain quest.
           </p>
         </div>
 
@@ -377,7 +381,7 @@ const ReferralCard = () => {
             value={referrals ? formatNumber(referrals.invited) : PLACEHOLDER}
           />
           <StatCard
-            label="Completed a quest"
+            label="Rewarded"
             value={referrals ? formatNumber(referrals.rewarded) : PLACEHOLDER}
           />
           <StatCard

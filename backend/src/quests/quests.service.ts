@@ -171,8 +171,8 @@ export class QuestsService {
       .returning({ points: questCompletions.points });
     if (!completion) throw new ConflictException('Already claimed');
 
-    // A verified onchain quest is what makes an invited user count; a follow
-    // or a check in our own records doesn't.
+    // A verified onchain quest (plus a linked X account, checked there) is
+    // what makes an invited user count; a follow or a visit doesn't.
     if (!isOffchain(spec)) await this.referrals.rewardReferrer(user.id);
 
     return {

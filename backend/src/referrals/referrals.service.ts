@@ -1,9 +1,18 @@
 import { randomBytes } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { ConfigService } from '@nestjs/config';
+import { and, count, eq, inArray, isNull, sql } from 'drizzle-orm';
+import type { Env } from '../config/env';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
-import { referralRewards, users } from '../database/schema';
+import {
+  questCompletions,
+  quests,
+  referralRewards,
+  users,
+} from '../database/schema';
+import { isOffchain, VERIFIERS } from '../quests/verifiers';
+import { xLinkingConfigured } from '../x/x-config';
 
 export const REFERRAL_XP = 50;
 
@@ -21,9 +30,23 @@ const generateCode = () =>
 const isUniqueViolation = (err: unknown) =>
   (err as { cause?: { code?: string } }).cause?.code === '23505';
 
+// Quests that are an onchain action by the user (not a follow, a visit or
+// a check in our own records); one of them makes an invited user count.
+const ONCHAIN_VERIFIERS = Object.keys(VERIFIERS).filter(
+  (key) => !isOffchain(VERIFIERS[key]),
+);
+
 @Injectable()
 export class ReferralsService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  // A linked X account is required once linking is set up.
+  private readonly xRequired: boolean;
+
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    config: ConfigService<Env, true>,
+  ) {
+    this.xRequired = xLinkingConfigured(config);
+  }
 
   // The user's invite code, created on first use.
   async codeFor(userId: number) {
@@ -69,21 +92,38 @@ export class ReferralsService {
       code: await this.codeFor(userId),
       // Signed up with the link.
       invited,
-      // Also completed an onchain quest, which paid the reward.
+      // Also completed an onchain quest (and linked X, once X linking is set
+      // up), which paid the reward.
       rewarded,
       xpEarned,
       rewardXp: REFERRAL_XP,
     };
   }
 
-  // Called after every successful quest claim. Pays the referrer once per
-  // invited user; the unique referred_id makes repeats a no-op.
+  // Pays the referrer once the invited user has completed an onchain quest
+  // and, when X linking is set up, linked an X account. Either can come
+  // first, so it's called after both an onchain quest claim and an X link.
+  // Once per invited user; the unique referred_id makes repeats a no-op.
   async rewardReferrer(referredUserId: number) {
     const [user] = await this.db
-      .select({ referrerId: users.referredById })
+      .select({ referrerId: users.referredById, xUserId: users.xUserId })
       .from(users)
       .where(eq(users.id, referredUserId));
     if (!user?.referrerId) return;
+    if (this.xRequired && !user.xUserId) return;
+
+    const [onchainQuest] = await this.db
+      .select({ id: questCompletions.id })
+      .from(questCompletions)
+      .innerJoin(quests, eq(quests.id, questCompletions.questId))
+      .where(
+        and(
+          eq(questCompletions.userId, referredUserId),
+          inArray(quests.verifier, ONCHAIN_VERIFIERS),
+        ),
+      )
+      .limit(1);
+    if (!onchainQuest) return;
 
     await this.db
       .insert(referralRewards)

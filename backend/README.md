@@ -220,9 +220,11 @@ frontend shows them at `/statistics`, which isn't linked anywhere.
 - `POST /auth/verify` takes an optional `ref`. It links the new user to the referrer only when
   that sign-in creates the account; existing users are never re-assigned, and a bad code is
   ignored rather than failing the login.
-- The referrer gets 50 XP (`REFERRAL_XP` in `src/referrals/referrals.service.ts`) when the invited
-  user completes their first onchain quest, paid once per invited user (`referral_rewards`,
-  unique `referred_id`). Waiting for an onchain quest keeps free sign-ups from farming it.
+- The referrer gets 50 XP (`REFERRAL_XP` in `src/referrals/referrals.service.ts`) once the invited
+  user has completed an onchain quest and, when X linking is set up (`X_CLIENT_*`), linked an X
+  account. Either can come first: the check runs after every onchain quest claim and after an X
+  link. Paid once per invited user (`referral_rewards`, unique `referred_id`). Waiting for an
+  onchain quest and a unique X account keeps free sign-ups from farming it.
 - `GET /me/referrals`: `{ code, invited, rewarded, xpEarned, rewardXp }`. Referral XP counts in
   `/me/progress`, the leaderboard and `/me/activity` (type `referral`).
 

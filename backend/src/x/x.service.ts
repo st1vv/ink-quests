@@ -6,6 +6,8 @@ import type { Env } from '../config/env';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { users, xOauthStates } from '../database/schema';
+import { ReferralsService } from '../referrals/referrals.service';
+import { xLinkingConfigured } from './x-config';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 // Enough to read the user's own id and handle; no tokens are kept.
@@ -42,9 +44,11 @@ export class XService {
   private readonly redirectUri?: string;
   private readonly authorizeUrl: string;
   private readonly apiUrl: string;
+  readonly available: boolean;
 
   constructor(
     @Inject(DB) private readonly db: Database,
+    private readonly referrals: ReferralsService,
     config: ConfigService<Env, true>,
   ) {
     this.clientId = config.get('X_CLIENT_ID', { infer: true });
@@ -52,10 +56,7 @@ export class XService {
     this.redirectUri = config.get('X_REDIRECT_URI', { infer: true });
     this.authorizeUrl = config.get('X_AUTHORIZE_URL', { infer: true });
     this.apiUrl = config.get('X_API_URL', { infer: true });
-  }
-
-  get available() {
-    return Boolean(this.clientId && this.clientSecret && this.redirectUri);
+    this.available = xLinkingConfigured(config);
   }
 
   async account(userId: number) {
@@ -191,5 +192,9 @@ export class XService {
       if (isUniqueViolation(err)) throw new XLinkFailure('taken');
       throw err;
     }
+
+    // A linked X account is one of the two things that make an invited
+    // user count; the other may already be done.
+    await this.referrals.rewardReferrer(userId);
   }
 }
