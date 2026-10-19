@@ -125,7 +125,7 @@ export const partners = pgTable('partners', {
   // XP for finishing every task of the campaign; the tasks themselves are
   // worth nothing on their own.
   rewardXp: integer().notNull().default(0),
-  // What the partner is about (e.g. NFTs, Token), shown as badges on its
+  // What the partner is about (e.g. NFT, Perp DEX), shown as badges on its
   // card. Set in seed.ts.
   tags: text().array().notNull().default([]),
   isActive: boolean().notNull().default(true),
@@ -172,7 +172,7 @@ export const quests = pgTable(
     // daily rotation never shows two of them on the same day. Null means
     // the quest is its own group.
     groupKey: varchar({ length: 64 }),
-    // What the quest is about (e.g. Swap, NFTs), shown as badges on daily
+    // What the quest is about (e.g. DEX, NFT), shown as badges on daily
     // quests. Set in seed.ts.
     tags: text().array().notNull().default([]),
     sortOrder: integer().notNull().default(0),

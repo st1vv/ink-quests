@@ -3,13 +3,13 @@ import { Badge, type BadgeVariant } from "@/shared/ui/badge";
 // Partner and daily quest tags (set in the backend's seed.ts) and their
 // badge colors; a tag missing here shows in grey.
 const TAG_COLORS: Record<string, BadgeVariant> = {
-  NFTs: "blue",
+  NFT: "blue",
   Token: "pink",
   GM: "amber",
-  Swap: "orange",
+  DEX: "orange",
   Lending: "teal",
   Bridge: "cyan",
-  Futures: "lime",
+  "Perp DEX": "lime",
 };
 
 // An API deployed before tags existed sends none.

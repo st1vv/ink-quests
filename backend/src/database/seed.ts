@@ -13,7 +13,7 @@ loadEnvFile();
 
 // Badges on a partner's card. Add new ones here so every partner spells
 // them the same way.
-type PartnerTag = 'NFTs' | 'Token' | 'Futures';
+type PartnerTag = 'NFT' | 'Token' | 'Perp DEX';
 
 type SeedPartner = Omit<
   typeof partners.$inferInsert,
@@ -22,7 +22,7 @@ type SeedPartner = Omit<
 
 // Badges on a daily quest: what the user does. Add new ones here so every
 // quest spells them the same way.
-type QuestTag = 'GM' | 'Swap' | 'Lending' | 'Bridge' | 'NFTs' | 'Futures';
+type QuestTag = 'GM' | 'DEX' | 'Lending' | 'Bridge' | 'NFT' | 'Perp DEX';
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -53,7 +53,7 @@ const PARTNERS: SeedPartner[] = [
     imageUrl: '/campaigns/ink-hornet.webp',
     websiteUrl: 'https://www.inkhornet.com/',
     rewardXp: 100,
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'boink',
@@ -62,7 +62,7 @@ const PARTNERS: SeedPartner[] = [
     imageUrl: '/campaigns/boink.webp',
     websiteUrl: 'https://www.boinkverse.ink/',
     rewardXp: 100,
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'inky-squad',
@@ -71,7 +71,7 @@ const PARTNERS: SeedPartner[] = [
       "A bunch of drippy sea punks having fun. We're here to ink the game, not play it.",
     imageUrl: '/campaigns/inky-squad.webp',
     rewardXp: 100,
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'nado',
@@ -81,7 +81,7 @@ const PARTNERS: SeedPartner[] = [
     imageUrl: '/campaigns/nado.webp',
     websiteUrl: NADO_URL,
     rewardXp: 100,
-    tags: ['Futures'],
+    tags: ['Perp DEX'],
   },
 ];
 
@@ -156,7 +156,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 2,
     verifier: 'inkyswap-swap',
-    tags: ['Swap'],
+    tags: ['DEX'],
   }),
   ...tiered({
     slug: 'daily-velodrome-swap',
@@ -167,7 +167,7 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 3,
     verifier: 'velodrome-swap',
-    tags: ['Swap'],
+    tags: ['DEX'],
   }),
   ...tiered({
     slug: 'daily-tydro-supply-weth',
@@ -213,7 +213,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 12,
     verifier: 'nado-perp-trade',
-    tags: ['Futures'],
+    tags: ['Perp DEX'],
     tiers: [100, 150, 200],
   }),
   {
@@ -226,7 +226,7 @@ const QUESTS: SeedQuest[] = [
     points: 100,
     sortOrder: 6,
     verifier: 'hold-templars-of-the-storm',
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'daily-hold-rekt-ink',
@@ -238,7 +238,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 7,
     verifier: 'hold-rekt-ink',
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'daily-hold-ink-bunnies',
@@ -250,7 +250,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 8,
     verifier: 'hold-ink-bunnies',
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'daily-hold-ink-hornet',
@@ -262,7 +262,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 10,
     verifier: 'hold-ink-hornet',
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   {
     slug: 'daily-hold-boink',
@@ -274,7 +274,7 @@ const QUESTS: SeedQuest[] = [
     points: 50,
     sortOrder: 11,
     verifier: 'hold-boink',
-    tags: ['NFTs'],
+    tags: ['NFT'],
   },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp

@@ -8,7 +8,7 @@ export type Quest = {
   description: string;
   actionUrl: string;
   points: number;
-  // What the quest is about, e.g. "Swap"; shown as badges on daily quests.
+  // What the quest is about, e.g. "DEX"; shown as badges on daily quests.
   // Missing from an API deployed before tags existed.
   tags?: string[];
   // False until the backend has an onchain check for this quest.
@@ -24,7 +24,7 @@ export type Partner = {
   websiteUrl: string | null;
   // Paid once all tasks are verified.
   rewardXp: number;
-  // What the partner is about, e.g. "NFTs"; shown as badges on its card.
+  // What the partner is about, e.g. "NFT"; shown as badges on its card.
   tags?: string[];
 };
 
