@@ -276,6 +276,18 @@ const QUESTS: SeedQuest[] = [
     verifier: 'hold-boink',
     tags: ['NFT'],
   },
+  {
+    slug: 'daily-hold-eye-of-the-seeker',
+    kind: 'daily',
+    title: 'Hold an Eye of the Seeker NFT',
+    description:
+      'Hold at least one Eye of the Seeker NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/eye-of-the-seeker',
+    points: 30,
+    sortOrder: 13,
+    verifier: 'hold-eye-of-the-seeker',
+    tags: ['NFT'],
+  },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
   // is paid once all of them are verified. Follows on X need a linked X
@@ -392,9 +404,7 @@ const QUESTS: SeedQuest[] = [
     partner: 'inky-squad',
     title: 'Hold an Inky Squad NFT',
     description: 'Hold at least one Inky Squad NFT in your wallet.',
-    // Not listed on OpenSea yet.
-    actionUrl:
-      'https://explorer.inkonchain.com/token/0xe4e5d5170ba5cae36d1876893d4b218e8ed19c91',
+    actionUrl: 'https://opensea.io/collection/inkysquad',
     points: 0,
     sortOrder: 1,
     verifier: 'hold-inky-squad',

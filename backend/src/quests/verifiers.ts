@@ -264,6 +264,13 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       contract: '0x3132e1e8c7a46638b2df26b9252ac5d88d9e04c5',
     },
   ],
+  // Behind a minimal proxy; balanceOf goes through it.
+  'hold-eye-of-the-seeker': [
+    {
+      type: 'nft-holder',
+      contract: '0x9234d821c10b72e09c594f882f1d5dacf2621006',
+    },
+  ],
   // InkySquad (ISQD), not on OpenSea yet.
   'hold-inky-squad': [
     {
