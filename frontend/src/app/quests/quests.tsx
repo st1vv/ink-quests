@@ -3,11 +3,13 @@ import { Link, useSearchParams } from "react-router";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { Badge } from "@/shared/ui/badge";
+import { badgeColors, type BadgeVariant } from "@/shared/ui/badge-colors";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { formatNumber } from "@/lib/format";
 import { usePartners, type CampaignSummary } from "@/app/quests/catalog";
 import { CampaignCover } from "@/app/quests/campaign-cover";
 import { TagBadges } from "@/app/quests/tag-badges";
+import { tagVariant } from "@/app/quests/tag-colors";
 import { useClaimedCampaigns } from "@/app/quests/claims";
 import { useAuth } from "@/app/auth/use-auth";
 
@@ -18,14 +20,30 @@ export const Quests = () => {
   const claimed = useClaimedCampaigns();
   const { address, status } = useAuth();
   const { openConnectModal } = useConnectModal();
-  // Kept in the URL (?tab=completed) so it survives a reload and can be
-  // shared.
+  // Tab and tag filter are kept in the URL (?tab=completed&tag=NFT) so they
+  // survive a reload and can be shared.
   const [params, setParams] = useSearchParams();
   const tab: Tab = params.get("tab") === "completed" ? "completed" : "active";
+  const setParam = (key: "tab" | "tag", value: string | null) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
   const setTab = (next: Tab) =>
-    setParams(next === "active" ? {} : { tab: next }, { replace: true });
+    setParam("tab", next === "active" ? null : next);
 
-  const all = campaigns.data ?? [];
+  const every = campaigns.data ?? [];
+  // The filters are the tags partners actually have, in order of first use.
+  const tags = [...new Set(every.flatMap((c) => c.tags ?? []))];
+  const rawTag = params.get("tag");
+  const tag = rawTag && tags.includes(rawTag) ? rawTag : null;
+  const all = tag ? every.filter((c) => c.tags?.includes(tag)) : every;
+
   const isClaimed = (c: CampaignSummary) => claimed.data?.has(c.slug) ?? false;
   const active = all.filter((c) => !isClaimed(c));
   const completed = all.filter(isClaimed);
@@ -54,23 +72,49 @@ export const Quests = () => {
         }
       />
 
-      <div
-        role="tablist"
-        aria-label="Quests"
-        className="flex w-fit gap-1 rounded-full border border-white/10 bg-black/20 p-1"
-      >
-        <TabButton
-          selected={tab === "active"}
-          onClick={() => setTab("active")}
-          label="Active"
-          count={campaigns.isSuccess ? active.length : undefined}
-        />
-        <TabButton
-          selected={tab === "completed"}
-          onClick={() => setTab("completed")}
-          label="Completed"
-          count={address && claimed.isSuccess ? completed.length : undefined}
-        />
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div
+          role="tablist"
+          aria-label="Quests"
+          className="flex w-fit gap-1 rounded-full border border-white/10 bg-black/20 p-1"
+        >
+          <TabButton
+            selected={tab === "active"}
+            onClick={() => setTab("active")}
+            label="Active"
+            count={campaigns.isSuccess ? active.length : undefined}
+          />
+          <TabButton
+            selected={tab === "completed"}
+            onClick={() => setTab("completed")}
+            label="Completed"
+            count={address && claimed.isSuccess ? completed.length : undefined}
+          />
+        </div>
+
+        {tags.length > 0 && (
+          <div
+            role="group"
+            aria-label="Filter by category"
+            className="flex flex-wrap gap-2"
+          >
+            <FilterChip
+              label="All"
+              variant="ink"
+              selected={!tag}
+              onClick={() => setParam("tag", null)}
+            />
+            {tags.map((t) => (
+              <FilterChip
+                key={t}
+                label={t}
+                variant={tagVariant(t)}
+                selected={tag === t}
+                onClick={() => setParam("tag", t)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {campaigns.isError && (
@@ -126,7 +170,12 @@ export const Quests = () => {
           {campaigns.isSuccess && tab === "active" && (
             <>
               {active.length === 0 &&
-                (all.length > 0 ? (
+                (tag && all.length === 0 ? (
+                  <EmptyCard
+                    title={`No ${tag} quests right now`}
+                    text="Pick another category or show all quests."
+                  />
+                ) : all.length > 0 ? (
                   <EmptyCard
                     title="All caught up 🎉"
                     text="You've completed every quest. New ones are on the way."
@@ -185,6 +234,31 @@ const TabButton = ({ selected, onClick, label, count }: TabButtonProps) => (
         {count}
       </span>
     )}
+  </button>
+);
+
+type FilterChipProps = {
+  label: string;
+  // The tag's badge color; ink for "All".
+  variant: BadgeVariant;
+  selected: boolean;
+  onClick: () => void;
+};
+
+// Only the picked one takes its tag's badge color; the rest stay grey
+// until picked.
+const FilterChip = ({ label, variant, selected, onClick }: FilterChipProps) => (
+  <button
+    type="button"
+    aria-pressed={selected}
+    onClick={onClick}
+    className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${
+      selected
+        ? badgeColors(variant)
+        : "border-white/10 text-white/60 hover:border-white/25 hover:text-white"
+    }`}
+  >
+    {label}
   </button>
 );
 
