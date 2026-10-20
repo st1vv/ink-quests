@@ -231,6 +231,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-boinkverse': [{ type: 'x-follow', handle: 'boinkverse' }],
   'x-follow-squidsonink': [{ type: 'x-follow', handle: 'squidsonink' }],
   'x-follow-nadohq': [{ type: 'x-follow', handle: 'nadoHQ' }],
+  'x-follow-tydrohq': [{ type: 'x-follow', handle: 'tydrohq' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
 

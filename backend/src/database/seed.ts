@@ -13,7 +13,7 @@ loadEnvFile();
 
 // Badges on a partner's card. Add new ones here so every partner spells
 // them the same way.
-type PartnerTag = 'NFT' | 'Token' | 'Perp DEX';
+type PartnerTag = 'NFT' | 'Token' | 'Perp DEX' | 'Lending';
 
 type SeedPartner = Omit<
   typeof partners.$inferInsert,
@@ -35,6 +35,10 @@ type SeedQuest = Omit<
 
 // Every Nado link carries our referral code.
 const NADO_URL = 'https://app.nado.xyz?join=inkquests';
+
+// Tydro's ETH (WETH) market, where ETH supply quests point.
+const TYDRO_WETH_URL =
+  'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3';
 
 const PARTNERS: SeedPartner[] = [
   {
@@ -82,6 +86,16 @@ const PARTNERS: SeedPartner[] = [
     websiteUrl: NADO_URL,
     rewardXp: 100,
     tags: ['Perp DEX'],
+  },
+  {
+    slug: 'tydro',
+    title: 'Tydro',
+    description:
+      'Lending market on Ink: supply crypto to earn, or borrow against it.',
+    imageUrl: '/campaigns/tydro.webp',
+    websiteUrl: 'https://app.tydro.com',
+    rewardXp: 100,
+    tags: ['Lending'],
   },
 ];
 
@@ -174,8 +188,7 @@ const QUESTS: SeedQuest[] = [
     title: (usd) => `Supply $${usd} of ETH on Tydro`,
     description: (usd) =>
       `Supply at least $${usd} of ETH (or WETH) to the Tydro lending market to complete this daily quest.`,
-    actionUrl:
-      'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3',
+    actionUrl: TYDRO_WETH_URL,
     points: 30,
     sortOrder: 4,
     verifier: 'tydro-supply-weth',
@@ -477,6 +490,44 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 4,
+    verifier: 'any-daily-quest',
+  },
+  // Tydro
+  {
+    slug: 'tydro-follow-tydrohq',
+    kind: 'partner',
+    partner: 'tydro',
+    title: 'Follow @tydrohq on X',
+    description:
+      'Follow Tydro on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=tydrohq',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'x-follow-tydrohq',
+  },
+  {
+    // Same check as the daily ETH supply quest, with its own minimum.
+    slug: 'tydro-supply-weth-20usd',
+    kind: 'partner',
+    partner: 'tydro',
+    title: 'Supply $20 of ETH on Tydro',
+    description:
+      'Supply at least $20 of ETH (or WETH) to the Tydro lending market in one transaction.',
+    actionUrl: TYDRO_WETH_URL,
+    points: 0,
+    sortOrder: 2,
+    verifier: 'tydro-supply-weth',
+    minUsd: 20,
+  },
+  {
+    slug: 'tydro-complete-daily-quest',
+    kind: 'partner',
+    partner: 'tydro',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
     verifier: 'any-daily-quest',
   },
 ];
