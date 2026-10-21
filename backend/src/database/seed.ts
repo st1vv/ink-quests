@@ -628,15 +628,16 @@ type SeedChallenge = Omit<typeof challenges.$inferInsert, 'id' | 'createdAt'>;
 // challenge count, and only for wallets with a linked X account. Prizes are
 // handed out by hand from the final standings.
 const CHALLENGES: SeedChallenge[] = [
-  // {
-  //   slug: '2026-w44',
-  //   title: 'Weekly challenge #1',
-  //   startsAt: new Date('2026-10-26T00:00:00Z'),
-  //   endsAt: new Date('2026-11-02T00:00:00Z'),
-  //   places: 3,
-  //   prize: '1 Ink Hornet NFT',
-  //   postUrl: 'https://x.com/inkquests/status/…',
-  // },
+  {
+    slug: 'challenge-2-inkverse',
+    title: 'Leaderboard Challenge #2',
+    // Oct 22 00:00 UTC through the Oct 28 23:59 UTC snapshot.
+    startsAt: new Date('2026-10-22T00:00:00Z'),
+    endsAt: new Date('2026-10-29T00:00:00Z'),
+    places: 3,
+    prize: '1 INKverse NFT',
+    postUrl: 'https://x.com/inkquests/status/2112889305555235118',
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.
