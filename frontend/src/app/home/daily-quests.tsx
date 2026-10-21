@@ -1,11 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
+import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useDailyQuests } from "@/app/quests/catalog";
 import { useCompletions } from "@/app/quests/claims";
 import { QuestRow } from "@/app/quests/quest-row";
 import { useQuestStatuses } from "@/app/quests/quest-status";
+import { connectX, useXAccount } from "@/app/x/use-x";
 
 export const HomeDailyQuests = () => {
   const dailyQuests = useDailyQuests();
@@ -16,6 +18,14 @@ export const HomeDailyQuests = () => {
   );
   const [timeLeft, setTimeLeft] = useState("");
   const requireAuth = useRequireAuth();
+  const { address } = useAuth();
+  const { data: x } = useXAccount();
+  // With X linking set up, "like & repost" asks a signed-in user to link X
+  // first, like the follow tasks on the Quests page.
+  const xBlocker =
+    address && x?.available && !x.username
+      ? { label: "Connect X", onClick: connectX }
+      : undefined;
 
   const completedCount = quests.filter((q) => q.status === "completed").length;
 
@@ -95,6 +105,10 @@ export const HomeDailyQuests = () => {
               marker={index + 1}
               quest={quest}
               onStart={requireAuth(start)}
+              {...(quest.type === "x-post" && {
+                actionLabel: "Like & repost ↗",
+                blocker: xBlocker,
+              })}
             />
           ))}
         </div>

@@ -213,6 +213,32 @@ frontend shows them at `/statistics`, which isn't linked anywhere.
   `STATS_VIEWS` in `statistics.service.ts` for each list's fields). `address` narrows it to one
   wallet.
 
+## Weekly challenge
+
+A challenge has its own leaderboard. Challenges are set by hand in `CHALLENGES` in `seed.ts`
+(slug, title, `startsAt`, exclusive `endsAt`, prize `places`, `prize`, optional `postUrl`) and
+upserted by slug on every seed. Prizes are handed out by hand from the final standings.
+
+- Score: XP earned between `startsAt` and `endsAt` from daily quests (the "like & repost" quest
+  included), check-ins with their weekly bonus, and each player's first 5 referral rewards
+  (`CHALLENGE_REFERRAL_LIMIT`). Partner quests don't count. Total XP and the global leaderboard
+  are unaffected; referrals past the limit still pay XP.
+- Who takes part: wallets with a linked X account once X linking is set up (`X_CLIENT_*`),
+  everyone until then. Our own wallets (`HIDDEN_ADDRESSES`) are left out, as on the leaderboard.
+  Ties go to whoever reached the score first.
+- `GET /challenge`: the running challenge, else the last one that ended, else the next one, with
+  its top 100 as `{ challenge, top }`. `challenge` is null when none is set, else it has `slug`,
+  `title`, `startsAt`, `endsAt`, `status` (`live`, `ended`, `upcoming`), `places`, `prize`,
+  `postUrl`, `referralLimit` and `xRequired`; `top` is `{ rank, address, name, score }[]`.
+- `GET /me/challenge`: `{ rank, score, eligible, xLinked, referralsCounted }`, or `null`.
+
+**Like & repost.** The daily quest `daily-x-like-repost` (verifier `{ type: 'x-like-repost' }`)
+isn't in the rotation: it shows, after the rotating quests, on every UTC day that has a post of
+the day (`social_posts`), and that post is its link. Taken on trust like a follow, with the same
+linked-X rule. Admins set the posts on the statistics page: `GET /statistics/social-posts` (a week
+back to two weeks ahead) and `PUT /statistics/social-posts/:day` with `{ postUrl }` (an x.com or
+twitter.com post link; empty removes it).
+
 ## Referrals
 
 - Every user gets an 8-character invite code (no 0/O/1/I), created the first time

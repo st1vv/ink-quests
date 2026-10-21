@@ -29,7 +29,7 @@ export const userXp = sql`
 
 // Our own wallets: they keep their XP but take no place on the
 // leaderboard. Lowercase, as users.address is stored.
-const HIDDEN_ADDRESSES = ['0x99014f787fa9b21112194e9c8c0a3e4a22d33670'];
+export const HIDDEN_ADDRESSES = ['0x99014f787fa9b21112194e9c8c0a3e4a22d33670'];
 
 // Every user with XP gets their own place: on equal XP, whoever reached it
 // first (the earlier last XP-earning action) is ahead, then whoever signed

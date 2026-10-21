@@ -11,6 +11,9 @@ export type Quest = {
   // What the quest is about, e.g. "DEX"; shown as badges on daily quests.
   // Missing from an API deployed before tags existed.
   tags?: string[];
+  // The kind of task, which decides its buttons. Daily quests carry it too;
+  // missing from an API deployed before they did.
+  type?: TaskType;
   // False until the backend has an onchain check for this quest.
   claimable: boolean;
 };
@@ -51,7 +54,7 @@ export const usePartners = () =>
 
 // A campaign's task kind, which decides its buttons.
 export type TaskType =
-  "x-follow" | "nft-holder" | "daily-quest" | "visit" | "onchain";
+  "x-follow" | "nft-holder" | "daily-quest" | "visit" | "x-post" | "onchain";
 
 export type CampaignTask = Quest & { type: TaskType };
 

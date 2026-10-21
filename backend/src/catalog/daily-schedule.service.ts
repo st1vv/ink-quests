@@ -4,7 +4,7 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { dailyQuestSchedule, quests } from '../database/schema';
 import { utcDay } from '../quests/period';
-import { taskTypeOf } from '../quests/verifiers';
+import { isPostOfTheDay, taskTypeOf } from '../quests/verifiers';
 import { pickDailyQuests } from './rotation';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -39,22 +39,25 @@ export class DailyScheduleService {
   }
 
   private async create(day: string, yesterday: string) {
-    // Only quests that can be claimed are worth a slot.
-    const candidates = await this.db
-      .select({
-        id: quests.id,
-        slug: quests.slug,
-        group: quests.groupKey,
-        verifier: quests.verifier,
-      })
-      .from(quests)
-      .where(
-        and(
-          eq(quests.kind, 'daily'),
-          eq(quests.isActive, true),
-          isNotNull(quests.verifier),
-        ),
-      );
+    // Only quests that can be claimed are worth a slot. The "like & repost"
+    // quest isn't rotated: it shows on every day that has a post.
+    const candidates = (
+      await this.db
+        .select({
+          id: quests.id,
+          slug: quests.slug,
+          group: quests.groupKey,
+          verifier: quests.verifier,
+        })
+        .from(quests)
+        .where(
+          and(
+            eq(quests.kind, 'daily'),
+            eq(quests.isActive, true),
+            isNotNull(quests.verifier),
+          ),
+        )
+    ).filter((c) => !isPostOfTheDay(c.verifier));
     const groupOf = new Map(candidates.map((c) => [c.id, c.group ?? c.slug]));
 
     const yesterdays = await this.scheduled(yesterday);

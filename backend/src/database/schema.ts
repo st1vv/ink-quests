@@ -200,6 +200,31 @@ export const dailyQuestSchedule = pgTable(
   ],
 );
 
+// The X post of the day for the daily "like & repost" quest, set by an
+// admin on the statistics page. No post, no quest that day.
+export const socialPosts = pgTable('social_posts', {
+  day: date({ mode: 'string' }).primaryKey(),
+  postUrl: text().notNull(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+// Weekly challenges with their own leaderboard (see challenge.service.ts),
+// set in seed.ts. Prizes are handed out by hand from the final standings.
+export const challenges = pgTable('challenges', {
+  id: serial().primaryKey(),
+  slug: varchar({ length: 64 }).notNull().unique(),
+  title: text().notNull(),
+  startsAt: timestamp({ withTimezone: true }).notNull(),
+  // Exclusive: activity at endsAt or later doesn't count.
+  endsAt: timestamp({ withTimezone: true }).notNull(),
+  // The top `places` win `prize`.
+  places: integer().notNull(),
+  prize: text().notNull(),
+  // The announcement on X, if any.
+  postUrl: text(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export const questCompletions = pgTable(
   'quest_completions',
   {

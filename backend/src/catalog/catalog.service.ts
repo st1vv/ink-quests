@@ -3,8 +3,10 @@ import { and, asc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { partners, quests } from '../database/schema';
-import { taskTypeOf } from '../quests/verifiers';
+import { utcDay } from '../quests/period';
+import { isPostOfTheDay, taskTypeOf } from '../quests/verifiers';
 import { DailyScheduleService } from './daily-schedule.service';
+import { SocialPostsService } from './social-posts.service';
 
 // Public shape of a quest. The verifier key stays server-side; the client
 // only needs to know whether the quest can be claimed yet.
@@ -35,19 +37,38 @@ export class CatalogService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly schedule: DailyScheduleService,
+    private readonly socialPosts: SocialPostsService,
   ) {}
 
   // Today's daily quests (a rotating set, see DailyScheduleService), in the
-  // day's order.
+  // day's order, then the "like & repost" quest if today has a post, with
+  // that post as its link. Each with its `type` for the UI.
   async dailyQuests(now = new Date()) {
     const ids = await this.schedule.questIdsFor(now);
-    if (!ids.length) return [];
+    const rows = ids.length
+      ? await this.db
+          .select({ ...questFields, verifier: quests.verifier })
+          .from(quests)
+          .where(and(inArray(quests.id, ids), eq(quests.isActive, true)))
+      : [];
+    const rotation = ids.flatMap((id) => rows.filter((q) => q.id === id));
 
-    const rows = await this.db
-      .select(questFields)
-      .from(quests)
-      .where(and(inArray(quests.id, ids), eq(quests.isActive, true)));
-    return ids.flatMap((id) => rows.filter((q) => q.id === id));
+    const postUrl = await this.socialPosts.forDay(utcDay(now));
+    const postQuests = postUrl
+      ? (
+          await this.db
+            .select({ ...questFields, verifier: quests.verifier })
+            .from(quests)
+            .where(and(eq(quests.kind, 'daily'), eq(quests.isActive, true)))
+        )
+          .filter((q) => isPostOfTheDay(q.verifier))
+          .map((q) => ({ ...q, actionUrl: postUrl }))
+      : [];
+
+    return [...rotation, ...postQuests].map(({ verifier, ...quest }) => ({
+      ...quest,
+      type: taskTypeOf(verifier),
+    }));
   }
 
   // Campaigns for the Quests page: active partners with at least one active
