@@ -239,18 +239,19 @@ const QUESTS: SeedQuest[] = [
     tags: ['Perp DEX'],
     tiers: [100, 150, 200],
   }),
-  {
-    slug: 'daily-hold-templars-of-the-storm',
-    kind: 'daily',
-    title: 'Hold a Templars of the Storm NFT',
-    description:
-      'Hold at least one Templars of the Storm NFT in your wallet to claim this daily reward.',
-    actionUrl: 'https://opensea.io/collection/templars-of-the-storm',
-    points: 100,
-    sortOrder: 6,
-    verifier: 'hold-templars-of-the-storm',
-    tags: ['NFT'],
-  },
+  // Paused for now: uncomment to put it back in the rotation.
+  // {
+  //   slug: 'daily-hold-templars-of-the-storm',
+  //   kind: 'daily',
+  //   title: 'Hold a Templars of the Storm NFT',
+  //   description:
+  //     'Hold at least one Templars of the Storm NFT in your wallet to claim this daily reward.',
+  //   actionUrl: 'https://opensea.io/collection/templars-of-the-storm',
+  //   points: 100,
+  //   sortOrder: 6,
+  //   verifier: 'hold-templars-of-the-storm',
+  //   tags: ['NFT'],
+  // },
   {
     slug: 'daily-hold-rekt-ink',
     kind: 'daily',
@@ -309,6 +310,18 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 13,
     verifier: 'hold-eye-of-the-seeker',
+    tags: ['NFT'],
+  },
+  {
+    slug: 'daily-hold-inkverse',
+    kind: 'daily',
+    title: 'Hold an INKverse NFT',
+    description:
+      'Hold at least one INKverse NFT in your wallet to claim this daily reward.',
+    actionUrl: 'https://opensea.io/collection/inkverse-920024436',
+    points: 50,
+    sortOrder: 14,
+    verifier: 'hold-inkverse',
     tags: ['NFT'],
   },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
