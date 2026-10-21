@@ -97,6 +97,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['Lending'],
   },
+  {
+    slug: 'inkverse',
+    title: 'INKverse',
+    description:
+      'INKverse is a community art collection for Ink: 1,000 animated loops, each a one-of-one artwork created in code from the INK mark — puns, geometry, retro screens, design movements and living systems.',
+    imageUrl: '/campaigns/inkverse.webp',
+    websiteUrl: 'https://inkside.fun/inkverse',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -528,6 +538,51 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // INKverse
+  {
+    slug: 'inkverse-hold-inkverse',
+    kind: 'partner',
+    partner: 'inkverse',
+    title: 'Hold an INKverse NFT',
+    description: 'Hold at least one INKverse NFT in your wallet.',
+    actionUrl: 'https://opensea.io/collection/inkverse-920024436',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-inkverse',
+  },
+  {
+    slug: 'inkverse-follow-0x-snatch',
+    kind: 'partner',
+    partner: 'inkverse',
+    title: 'Follow @0x_snatch on X',
+    description: 'Follow the artist behind INKverse on X.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=0x_snatch',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-0x-snatch',
+  },
+  {
+    slug: 'inkverse-explore',
+    kind: 'partner',
+    partner: 'inkverse',
+    title: 'Explore INKverse',
+    description: 'Open the INKverse gallery and take a look around.',
+    actionUrl: 'https://inkside.fun/inkverse',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-inkverse',
+  },
+  {
+    slug: 'inkverse-complete-daily-quest',
+    kind: 'partner',
+    partner: 'inkverse',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
 ];
