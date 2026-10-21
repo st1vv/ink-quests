@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BaseError,
   ContractFunctionRevertedError,
+  InsufficientFundsError,
   UserRejectedRequestError,
   type Address,
 } from "viem";
@@ -113,8 +114,19 @@ const sendCheckIn = async (
   contract: Address,
   onStage: (stage: CheckInStage) => void,
 ) => {
+  // A wallet on another network is asked to switch to Ink (most wallets
+  // offer to add it if missing).
   if (getAccount(wagmiConfig).chainId !== ink.id) {
-    await switchChain(wagmiConfig, { chainId: ink.id });
+    try {
+      await switchChain(wagmiConfig, { chainId: ink.id });
+    } catch (err) {
+      // Declining the switch isn't a cancelled check-in: say what's needed.
+      throw userError(
+        isRejected(err)
+          ? "Switch your wallet to the Ink network to check in."
+          : "Couldn't switch your wallet to Ink. Switch to the Ink network in your wallet and try again.",
+      );
+    }
   }
   const fee = await readContract(wagmiConfig, {
     address: contract,
@@ -139,9 +151,37 @@ const sendCheckIn = async (
     chainId: ink.id,
   });
   if (receipt.status !== "success") {
-    throw new Error("The check-in transaction failed. Try again.");
+    throw userError("The check-in transaction failed. Try again.");
   }
 };
+
+// The user declined in their wallet (EIP-1193 code 4001), anywhere down the
+// error's cause chain: viem and wagmi wrap it differently.
+const isRejected = (err: unknown) => {
+  for (let e = err; e; e = (e as { cause?: unknown }).cause) {
+    if (
+      e instanceof UserRejectedRequestError ||
+      (e as { code?: unknown }).code === 4001 ||
+      (e as { name?: unknown }).name === "UserRejectedRequestError"
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// An error whose text is shown as is in the toast (see lib/notify).
+const userError = (text: string) =>
+  Object.assign(new Error(text), { shortMessage: text });
+
+// Not enough ETH on Ink for the fee and gas. RPCs word it differently
+// ("insufficient funds", "OutOfFunds"), and viem doesn't always map it.
+const isOutOfFunds = (err: unknown) =>
+  err instanceof BaseError &&
+  Boolean(
+    err.walk((e) => e instanceof InsufficientFundsError) ||
+    /insufficient funds|OutOfFunds/i.test(`${err.details} ${err.message}`),
+  );
 
 export const useCheckIn = () => {
   const queryClient = useQueryClient();
@@ -158,11 +198,11 @@ export const useCheckIn = () => {
       } catch (err) {
         // Checked in from another tab: the refetch below shows it.
         if (err instanceof ApiError && err.status === 409) return null;
-        if (
-          err instanceof BaseError &&
-          err.walk((e) => e instanceof UserRejectedRequestError)
-        ) {
-          return "cancelled" as const;
+        if (isRejected(err)) return "cancelled" as const;
+        if (isOutOfFunds(err)) {
+          throw userError(
+            "Not enough ETH on Ink in this wallet. A check-in costs about $0.05 in ETH plus gas.",
+          );
         }
         throw err;
       } finally {

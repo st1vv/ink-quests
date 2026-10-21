@@ -19,9 +19,17 @@ export const errorMessage = (err: unknown) => {
   if (err instanceof TypeError) {
     return "Couldn't reach the server. Check your connection and try again.";
   }
+  // Wallet and contract errors (viem, wagmi) carry a one-line reason, e.g.
+  // "insufficient funds" or "Chain not configured".
+  const short = (err as { shortMessage?: unknown } | null)?.shortMessage;
+  if (typeof short === "string" && short) return short;
   return "Something went wrong. Try again.";
 };
 
-export const notifyError = (err: unknown) => toast.error(errorMessage(err));
+export const notifyError = (err: unknown) => {
+  // The toast is one line; the console keeps the whole story for debugging.
+  console.error(err);
+  toast.error(errorMessage(err));
+};
 
 export { toast };

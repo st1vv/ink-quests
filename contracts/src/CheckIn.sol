@@ -8,8 +8,8 @@ interface IPriceOracle {
 
 /// Paid daily check-in for InkQuests. A wallet checks in at most once per
 /// UTC day by paying `feeUsd` worth of ETH, priced by the oracle, and the
-/// payment goes straight to `treasury`. The app's backend reads the
-/// CheckedIn event to credit the check-in, so the contract keeps no balance.
+/// payment goes straight to `treasury`, so the contract keeps no balance.
+/// The app's backend credits the check-in by reading `lastCheckInDay`.
 contract CheckIn {
     /// ETH, as the oracle prices it (WETH on Ink).
     address public immutable weth;
