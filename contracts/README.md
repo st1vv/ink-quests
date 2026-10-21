@@ -12,9 +12,11 @@ twice the fee is refused; the app sends the fee plus 1% for price moves.
 
 ## Setup
 
-Needs [Foundry](https://getfoundry.sh) (`foundryup`). `lib/forge-std` is checked in.
+Needs [Foundry](https://getfoundry.sh) (`foundryup`). Dependencies live in `lib/`, which isn't
+checked in; install them once after cloning:
 
 ```sh
+forge install foundry-rs/forge-std@v1.17.0 --no-git
 forge build
 forge test
 # Also against the real Tydro oracle on a fork of Ink mainnet:
