@@ -1,4 +1,22 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BaseError,
+  ContractFunctionRevertedError,
+  UserRejectedRequestError,
+  type Address,
+} from "viem";
+import { ink } from "viem/chains";
+import {
+  getAccount,
+  readContract,
+  simulateContract,
+  switchChain,
+  waitForTransactionReceipt,
+  writeContract,
+} from "wagmi/actions";
+import { wagmiConfig } from "@/config/wagmi";
+import { checkInAbi, FEE_BUFFER_PERCENT } from "@/lib/check-in-contract";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
 import { toast } from "@/lib/notify";
@@ -18,6 +36,9 @@ export type Progress = {
   checkInXp: number;
   // Extra XP for checking in every day of a Monday-Sunday week.
   fullWeekBonusXp: number;
+  // Where to pay for a check-in on Ink; null while check-ins are free.
+  // Missing from an API deployed before paid check-ins.
+  checkInContract?: Address | null;
 };
 
 const msUntilNextUtcDay = () => {
@@ -38,21 +59,121 @@ export const useProgress = () => {
   });
 };
 
+// Where a paid check-in is: waiting on the wallet, or on the chain and our
+// backend.
+export type CheckInStage = "wallet" | "confirming" | null;
+
+// Our RPC can be a block behind the wallet's, so a just-mined check-in may
+// be "not confirmed yet" for a moment.
+const CONFIRM_RETRIES = 4;
+const CONFIRM_RETRY_MS = 2000;
+
+const isNotConfirmedYet = (err: unknown) =>
+  err instanceof ApiError &&
+  err.status === 422 &&
+  err.message.includes("isn't confirmed yet");
+
+const errorNamed = (err: unknown, name: string) =>
+  err instanceof BaseError &&
+  Boolean(
+    err.walk(
+      (e) =>
+        e instanceof ContractFunctionRevertedError &&
+        e.data?.errorName === name,
+    ),
+  );
+
+// The backend reads the paid check-in from the contract itself.
+const postCheckIn = async () => {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await apiFetch<CheckInResult>("/me/check-in", { method: "POST" });
+    } catch (err) {
+      if (!isNotConfirmedYet(err) || attempt >= CONFIRM_RETRIES) throw err;
+      await new Promise((r) => setTimeout(r, CONFIRM_RETRY_MS));
+    }
+  }
+};
+
+// Pays for today's check-in on the CheckIn contract; resolves once mined.
+// Already paid today (e.g. the tab closed before we heard back) resolves
+// too, so the check-in still gets credited.
+const payCheckIn = async (
+  contract: Address,
+  onStage: (stage: CheckInStage) => void,
+) => {
+  try {
+    await sendCheckIn(contract, onStage);
+  } catch (err) {
+    if (!errorNamed(err, "AlreadyCheckedInToday")) throw err;
+  }
+};
+
+const sendCheckIn = async (
+  contract: Address,
+  onStage: (stage: CheckInStage) => void,
+) => {
+  if (getAccount(wagmiConfig).chainId !== ink.id) {
+    await switchChain(wagmiConfig, { chainId: ink.id });
+  }
+  const fee = await readContract(wagmiConfig, {
+    address: contract,
+    abi: checkInAbi,
+    functionName: "fee",
+    chainId: ink.id,
+  });
+  // Simulated first, so a known revert (already checked in, paused) shows
+  // up before the wallet asks to sign.
+  const { request } = await simulateContract(wagmiConfig, {
+    address: contract,
+    abi: checkInAbi,
+    functionName: "checkIn",
+    value: fee + (fee * FEE_BUFFER_PERCENT) / 100n,
+    chainId: ink.id,
+  });
+  onStage("wallet");
+  const hash = await writeContract(wagmiConfig, request);
+  onStage("confirming");
+  const receipt = await waitForTransactionReceipt(wagmiConfig, {
+    hash,
+    chainId: ink.id,
+  });
+  if (receipt.status !== "success") {
+    throw new Error("The check-in transaction failed. Try again.");
+  }
+};
+
 export const useCheckIn = () => {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
+  const [stage, setStage] = useState<CheckInStage>(null);
+  const mutation = useMutation({
+    // `contract` is Progress.checkInContract: null while check-ins are free.
+    mutationFn: async (contract: Address | null) => {
       try {
-        return await apiFetch<CheckInResult>("/me/check-in", {
-          method: "POST",
-        });
+        if (contract) {
+          await payCheckIn(contract, setStage);
+          setStage("confirming");
+        }
+        return await postCheckIn();
       } catch (err) {
         // Checked in from another tab: the refetch below shows it.
         if (err instanceof ApiError && err.status === 409) return null;
+        if (
+          err instanceof BaseError &&
+          err.walk((e) => e instanceof UserRejectedRequestError)
+        ) {
+          return "cancelled" as const;
+        }
         throw err;
+      } finally {
+        setStage(null);
       }
     },
     onSuccess: (result) => {
+      if (result === "cancelled") {
+        toast.info("Check-in cancelled");
+        return;
+      }
       if (!result) toast.info("Already checked in today");
       else if (result.bonusPoints > 0) {
         toast.success(`Checked in: +${result.points + result.bonusPoints} XP`, {
@@ -69,4 +190,5 @@ export const useCheckIn = () => {
       ]);
     },
   });
+  return { ...mutation, stage };
 };
