@@ -8,18 +8,19 @@ import { ProgressService } from './progress.service';
 export class ProgressController {
   constructor(private readonly progress: ProgressService) {}
 
-  // { totalXp, level, levelXp, nextLevelXp, streak, checkedInToday };
-  // levelXp and nextLevelXp are the total XP at which the current and next
-  // level start.
+  // { totalXp, level, levelXp, nextLevelXp, streak, checkedInToday, week,
+  //   checkInXp, fullWeekBonusXp, checkInContract }; levelXp and
+  // nextLevelXp are the total XP at which the current and next level start.
   @Get('progress')
   get(@CurrentUser() user: AuthUser) {
     return this.progress.progress(user.id);
   }
 
-  // Once per UTC day; 409 on a repeat.
+  // Once per UTC day; 409 on a repeat. Once CHECKIN_CONTRACT is set, only
+  // after paying for it on the contract (422 until that's on chain).
   @Post('check-in')
   @HttpCode(200)
   checkIn(@CurrentUser() user: AuthUser) {
-    return this.progress.checkIn(user.id);
+    return this.progress.checkIn(user);
   }
 }
