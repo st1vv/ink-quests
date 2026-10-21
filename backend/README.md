@@ -51,6 +51,7 @@ See `.env.example`. The app refuses to start if a variable is missing or invalid
 | `EXPLORER_API_URL` | Optional override of the Blockscout API base URL                                    |
 | `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)                       |
 | `NADO_ARCHIVE_URL` | Nado archive API for futures quests (default: https://api.prod.nado.xyz/archive/v1) |
+| `CHECKIN_CONTRACT` | Paid CheckIn contract on Ink (`contracts/`); unset keeps check-ins free             |
 | `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the `/statistics` page                       |
 
 ## Auth (Sign-In with Ethereum)
@@ -166,6 +167,12 @@ next level start.
 - **Level**: reaching level L takes `125 · L · (L − 1)` XP in total (0, 250, 750, 1500, 2500, …),
   so each level needs 250 XP more than the previous one. The curve lives in
   `src/progress/level.ts`.
+- **Paid check-in**: with `CHECKIN_CONTRACT` set, a check-in is paid first on the CheckIn
+  contract (`contracts/`, ~$0.05 in ETH). `POST /me/check-in` then reads the wallet's
+  `lastCheckInDay` from the contract and credits that day, today or (for a payment just before
+  midnight) yesterday; 422 until the payment is on chain. Reading the contract rather than a
+  transaction means a paid check-in that never reached us is credited on the next try.
+  `GET /me/progress` returns `checkInContract` (null while check-ins are free).
 - **Check-in**: `POST /me/check-in` gives 10 XP, once per UTC day (409 on a repeat). The Sunday
   check-in that completes a Monday-Sunday week also gives a 10 XP bonus (`bonus_points`). Both
   values are constants in `src/progress/progress.service.ts`; past check-ins keep what they paid.

@@ -2,10 +2,11 @@
 
 Quests on [Ink](https://inkonchain.com): complete daily and partner quests onchain, earn points, climb the leaderboard.
 
-| Folder                   | What                                           |
-| ------------------------ | ---------------------------------------------- |
-| [`frontend/`](frontend/) | React 19 + Vite + Tailwind, wagmi / RainbowKit |
-| [`backend/`](backend/)   | NestJS API, PostgreSQL via Drizzle ORM         |
+| Folder                     | What                                           |
+| -------------------------- | ---------------------------------------------- |
+| [`frontend/`](frontend/)   | React 19 + Vite + Tailwind, wagmi / RainbowKit |
+| [`backend/`](backend/)     | NestJS API, PostgreSQL via Drizzle ORM         |
+| [`contracts/`](contracts/) | Solidity (Foundry): the paid daily check-in    |
 
 ## Run everything with Docker
 

@@ -19,6 +19,13 @@ const envSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   // Relay's public API, used to verify bridges to Ink.
   RELAY_API_URL: z.url().default('https://api.relay.link'),
+  // The paid CheckIn contract on Ink (contracts/src/CheckIn.sol). Once set,
+  // a check-in needs a paid transaction to it; without it check-ins are
+  // free, e.g. for local development.
+  CHECKIN_CONTRACT: z
+    .string()
+    .regex(/^0x[0-9a-fA-F]{40}$/, 'Not an address')
+    .optional(),
   // Nado's archive (indexer) API, used to verify futures trades.
   NADO_ARCHIVE_URL: z.url().default('https://api.prod.nado.xyz/archive/v1'),
   // X (Twitter) OAuth 2.0 app from developer.x.com, for linking X accounts.

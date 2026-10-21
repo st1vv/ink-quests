@@ -1,9 +1,13 @@
+import type { Address } from "viem";
+import { ink } from "viem/chains";
+import { useReadContract } from "wagmi";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useCheckIn, useProgress } from "@/app/home/use-progress";
+import { checkInAbi } from "@/lib/check-in-contract";
 
 const PLACEHOLDER = "—";
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -89,21 +93,32 @@ export const HomeProgress = () => {
               Checked in today
             </Button>
           ) : (
-            <Button
-              onClick={requireAuth(() => checkIn.mutate())}
-              disabled={
-                authStatus === "loading" ||
-                (authStatus === "authenticated" && !progress) ||
-                checkIn.isPending
-              }
-              className="w-full"
-            >
-              {checkIn.isPending
-                ? "Checking in…"
-                : progress
-                  ? `Daily Check-in (+${progress.checkInXp} XP)`
-                  : "Daily Check-in"}
-            </Button>
+            <>
+              <Button
+                onClick={requireAuth(() =>
+                  checkIn.mutate(progress?.checkInContract ?? null),
+                )}
+                disabled={
+                  authStatus === "loading" ||
+                  (authStatus === "authenticated" && !progress) ||
+                  checkIn.isPending
+                }
+                className="w-full"
+              >
+                {checkIn.stage === "wallet"
+                  ? "Confirm in your wallet…"
+                  : checkIn.stage === "confirming"
+                    ? "Confirming…"
+                    : checkIn.isPending
+                      ? "Checking in…"
+                      : progress
+                        ? `Daily Check-in (+${progress.checkInXp} XP)`
+                        : "Daily Check-in"}
+              </Button>
+              {progress?.checkInContract && (
+                <CheckInPrice contract={progress.checkInContract} />
+              )}
+            </>
           )}
         </div>
       </div>
@@ -141,5 +156,23 @@ const WeekFlames = ({ week }: { week: boolean[] }) => {
         </li>
       ))}
     </ol>
+  );
+};
+
+// "Costs $0.05 in ETH on Ink", from the contract's own USD price.
+const CheckInPrice = ({ contract }: { contract: Address }) => {
+  const { data: feeUsd } = useReadContract({
+    address: contract,
+    abi: checkInAbi,
+    functionName: "feeUsd",
+    chainId: ink.id,
+  });
+  if (feeUsd === undefined) return null;
+  const usd = Number(feeUsd) / 1e8;
+
+  return (
+    <p className="text-center text-xs text-white/40">
+      Costs ${usd.toFixed(usd < 1 ? 2 : 0)} in ETH on Ink, plus gas
+    </p>
   );
 };

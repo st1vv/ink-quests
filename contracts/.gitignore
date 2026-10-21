@@ -1,0 +1,8 @@
+# Build output and caches
+out/
+cache/
+# Script runs (they hold the deployer address and RPC details)
+broadcast/
+.env
+# Dependencies, installed with `forge install` (see README)
+lib/

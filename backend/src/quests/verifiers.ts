@@ -241,8 +241,10 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-squidsonink': [{ type: 'x-follow', handle: 'squidsonink' }],
   'x-follow-nadohq': [{ type: 'x-follow', handle: 'nadoHQ' }],
   'x-follow-tydrohq': [{ type: 'x-follow', handle: 'tydrohq' }],
+  'x-follow-0x-snatch': [{ type: 'x-follow', handle: '0x_snatch' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
+  'visit-inkverse': [{ type: 'visit' }],
   'x-like-repost': [{ type: 'x-like-repost' }],
 
   'hold-templars-of-the-storm': [
@@ -276,6 +278,13 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     },
   ],
   // Behind a minimal proxy; balanceOf goes through it.
+  // INKverse (INKVRS), 1,000 one-of-one animated loops.
+  'hold-inkverse': [
+    {
+      type: 'nft-holder',
+      contract: '0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64',
+    },
+  ],
   'hold-eye-of-the-seeker': [
     {
       type: 'nft-holder',
