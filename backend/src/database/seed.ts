@@ -637,6 +637,27 @@ const CHALLENGES: SeedChallenge[] = [
     places: 3,
     prize: '1 INKverse NFT',
     postUrl: 'https://x.com/inkquests/status/2112889305555235118',
+    // First frames of the animated originals, in frontend/public/challenges.
+    prizeItems: [
+      {
+        place: 2,
+        name: 'INKverse #873',
+        imageUrl: '/challenges/inkverse-873.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/873',
+      },
+      {
+        place: 3,
+        name: 'INKverse #428',
+        imageUrl: '/challenges/inkverse-428.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/428',
+      },
+      {
+        place: 1,
+        name: 'INKverse #442',
+        imageUrl: '/challenges/inkverse-442.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/442',
+      },
+    ],
   },
 ];
 

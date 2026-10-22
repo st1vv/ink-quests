@@ -37,6 +37,14 @@ export const useMyRank = () => {
   });
 };
 
+export type ChallengePrizeItem = {
+  place: number;
+  name: string;
+  imageUrl: string;
+  // Where to see it, e.g. its OpenSea page.
+  url: string;
+};
+
 export type Challenge = {
   slug: string;
   title: string;
@@ -50,6 +58,8 @@ export type Challenge = {
   prize: string;
   // The announcement on X.
   postUrl: string | null;
+  // One prize per place, shown as cards; null shows `prize` for every place.
+  prizeItems: ChallengePrizeItem[] | null;
   // Most referral rewards one player can count in the challenge.
   referralLimit: number;
   // Whether taking part needs a linked X account.

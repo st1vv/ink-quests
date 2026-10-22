@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -208,6 +209,16 @@ export const socialPosts = pgTable('social_posts', {
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+// One place's prize on the challenge page.
+export type ChallengePrizeItem = {
+  place: number;
+  name: string;
+  // Under frontend/public, e.g. /challenges/inkverse-873.webp.
+  imageUrl: string;
+  // Where to see it, e.g. its OpenSea page.
+  url: string;
+};
+
 // Weekly challenges with their own leaderboard (see challenge.service.ts),
 // set in seed.ts. Prizes are handed out by hand from the final standings.
 export const challenges = pgTable('challenges', {
@@ -222,6 +233,9 @@ export const challenges = pgTable('challenges', {
   prize: text().notNull(),
   // The announcement on X, if any.
   postUrl: text(),
+  // The prize for each place, shown as cards (e.g. a specific NFT); null
+  // shows `prize` for every place.
+  prizeItems: jsonb().$type<ChallengePrizeItem[]>(),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

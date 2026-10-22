@@ -193,6 +193,7 @@ export class ChallengeService {
       places: c.places,
       prize: c.prize,
       postUrl: c.postUrl,
+      prizeItems: c.prizeItems,
       referralLimit: CHALLENGE_REFERRAL_LIMIT,
       xRequired: this.xRequired,
     };
