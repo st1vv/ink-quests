@@ -472,8 +472,22 @@ const ACTIVITY_ICONS: Record<
   campaign: { icon: "🏆", style: "bg-amber-400/15" },
 };
 
+// "Oct 22" for a UTC day (YYYY-MM-DD).
+const formatUtcDay = (day: string) =>
+  new Date(`${day}T00:00:00Z`).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  });
+
 const activityTitle = (item: Activity) => {
-  if (item.type === "check-in") return "Daily check-in";
+  if (item.type === "check-in") {
+    // A paid check-in credited after its day (e.g. paid just before
+    // midnight) names the day it counts for.
+    return item.day && item.day !== item.at.slice(0, 10)
+      ? `Daily check-in for ${formatUtcDay(item.day)}`
+      : "Daily check-in";
+  }
   if (item.type === "campaign") return `Completed the ${item.title} quest`;
   if (item.type === "referral" && item.title) {
     return `Friend ${shortAddress(item.title)} completed a quest`;

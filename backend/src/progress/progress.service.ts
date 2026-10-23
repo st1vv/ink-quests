@@ -99,9 +99,10 @@ export class ProgressService {
 
   // With the CheckIn contract set up, the check-in is the wallet's latest
   // paid one and counts for the day it was paid for; otherwise it's free and
-  // counts for today.
-  async checkIn(user: AuthUser, now = new Date()) {
-    const at = this.contract ? await this.paidDay(user, now) : now;
+  // counts for today. `paidAtBlock` is the block of the payment the app just
+  // made, so it's read there rather than from a lagging latest block.
+  async checkIn(user: AuthUser, paidAtBlock?: bigint, now = new Date()) {
+    const at = this.contract ? await this.paidDay(user, paidAtBlock, now) : now;
 
     const checkedIn = new Set(await this.recentCheckInDays(user.id, at));
     const bonusPoints = completesWeek(checkedIn, at) ? FULL_WEEK_BONUS_XP : 0;
@@ -123,39 +124,63 @@ export class ProgressService {
         points: checkIns.points,
         bonusPoints: checkIns.bonusPoints,
       });
-    if (!row) throw new ConflictException('Already checked in today');
+    if (!row) {
+      // The contract named yesterday, which is already credited: our RPC is
+      // a block or two behind a payment just made for today. Not a repeat,
+      // so the app retries until today's payment shows up.
+      if (utcDay(at) !== utcDay(now)) throw this.notConfirmedYet();
+      throw new ConflictException('Already checked in today');
+    }
     return row;
   }
 
   // Midnight UTC of the day the wallet's latest paid check-in is for, read
   // from the contract. Asking the contract rather than a transaction means
   // a check-in that was paid but never reached us (a closed tab, a dropped
-  // request) is still credited on the next try.
-  private async paidDay(user: AuthUser, now: Date) {
+  // request) is still credited on the next try. Right after a payment it's
+  // read at the payment's block: our RPC can lag the wallet's by a block or
+  // two, and the latest block it knows would still show the day before.
+  private async paidDay(
+    user: AuthUser,
+    paidAtBlock: bigint | undefined,
+    now: Date,
+  ) {
     let day: number;
     try {
+      if (
+        paidAtBlock !== undefined &&
+        (await this.client.getBlockNumber({ cacheTime: 0 })) < paidAtBlock
+      ) {
+        throw this.notConfirmedYet();
+      }
       day = Number(
         await this.client.readContract({
           address: this.contract!,
           abi: checkInAbi,
           functionName: 'lastCheckInDay',
           args: [user.address as Address],
+          blockNumber: paidAtBlock,
         }),
       );
     } catch (err) {
+      if (err instanceof UnprocessableEntityException) throw err;
       this.logger.warn(`Check-in read failed: ${(err as Error).message}`);
       throw new ServiceUnavailableException(
         "Couldn't check the chain right now, try again in a moment",
       );
     }
 
-    if (!isCreditableDay(day, now)) {
-      // Also right after paying: our RPC can be a block behind the wallet's.
-      throw new UnprocessableEntityException(
-        "Your paid check-in isn't confirmed yet. If you just paid, try again in a moment",
-      );
-    }
+    // Also right after paying: our RPC can be a block behind the wallet's.
+    if (!isCreditableDay(day, now)) throw this.notConfirmedYet();
     return new Date(day * DAY_MS);
+  }
+
+  // The app retries on this message (frontend use-progress.ts), so a
+  // payment our RPC doesn't see yet gets credited a moment later.
+  private notConfirmedYet() {
+    return new UnprocessableEntityException(
+      "Your paid check-in isn't confirmed yet. If you just paid, try again in a moment",
+    );
   }
 
   // Distinct check-in days, newest first.

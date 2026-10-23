@@ -41,6 +41,9 @@ export type Activity = {
   bonusPoints: number;
   at: string;
   txHash: string | null;
+  // The UTC day a check-in counts for (YYYY-MM-DD); null for the rest.
+  // Missing from an API deployed before it was added.
+  day?: string | null;
 };
 
 export const useProfileStats = () => {

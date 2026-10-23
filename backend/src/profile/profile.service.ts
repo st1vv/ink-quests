@@ -14,6 +14,8 @@ type ActivityRow = {
   // Raw Postgres timestamp text (e.g. '2026-09-27 09:00:00+00').
   at: string;
   tx_hash: string | null;
+  // The UTC day a check-in counts for (YYYY-MM-DD); null for the rest.
+  day: string | null;
 };
 
 // Profile extras on top of GET /me/progress and GET /me/rank.
@@ -76,23 +78,24 @@ export class ProfileService {
           points,
           bonus_points,
           created_at as at,
-          null::text as tx_hash
+          null::text as tx_hash,
+          day::text as day
         from check_ins
         where user_id = ${userId}
         union all
-        select 'quest', q.title, c.points, 0, c.completed_at, c.tx_hash
+        select 'quest', q.title, c.points, 0, c.completed_at, c.tx_hash, null
         from quest_completions c
         join quests q on q.id = c.quest_id
         -- Campaign tasks are worth 0 XP on their own; the campaign's reward
         -- shows up as its own row.
         where c.user_id = ${userId} and c.points > 0
         union all
-        select 'referral', u.address, r.points, 0, r.created_at, null
+        select 'referral', u.address, r.points, 0, r.created_at, null, null
         from referral_rewards r
         join users u on u.id = r.referred_id
         where r.referrer_id = ${userId}
         union all
-        select 'campaign', p.title, cr.points, 0, cr.created_at, null
+        select 'campaign', p.title, cr.points, 0, cr.created_at, null, null
         from campaign_rewards cr
         join partners p on p.id = cr.partner_id
         where cr.user_id = ${userId}
@@ -109,6 +112,8 @@ export class ProfileService {
       // ISO, which every browser parses.
       at: new Date(r.at).toISOString(),
       txHash: r.tx_hash,
+      // A paid check-in can be credited after its day (see ProgressService).
+      day: r.day,
     }));
   }
 }

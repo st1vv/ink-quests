@@ -84,11 +84,17 @@ const errorNamed = (err: unknown, name: string) =>
     ),
   );
 
-// The backend reads the paid check-in from the contract itself.
-const postCheckIn = async () => {
+// The backend reads the paid check-in from the contract itself, at the
+// payment's block when we have one, so a lagging RPC can't hide it.
+const postCheckIn = async (paidAtBlock?: bigint) => {
   for (let attempt = 0; ; attempt++) {
     try {
-      return await apiFetch<CheckInResult>("/me/check-in", { method: "POST" });
+      return await apiFetch<CheckInResult>("/me/check-in", {
+        method: "POST",
+        ...(paidAtBlock !== undefined && {
+          body: JSON.stringify({ blockNumber: paidAtBlock.toString() }),
+        }),
+      });
     } catch (err) {
       if (!isNotConfirmedYet(err) || attempt >= CONFIRM_RETRIES) throw err;
       await new Promise((r) => setTimeout(r, CONFIRM_RETRY_MS));
@@ -96,17 +102,19 @@ const postCheckIn = async () => {
   }
 };
 
-// Pays for today's check-in on the CheckIn contract; resolves once mined.
-// Already paid today (e.g. the tab closed before we heard back) resolves
-// too, so the check-in still gets credited.
+// Pays for today's check-in on the CheckIn contract; resolves with the
+// payment's block once mined. Already paid today (e.g. the tab closed
+// before we heard back) resolves too, with no block, so the check-in still
+// gets credited.
 const payCheckIn = async (
   contract: Address,
   onStage: (stage: CheckInStage) => void,
-) => {
+): Promise<bigint | undefined> => {
   try {
-    await sendCheckIn(contract, onStage);
+    return await sendCheckIn(contract, onStage);
   } catch (err) {
     if (!errorNamed(err, "AlreadyCheckedInToday")) throw err;
+    return undefined;
   }
 };
 
@@ -153,6 +161,7 @@ const sendCheckIn = async (
   if (receipt.status !== "success") {
     throw userError("The check-in transaction failed. Try again.");
   }
+  return receipt.blockNumber;
 };
 
 // The user declined in their wallet (EIP-1193 code 4001), anywhere down the
@@ -190,11 +199,11 @@ export const useCheckIn = () => {
     // `contract` is Progress.checkInContract: null while check-ins are free.
     mutationFn: async (contract: Address | null) => {
       try {
-        if (contract) {
-          await payCheckIn(contract, setStage);
-          setStage("confirming");
-        }
-        return await postCheckIn();
+        const paidAtBlock = contract
+          ? await payCheckIn(contract, setStage)
+          : undefined;
+        if (contract) setStage("confirming");
+        return await postCheckIn(paidAtBlock);
       } catch (err) {
         // Checked in from another tab: the refetch below shows it.
         if (err instanceof ApiError && err.status === 409) return null;

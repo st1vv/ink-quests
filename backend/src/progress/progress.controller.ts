@@ -1,4 +1,12 @@
-import { Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import type { AuthUser } from '../auth/auth.service';
 import { ProgressService } from './progress.service';
@@ -18,9 +26,21 @@ export class ProgressController {
 
   // Once per UTC day; 409 on a repeat. Once CHECKIN_CONTRACT is set, only
   // after paying for it on the contract (422 until that's on chain).
+  // Optional { blockNumber }: the block of the payment just made, as a
+  // decimal string, so the contract is read there.
   @Post('check-in')
   @HttpCode(200)
-  checkIn(@CurrentUser() user: AuthUser) {
-    return this.progress.checkIn(user);
+  checkIn(@CurrentUser() user: AuthUser, @Body() body: unknown) {
+    const raw = (body as { blockNumber?: unknown } | null)?.blockNumber;
+    if (
+      raw !== undefined &&
+      !(typeof raw === 'string' && /^\d{1,19}$/.test(raw))
+    ) {
+      throw new BadRequestException('blockNumber must be a decimal string');
+    }
+    return this.progress.checkIn(
+      user,
+      raw === undefined ? undefined : BigInt(raw),
+    );
   }
 }
