@@ -3,6 +3,7 @@ import {
   binanceWallet,
   coinbaseWallet,
   injectedWallet,
+  krakenWallet,
   metaMaskWallet,
   okxWallet,
   rabbyWallet,
@@ -32,6 +33,9 @@ const connectors = projectId
         {
           groupName: "Popular",
           wallets: [
+            // Ink is built by Kraken; its wallet is a mobile app, reached over
+            // WalletConnect (a QR code on desktop, a deep link on mobile).
+            krakenWallet,
             rabbyWallet,
             okxWallet,
             binanceWallet,

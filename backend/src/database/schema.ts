@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -199,6 +200,44 @@ export const dailyQuestSchedule = pgTable(
     uniqueIndex().on(t.day, t.questId),
   ],
 );
+
+// The X post of the day for the daily "like & repost" quest, set by an
+// admin on the statistics page. No post, no quest that day.
+export const socialPosts = pgTable('social_posts', {
+  day: date({ mode: 'string' }).primaryKey(),
+  postUrl: text().notNull(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+// One place's prize on the challenge page.
+export type ChallengePrizeItem = {
+  place: number;
+  name: string;
+  // Under frontend/public, e.g. /challenges/inkverse-873.webp.
+  imageUrl: string;
+  // Where to see it, e.g. its OpenSea page.
+  url: string;
+};
+
+// Weekly challenges with their own leaderboard (see challenge.service.ts),
+// set in seed.ts. Prizes are handed out by hand from the final standings.
+export const challenges = pgTable('challenges', {
+  id: serial().primaryKey(),
+  slug: varchar({ length: 64 }).notNull().unique(),
+  title: text().notNull(),
+  startsAt: timestamp({ withTimezone: true }).notNull(),
+  // Exclusive: activity at endsAt or later doesn't count.
+  endsAt: timestamp({ withTimezone: true }).notNull(),
+  // The top `places` win `prize`.
+  places: integer().notNull(),
+  prize: text().notNull(),
+  // The announcement on X, if any.
+  postUrl: text(),
+  // The prize for each place, shown as cards (e.g. a specific NFT); null
+  // shows `prize` for every place.
+  prizeItems: jsonb().$type<ChallengePrizeItem[]>(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 export const questCompletions = pgTable(
   'quest_completions',

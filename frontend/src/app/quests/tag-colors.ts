@@ -10,6 +10,7 @@ const TAG_COLORS: Record<string, BadgeVariant> = {
   Lending: "teal",
   Bridge: "cyan",
   "Perp DEX": "lime",
+  Social: "pink",
 };
 
 export const tagVariant = (tag: string): BadgeVariant =>

@@ -224,6 +224,7 @@ export const useCheckIn = () => {
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: ["progress"] }),
         queryClient.invalidateQueries({ queryKey: ["leaderboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["challenge"] }),
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),

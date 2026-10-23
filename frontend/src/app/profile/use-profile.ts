@@ -24,7 +24,7 @@ export const useSetDisplayName = () => {
       }),
     onSuccess: () =>
       Promise.all(
-        ["stats", "leaderboard", "rank"].map((key) =>
+        ["stats", "leaderboard", "rank", "challenge"].map((key) =>
           queryClient.invalidateQueries({ queryKey: [key] }),
         ),
       ),

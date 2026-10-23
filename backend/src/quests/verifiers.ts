@@ -97,6 +97,14 @@ export type VisitSpec = {
   type: 'visit';
 };
 
+// Liking and reposting the X post of the day (social_posts). Taken on
+// trust like a follow, and likewise needs a linked X account once X
+// linking is set up. Not part of the daily rotation: it shows on the days
+// that have a post.
+export type XPostSpec = {
+  type: 'x-like-repost';
+};
+
 export type VerifierSpec =
   | ContractCallSpec
   | NftHolderSpec
@@ -106,7 +114,8 @@ export type VerifierSpec =
   | NadoPerpVolumeSpec
   | XFollowSpec
   | DailyQuestDoneSpec
-  | VisitSpec;
+  | VisitSpec
+  | XPostSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -236,6 +245,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],
+  'x-like-repost': [{ type: 'x-like-repost' }],
 
   'hold-templars-of-the-storm': [
     {
@@ -445,6 +455,7 @@ export type TaskType =
   | 'nft-holder'
   | 'daily-quest'
   | 'visit'
+  | 'x-post'
   | 'onchain';
 
 export const taskTypeOf = (verifier: string | null): TaskType => {
@@ -453,6 +464,7 @@ export const taskTypeOf = (verifier: string | null): TaskType => {
   if (type === 'nft-holder') return 'nft-holder';
   if (type === 'daily-quest-done') return 'daily-quest';
   if (type === 'visit') return 'visit';
+  if (type === 'x-like-repost') return 'x-post';
   return 'onchain';
 };
 
@@ -463,5 +475,11 @@ export const isOffchain = (specs: VerifierSpec[]) =>
     (s) =>
       s.type === 'x-follow' ||
       s.type === 'daily-quest-done' ||
-      s.type === 'visit',
+      s.type === 'visit' ||
+      s.type === 'x-like-repost',
   );
+
+// The daily "like & repost the post of the day" quest, which lives outside
+// the rotation.
+export const isPostOfTheDay = (verifier: string | null) =>
+  taskTypeOf(verifier) === 'x-post';

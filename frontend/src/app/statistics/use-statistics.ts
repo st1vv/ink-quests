@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
+import { toast } from "@/lib/notify";
 
 export type StatsSummary = {
   users: number;
@@ -138,5 +139,49 @@ export const useStatsList = <T>(
     // loads; another list's rows have other fields, so not across lists.
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[1] === view ? previous : undefined,
+  });
+};
+
+export type SocialPosts = {
+  // The current UTC day, YYYY-MM-DD.
+  today: string;
+  // Days that have a post, from a week ago to two weeks ahead.
+  posts: { day: string; postUrl: string }[];
+};
+
+export const useSocialPosts = () => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["statistics", "social-posts", address],
+    queryFn: () => apiFetch<SocialPosts>("/statistics/social-posts"),
+    enabled: Boolean(address),
+    retry: retryUnlessNotFound,
+  });
+};
+
+// Sets a day's post; an empty postUrl removes it. Failures toast like every
+// other request.
+export const useSetSocialPost = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ day, postUrl }: { day: string; postUrl: string }) =>
+      apiFetch<{ day: string; postUrl: string | null }>(
+        `/statistics/social-posts/${day}`,
+        { method: "PUT", body: JSON.stringify({ postUrl }) },
+      ),
+    onSuccess: (result) => {
+      toast.success(
+        result.postUrl
+          ? `Post set for ${result.day}`
+          : `Post removed for ${result.day}`,
+      );
+      return Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["statistics", "social-posts"],
+        }),
+        // Today's post is the "like & repost" quest's link.
+        queryClient.invalidateQueries({ queryKey: ["quests", "daily"] }),
+      ]);
+    },
   });
 };

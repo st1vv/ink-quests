@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { Address } from "viem";
 import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
@@ -167,6 +168,17 @@ const StatsOverview = ({
       ) : (
         "Users, quests and onchain transactions across the whole app. Pick a card to list what it counts."
       )
+    }
+    aside={
+      <Link
+        to="/statistics/posts"
+        className={buttonStyles({
+          variant: "ghost",
+          className: "w-full md:w-auto",
+        })}
+      >
+        Posts of the day →
+      </Link>
     }
   >
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

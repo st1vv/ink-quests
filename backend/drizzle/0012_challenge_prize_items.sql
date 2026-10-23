@@ -1,0 +1,1 @@
+ALTER TABLE "challenges" ADD COLUMN "prize_items" jsonb;

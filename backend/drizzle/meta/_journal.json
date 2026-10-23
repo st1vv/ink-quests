@@ -78,6 +78,20 @@
       "when": 1791876594485,
       "tag": "0010_quest_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792499806176,
+      "tag": "0011_weekly_challenges",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792658074897,
+      "tag": "0012_challenge_prize_items",
+      "breakpoints": true
     }
   ]
 }

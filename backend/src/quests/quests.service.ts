@@ -12,6 +12,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { Address } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
 import { DailyScheduleService } from '../catalog/daily-schedule.service';
+import { SocialPostsService } from '../catalog/social-posts.service';
 import { XService } from '../x/x.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
@@ -19,7 +20,13 @@ import { questCompletions, quests } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
 import { ONE_TIME_PERIOD, questPeriod, startOfUtcDay, utcDay } from './period';
 import { VerificationService, type Verification } from './verification.service';
-import { isOffchain, minUsdOf, VERIFIERS, withMinUsd } from './verifiers';
+import {
+  isOffchain,
+  isPostOfTheDay,
+  minUsdOf,
+  VERIFIERS,
+  withMinUsd,
+} from './verifiers';
 
 // Explorers and Relay index a few seconds behind the chain, so a fresh
 // transaction may not be visible on the first try.
@@ -50,6 +57,7 @@ export class QuestsService {
     @Inject(DB) private readonly db: Database,
     private readonly verification: VerificationService,
     private readonly schedule: DailyScheduleService,
+    private readonly socialPosts: SocialPostsService,
     private readonly x: XService,
     private readonly referrals: ReferralsService,
   ) {}
@@ -88,10 +96,14 @@ export class QuestsService {
     if (!verifier) {
       throw new BadRequestException("This quest can't be claimed yet");
     }
-    // Only the day's rotating set can be claimed, not the whole catalog.
+    // Only the day's rotating set can be claimed, not the whole catalog. The
+    // "like & repost" quest is on whenever the day has a post.
+    const postOfTheDay = isPostOfTheDay(quest.verifier);
     if (
       quest.kind === 'daily' &&
-      !(await this.schedule.isScheduled(quest.id, now))
+      !(postOfTheDay
+        ? await this.socialPosts.forDay(utcDay(now))
+        : await this.schedule.isScheduled(quest.id, now))
     ) {
       throw new BadRequestException("This isn't one of today's daily quests");
     }
@@ -115,10 +127,13 @@ export class QuestsService {
 
     const windowStart =
       quest.kind === 'daily' ? startOfUtcDay(now) : quest.createdAt;
-    // Follows on X are taken on trust (X's API charges per read). Once X
-    // linking is set up (X_CLIENT_* env), the user also needs a linked X
-    // account, one per wallet; until then anyone can verify a follow.
-    const follow = spec.every((s) => s.type === 'x-follow');
+    // Follows, likes and reposts on X are taken on trust (X's API charges
+    // per read). Once X linking is set up (X_CLIENT_* env), the user also
+    // needs a linked X account, one per wallet; until then anyone can
+    // verify them.
+    const follow = spec.every(
+      (s) => s.type === 'x-follow' || s.type === 'x-like-repost',
+    );
     if (follow && this.x.available && !(await this.x.isLinked(user.id))) {
       throw new UnprocessableEntityException(
         'Connect your X account on your profile first',

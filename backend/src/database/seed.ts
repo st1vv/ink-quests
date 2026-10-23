@@ -5,7 +5,7 @@
 import { getTableColumns, notInArray, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { createDatabase } from './client';
-import { partners, quests } from './schema';
+import { challenges, partners, quests } from './schema';
 import { loadEnvFile } from '../config/load-env-file';
 import { VERIFIERS } from '../quests/verifiers';
 
@@ -22,7 +22,14 @@ type SeedPartner = Omit<
 
 // Badges on a daily quest: what the user does. Add new ones here so every
 // quest spells them the same way.
-type QuestTag = 'GM' | 'DEX' | 'Lending' | 'Bridge' | 'NFT' | 'Perp DEX';
+type QuestTag =
+  | 'GM'
+  | 'DEX'
+  | 'Lending'
+  | 'Bridge'
+  | 'NFT'
+  | 'Perp DEX'
+  | 'Social';
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -144,6 +151,19 @@ const tiered = (quest: {
 // The daily pool: each day shows 3 of these (see catalog/rotation.ts), from
 // 3 different groups.
 const QUESTS: SeedQuest[] = [
+  // Not in the rotation: shown every day that has a post of the day (set on
+  // the statistics page), which also becomes its link.
+  {
+    slug: 'daily-x-like-repost',
+    kind: 'daily',
+    title: 'Like & repost on X',
+    description: "Like and repost today's InkQuests post on X.",
+    actionUrl: 'https://x.com/inkquests',
+    points: 20,
+    sortOrder: 0,
+    verifier: 'x-like-repost',
+    tags: ['Social'],
+  },
   {
     slug: 'daily-gm',
     kind: 'daily',
@@ -600,17 +620,67 @@ const QUESTS: SeedQuest[] = [
   },
 ];
 
+type SeedChallenge = Omit<typeof challenges.$inferInsert, 'id' | 'createdAt'>;
+
+// Weekly challenges, each with its own leaderboard (see
+// leaderboard/challenge.service.ts). Times are UTC; `endsAt` is exclusive.
+// Only daily quests, check-ins and up to 5 referrals made during the
+// challenge count, and only for wallets with a linked X account. Prizes are
+// handed out by hand from the final standings.
+const CHALLENGES: SeedChallenge[] = [
+  {
+    slug: 'challenge-2-inkverse',
+    title: 'Leaderboard Challenge #2',
+    // Oct 22 00:00 UTC through the Oct 28 23:59 UTC snapshot.
+    startsAt: new Date('2026-10-22T00:00:00Z'),
+    endsAt: new Date('2026-10-29T00:00:00Z'),
+    places: 3,
+    prize: '1 INKverse NFT',
+    postUrl: 'https://x.com/inkquests/status/2112889305555235118',
+    // First frames of the animated originals, in frontend/public/challenges.
+    prizeItems: [
+      {
+        place: 2,
+        name: 'INKverse #873',
+        imageUrl: '/challenges/inkverse-873.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/873',
+      },
+      {
+        place: 3,
+        name: 'INKverse #428',
+        imageUrl: '/challenges/inkverse-428.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/428',
+      },
+      {
+        place: 1,
+        name: 'INKverse #442',
+        imageUrl: '/challenges/inkverse-442.webp',
+        url: 'https://opensea.io/item/ink/0xfffbd67f37e1e9fd9d9ebef9b687daa72a33da64/442',
+      },
+    ],
+  },
+];
+
 // Fail before touching the DB instead of half-applying a broken catalog.
 const validate = () => {
   const partnerSlugs = new Set(PARTNERS.map((p) => p.slug));
   const errors: string[] = [];
 
-  for (const list of [PARTNERS, QUESTS]) {
+  for (const list of [PARTNERS, QUESTS, CHALLENGES]) {
     const seen = new Set<string>();
     for (const { slug } of list) {
       if (seen.has(slug)) errors.push(`duplicate slug "${slug}"`);
       seen.add(slug);
     }
+  }
+
+  for (const c of CHALLENGES) {
+    const starts = new Date(c.startsAt).getTime();
+    const ends = new Date(c.endsAt).getTime();
+    if (Number.isNaN(starts) || Number.isNaN(ends) || ends <= starts) {
+      errors.push(`challenge "${c.slug}": endsAt must be after startsAt`);
+    }
+    if (c.places < 1) errors.push(`challenge "${c.slug}": places must be 1+`);
   }
 
   for (const q of QUESTS) {
@@ -688,10 +758,22 @@ async function main() {
             QUESTS.map((q) => q.slug),
           ),
         );
+
+      // Removing a challenge from the list keeps its row, so past standings
+      // stay; edit its dates instead to change it.
+      if (CHALLENGES.length) {
+        await tx
+          .insert(challenges)
+          .values(CHALLENGES)
+          .onConflictDoUpdate({
+            target: challenges.slug,
+            set: overwriteAll(challenges),
+          });
+      }
     });
 
     console.log(
-      `Seeded ${PARTNERS.length} partners and ${QUESTS.length} quests.`,
+      `Seeded ${PARTNERS.length} partners, ${QUESTS.length} quests and ${CHALLENGES.length} challenges.`,
     );
   } finally {
     await pool.end();
