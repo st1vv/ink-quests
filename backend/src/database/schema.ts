@@ -111,6 +111,10 @@ export const checkIns = pgTable(
     points: integer().notNull(),
     // Extra XP for the Sunday check-in that completes a Monday-Sunday week.
     bonusPoints: integer().notNull().default(0),
+    // The paid check-in's transaction on the CheckIn contract; null for
+    // free check-ins and paid ones credited without it (e.g. after the tab
+    // closed). Unique, so one payment can't be credited twice.
+    txHash: varchar({ length: 66 }).unique(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex().on(t.userId, t.day)],

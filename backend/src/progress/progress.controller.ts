@@ -7,6 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import type { Hex } from 'viem';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import type { AuthUser } from '../auth/auth.service';
 import { ProgressService } from './progress.service';
@@ -26,21 +27,31 @@ export class ProgressController {
 
   // Once per UTC day; 409 on a repeat. Once CHECKIN_CONTRACT is set, only
   // after paying for it on the contract (422 until that's on chain).
-  // Optional { blockNumber }: the block of the payment just made, as a
-  // decimal string, so the contract is read there.
+  // Optional { blockNumber, txHash }: the payment just made, its block as a
+  // decimal string (the contract is read there) and its transaction hash
+  // (kept as a link once checked).
   @Post('check-in')
   @HttpCode(200)
   checkIn(@CurrentUser() user: AuthUser, @Body() body: unknown) {
-    const raw = (body as { blockNumber?: unknown } | null)?.blockNumber;
+    const { blockNumber, txHash } = (body ?? {}) as {
+      blockNumber?: unknown;
+      txHash?: unknown;
+    };
     if (
-      raw !== undefined &&
-      !(typeof raw === 'string' && /^\d{1,19}$/.test(raw))
+      blockNumber !== undefined &&
+      !(typeof blockNumber === 'string' && /^\d{1,19}$/.test(blockNumber))
     ) {
       throw new BadRequestException('blockNumber must be a decimal string');
     }
-    return this.progress.checkIn(
-      user,
-      raw === undefined ? undefined : BigInt(raw),
-    );
+    if (
+      txHash !== undefined &&
+      !(typeof txHash === 'string' && /^0x[0-9a-fA-F]{64}$/.test(txHash))
+    ) {
+      throw new BadRequestException('txHash must be a transaction hash');
+    }
+    return this.progress.checkIn(user, {
+      block: blockNumber === undefined ? undefined : BigInt(blockNumber),
+      txHash: txHash as Hex | undefined,
+    });
   }
 }

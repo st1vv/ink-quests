@@ -50,7 +50,7 @@ const iso = (value: unknown) =>
 // single tasks don't show here.
 const dailyCompletions = sql`
   select
-    'q' || c.id as id, u.address, u.display_name, q.title as quest,
+    'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
     'daily' as kind,
     null::text as partner, c.points, c.tx_hash, c.completed_at
   from quest_completions c
@@ -60,7 +60,7 @@ const dailyCompletions = sql`
 `;
 const partnerCompletions = sql`
   select
-    'c' || cr.id as id, u.address, u.display_name, p.title as quest,
+    'c' || cr.id as id, u.address, u.display_name, u.x_username, p.title as quest,
     'partner' as kind,
     null::text as partner, cr.points, null::text as tx_hash,
     cr.created_at as completed_at
@@ -74,6 +74,7 @@ const toCompletion = (r: ListRow) => ({
   id: r.id,
   address: getAddress(r.address),
   name: r.display_name,
+  xUsername: r.x_username,
   quest: r.quest,
   kind: r.kind,
   // Campaign title for a partner task.
@@ -83,6 +84,27 @@ const toCompletion = (r: ListRow) => ({
   completedAt: iso(r.completed_at),
 });
 
+// Users the wallet invited, and how many of those paid it a referral reward
+// (`u` is the wallet's users row).
+const referralCounts = sql`
+  (select count(*)::int from users i where i.referred_by_id = u.id)
+    as referrals,
+  (select count(*)::int from referral_rewards rr
+    where rr.referrer_id = u.id) as rewarded_referrals
+`;
+
+// Every action proven by a transaction: quest completions with one, and
+// paid check-ins.
+const onchainActions = sql`
+  select user_id, points, tx_hash, completed_at as at
+  from quest_completions
+  where tx_hash is not null
+  union all
+  select user_id, points + bonus_points, tx_hash, created_at
+  from check_ins
+  where tx_hash is not null
+`;
+
 const LISTS: Record<StatsView, ListSpec> = {
   users: {
     query: sql`
@@ -91,10 +113,7 @@ const LISTS: Record<StatsView, ListSpec> = {
         coalesce(x.xp, 0)::int as xp,
         u.created_at, u.last_login_at, r.address as referrer,
         r.display_name as referrer_name,
-        (select count(*)::int from users i where i.referred_by_id = u.id)
-          as referrals,
-        (select count(*)::int from referral_rewards rr
-          where rr.referrer_id = u.id) as rewarded_referrals
+        ${referralCounts}
       from users u
       left join (${userXp}) x on x.user_id = u.id
       left join users r on r.id = u.referred_by_id
@@ -124,7 +143,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   'users-with-xp': {
     query: sql`
       select
-        u.id, u.address, u.display_name, x.xp, x.reached_at,
+        u.id, u.address, u.display_name, u.x_username, x.xp, x.reached_at,
+        ${referralCounts},
         row_number() over (
           order by x.xp desc, x.reached_at asc, u.id asc
         )::int as rank
@@ -140,6 +160,9 @@ const LISTS: Record<StatsView, ListSpec> = {
       xp: r.xp,
       level: levelForXp(r.xp as number),
       lastXpAt: iso(r.reached_at),
+      referrals: r.referrals,
+      rewardedReferrals: r.rewarded_referrals,
+      xUsername: r.x_username,
     }),
   },
 
@@ -162,7 +185,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   'check-ins': {
     query: sql`
       select
-        ci.id, u.address, u.display_name, ci.day::text as day, ci.points, ci.bonus_points,
+        ci.id, u.address, u.display_name, u.x_username, ci.day::text as day, ci.points, ci.bonus_points,
+        ci.tx_hash,
         ci.created_at
       from check_ins ci
       join users u on u.id = ci.user_id
@@ -172,18 +196,22 @@ const LISTS: Record<StatsView, ListSpec> = {
       id: r.id,
       address: getAddress(r.address),
       name: r.display_name,
+      xUsername: r.x_username,
       day: r.day,
       points: r.points,
       bonusPoints: r.bonus_points,
       createdAt: iso(r.created_at),
+      // The paid check-in's transaction; null for free ones.
+      txHash: r.tx_hash,
     }),
   },
 
-  // Quest completions proven by an onchain transaction, partner tasks too.
+  // Everything proven by an onchain transaction: quest completions
+  // (partner tasks too) and paid check-ins.
   transactions: {
     query: sql`
       select
-        'q' || c.id as id, u.address, u.display_name, q.title as quest,
+        'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
         q.kind::text as kind,
         p.title as partner, c.points, c.tx_hash, c.completed_at
       from quest_completions c
@@ -191,6 +219,14 @@ const LISTS: Record<StatsView, ListSpec> = {
       join quests q on q.id = c.quest_id
       left join partners p on p.id = q.partner_id
       where c.tx_hash is not null
+      union all
+      select
+        'k' || ci.id, u.address, u.display_name, u.x_username,
+        'Daily check-in', 'check-in', null, ci.points + ci.bonus_points,
+        ci.tx_hash, ci.created_at
+      from check_ins ci
+      join users u on u.id = ci.user_id
+      where ci.tx_hash is not null
     `,
     orderBy: completionOrder,
     toItem: toCompletion,
@@ -199,11 +235,11 @@ const LISTS: Record<StatsView, ListSpec> = {
   'transaction-wallets': {
     query: sql`
       select
-        u.id, u.address, u.display_name, count(*)::int as transactions,
-        sum(c.points)::int as xp, max(c.completed_at) as last_tx_at
-      from quest_completions c
-      join users u on u.id = c.user_id
-      where c.tx_hash is not null
+        u.id, u.address, u.display_name, u.x_username,
+        count(*)::int as transactions, sum(o.points)::int as xp,
+        max(o.at) as last_tx_at
+      from (${onchainActions}) o
+      join users u on u.id = o.user_id
       group by u.id
     `,
     orderBy: sql`last_tx_at desc, id desc`,
@@ -211,6 +247,7 @@ const LISTS: Record<StatsView, ListSpec> = {
       id: r.id,
       address: getAddress(r.address),
       name: r.display_name,
+      xUsername: r.x_username,
       transactions: r.transactions,
       xp: r.xp,
       lastTxAt: iso(r.last_tx_at),
@@ -230,8 +267,8 @@ export class StatisticsService {
         (count(*) filter (where q.kind = 'daily'))::int as daily_quests,
         (select count(*)::int from campaign_rewards) as partner_quests,
         (select count(*)::int from check_ins) as check_ins,
-        (count(*) filter (where c.tx_hash is not null))::int as transactions,
-        (count(distinct c.user_id) filter (where c.tx_hash is not null))::int
+        (select count(*)::int from (${onchainActions}) o) as transactions,
+        (select count(distinct user_id)::int from (${onchainActions}) o)
           as tx_users
       from quest_completions c
       join quests q on q.id = c.quest_id

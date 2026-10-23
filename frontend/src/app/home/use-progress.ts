@@ -6,6 +6,7 @@ import {
   InsufficientFundsError,
   UserRejectedRequestError,
   type Address,
+  type Hex,
 } from "viem";
 import { ink } from "viem/chains";
 import {
@@ -84,15 +85,22 @@ const errorNamed = (err: unknown, name: string) =>
     ),
   );
 
+// A payment just made: the backend reads the contract at its block and
+// keeps its transaction as a link.
+type Payment = { blockNumber: bigint; txHash: Hex };
+
 // The backend reads the paid check-in from the contract itself, at the
 // payment's block when we have one, so a lagging RPC can't hide it.
-const postCheckIn = async (paidAtBlock?: bigint) => {
+const postCheckIn = async (payment?: Payment) => {
   for (let attempt = 0; ; attempt++) {
     try {
       return await apiFetch<CheckInResult>("/me/check-in", {
         method: "POST",
-        ...(paidAtBlock !== undefined && {
-          body: JSON.stringify({ blockNumber: paidAtBlock.toString() }),
+        ...(payment && {
+          body: JSON.stringify({
+            blockNumber: payment.blockNumber.toString(),
+            txHash: payment.txHash,
+          }),
         }),
       });
     } catch (err) {
@@ -109,7 +117,7 @@ const postCheckIn = async (paidAtBlock?: bigint) => {
 const payCheckIn = async (
   contract: Address,
   onStage: (stage: CheckInStage) => void,
-): Promise<bigint | undefined> => {
+): Promise<Payment | undefined> => {
   try {
     return await sendCheckIn(contract, onStage);
   } catch (err) {
@@ -161,7 +169,7 @@ const sendCheckIn = async (
   if (receipt.status !== "success") {
     throw userError("The check-in transaction failed. Try again.");
   }
-  return receipt.blockNumber;
+  return { blockNumber: receipt.blockNumber, txHash: hash };
 };
 
 // The user declined in their wallet (EIP-1193 code 4001), anywhere down the
@@ -199,11 +207,11 @@ export const useCheckIn = () => {
     // `contract` is Progress.checkInContract: null while check-ins are free.
     mutationFn: async (contract: Address | null) => {
       try {
-        const paidAtBlock = contract
+        const payment = contract
           ? await payCheckIn(contract, setStage)
           : undefined;
         if (contract) setStage("confirming");
-        return await postCheckIn(paidAtBlock);
+        return await postCheckIn(payment);
       } catch (err) {
         // Checked in from another tab: the refetch below shows it.
         if (err instanceof ApiError && err.status === 409) return null;

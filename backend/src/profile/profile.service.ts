@@ -78,7 +78,7 @@ export class ProfileService {
           points,
           bonus_points,
           created_at as at,
-          null::text as tx_hash,
+          tx_hash::text as tx_hash,
           day::text as day
         from check_ins
         where user_id = ${userId}

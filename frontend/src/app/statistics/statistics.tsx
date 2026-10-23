@@ -220,7 +220,7 @@ const StatsList = (props: ListProps) => {
           title="Users with XP"
           description="Every wallet with XP by rank, our own included."
           empty="Nobody has XP yet."
-          grid="md:grid-cols-[60px_1fr_100px_80px_170px]"
+          grid="md:grid-cols-[60px_1fr_110px_110px_140px_170px]"
           columns={RANKED_USER_COLUMNS}
         />
       );
@@ -264,7 +264,7 @@ const StatsList = (props: ListProps) => {
           title="Check-ins"
           description="Daily check-ins, newest first."
           empty="No check-ins yet."
-          grid="md:grid-cols-[150px_1fr_120px_170px]"
+          grid="md:grid-cols-[150px_130px_1fr_120px_170px]"
           columns={CHECK_IN_COLUMNS}
         />
       );
@@ -286,7 +286,7 @@ const StatsList = (props: ListProps) => {
           title="Wallets with transactions"
           description="Wallets with at least one quest proven onchain, latest first."
           empty="No wallets with transactions yet."
-          grid="md:grid-cols-[1fr_120px_100px_170px]"
+          grid="md:grid-cols-[1fr_130px_120px_100px_170px]"
           columns={TRANSACTION_WALLET_COLUMNS}
         />
       );
@@ -508,6 +508,53 @@ const formatUtcDay = (day: string) =>
 
 // Columns
 
+// Columns shared by the Users and Users with XP lists, so both read alike.
+
+const XP_COLUMN: Column<{ xp: number; level: number }> = {
+  label: "XP",
+  cell: (u) => (
+    <>
+      <Strong>{formatNumber(u.xp)}</Strong>
+      <p className="text-xs text-white/40">Level {u.level}</p>
+    </>
+  ),
+};
+
+const REFERRALS_COLUMN: Column<{
+  referrals: number;
+  rewardedReferrals: number;
+}> = {
+  label: "Referrals",
+  cell: (u) => (
+    <>
+      <Strong>{formatNumber(u.referrals)}</Strong>
+      {u.referrals > 0 && (
+        <p className="text-xs text-white/40">
+          {formatNumber(u.rewardedReferrals)} rewarded
+        </p>
+      )}
+    </>
+  ),
+};
+
+const X_COLUMN: Column<{ xUsername: string | null }> = {
+  label: "X",
+  cell: (u) =>
+    u.xUsername ? (
+      <a
+        href={`https://x.com/${u.xUsername}`}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex max-w-full items-center gap-1 text-sm text-ink-light transition hover:text-white"
+      >
+        <span className="truncate">@{u.xUsername}</span>
+        <ExternalLinkIcon className="h-3 w-3 shrink-0" />
+      </a>
+    ) : (
+      <span className="text-xs text-white/40">{PLACEHOLDER}</span>
+    ),
+};
+
 const USER_COLUMNS: Column<StatsUser>[] = [
   {
     label: "Wallet",
@@ -515,45 +562,9 @@ const USER_COLUMNS: Column<StatsUser>[] = [
       <Wallet address={u.address} name={u.name} filterBy={filterBy} />
     ),
   },
-  {
-    label: "XP",
-    cell: (u) => (
-      <>
-        <Strong>{formatNumber(u.xp)}</Strong>
-        <p className="text-xs text-white/40">Level {u.level}</p>
-      </>
-    ),
-  },
-  {
-    label: "Referrals",
-    cell: (u) => (
-      <>
-        <Strong>{formatNumber(u.referrals)}</Strong>
-        {u.referrals > 0 && (
-          <p className="text-xs text-white/40">
-            {formatNumber(u.rewardedReferrals)} rewarded
-          </p>
-        )}
-      </>
-    ),
-  },
-  {
-    label: "X",
-    cell: (u) =>
-      u.xUsername ? (
-        <a
-          href={`https://x.com/${u.xUsername}`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex max-w-full items-center gap-1 text-sm text-ink-light transition hover:text-white"
-        >
-          <span className="truncate">@{u.xUsername}</span>
-          <ExternalLinkIcon className="h-3 w-3 shrink-0" />
-        </a>
-      ) : (
-        <span className="text-xs text-white/40">{PLACEHOLDER}</span>
-      ),
-  },
+  XP_COLUMN,
+  REFERRALS_COLUMN,
+  X_COLUMN,
   { label: "Joined", cell: (u) => <When at={u.createdAt} /> },
   { label: "Last sign-in", cell: (u) => <When at={u.lastLoginAt} /> },
   {
@@ -579,16 +590,13 @@ const RANKED_USER_COLUMNS: Column<StatsRankedUser>[] = [
       <Wallet address={u.address} name={u.name} filterBy={filterBy} />
     ),
   },
-  {
-    label: "XP",
-    align: "right",
-    cell: (u) => <Strong>{formatNumber(u.xp)}</Strong>,
-  },
-  { label: "Level", align: "right", cell: (u) => <Strong>{u.level}</Strong> },
+  XP_COLUMN,
+  REFERRALS_COLUMN,
+  X_COLUMN,
   { label: "Last XP", align: "right", cell: (u) => <When at={u.lastXpAt} /> },
 ];
 
-const COMPLETION_GRID = "md:grid-cols-[150px_1fr_80px_170px]";
+const COMPLETION_GRID = "md:grid-cols-[150px_130px_1fr_80px_170px]";
 
 const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
   {
@@ -597,6 +605,7 @@ const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
       <Wallet address={c.address} name={c.name} filterBy={filterBy} />
     ),
   },
+  X_COLUMN,
   {
     label: "Quest",
     cell: (c) => (
@@ -605,9 +614,11 @@ const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
         <p className="mt-0.5 truncate text-xs text-white/40">
           {c.kind === "daily"
             ? "Daily quest"
-            : c.partner
-              ? `Partner · ${c.partner}`
-              : "Partner quest"}
+            : c.kind === "check-in"
+              ? "Paid check-in"
+              : c.partner
+                ? `Partner · ${c.partner}`
+                : "Partner quest"}
         </p>
       </>
     ),
@@ -635,6 +646,7 @@ const CHECK_IN_COLUMNS: Column<StatsCheckIn>[] = [
       <Wallet address={c.address} name={c.name} filterBy={filterBy} />
     ),
   },
+  X_COLUMN,
   {
     label: "Day (UTC)",
     cell: (c) => <Strong>{formatUtcDay(c.day)}</Strong>,
@@ -656,7 +668,13 @@ const CHECK_IN_COLUMNS: Column<StatsCheckIn>[] = [
   {
     label: "Checked in",
     align: "right",
-    cell: (c) => <When at={c.createdAt} />,
+    // Paid check-ins link their transaction; free ones have none.
+    cell: (c) => (
+      <div className="flex flex-col gap-0.5 md:items-end">
+        <When at={c.createdAt} />
+        {c.txHash && <TxLink hash={c.txHash} />}
+      </div>
+    ),
   },
 ];
 
@@ -667,6 +685,7 @@ const TRANSACTION_WALLET_COLUMNS: Column<StatsTransactionWallet>[] = [
       <Wallet address={w.address} name={w.name} filterBy={filterBy} />
     ),
   },
+  X_COLUMN,
   {
     label: "Transactions",
     align: "right",

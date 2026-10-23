@@ -92,6 +92,13 @@
       "when": 1792658074897,
       "tag": "0012_challenge_prize_items",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792743478852,
+      "tag": "0013_check_in_tx_hash",
+      "breakpoints": true
     }
   ]
 }

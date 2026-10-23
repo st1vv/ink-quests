@@ -57,6 +57,11 @@ export type StatsRankedUser = {
   xp: number;
   level: number;
   lastXpAt: string;
+  // Users they invited, and how many of those paid a referral reward.
+  referrals: number;
+  rewardedReferrals: number;
+  // The linked X handle, without the @; null when not linked.
+  xUsername: string | null;
 };
 
 // A daily quest completion, a finished partner quest, or (in the
@@ -65,9 +70,12 @@ export type StatsCompletion = {
   id: string;
   address: Address;
   name: string | null;
+  // The linked X handle, without the @; null when not linked.
+  xUsername: string | null;
   // Quest title; the partner's title for a finished partner quest.
   quest: string;
-  kind: "daily" | "partner";
+  // "check-in" only in the transactions list: a paid check-in.
+  kind: "daily" | "partner" | "check-in";
   // Campaign title for a partner task.
   partner: string | null;
   points: number;
@@ -79,17 +87,23 @@ export type StatsCheckIn = {
   id: number;
   address: Address;
   name: string | null;
+  // The linked X handle, without the @; null when not linked.
+  xUsername: string | null;
   // UTC day, YYYY-MM-DD.
   day: string;
   points: number;
   bonusPoints: number;
   createdAt: string;
+  // The paid check-in's transaction; null for free ones.
+  txHash: string | null;
 };
 
 export type StatsTransactionWallet = {
   id: number;
   address: Address;
   name: string | null;
+  // The linked X handle, without the @; null when not linked.
+  xUsername: string | null;
   transactions: number;
   // XP from those transactions.
   xp: number;

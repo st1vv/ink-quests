@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
-import type { Address } from 'viem';
+import type { Address, Hex } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
 import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
@@ -21,7 +21,12 @@ import {
   referralRewards,
 } from '../database/schema';
 import { utcDay } from '../quests/period';
-import { checkInAbi, isCreditableDay } from './check-in-tx';
+import {
+  checkInAbi,
+  isCheckInPayment,
+  isCreditableDay,
+  unixDay,
+} from './check-in-tx';
 import { levelProgress } from './level';
 import { currentStreak } from './streak';
 import { completesWeek, utcWeekDays } from './week';
@@ -33,6 +38,10 @@ export const FULL_WEEK_BONUS_XP = 10;
 // Only this far back is read to compute the streak, so it tops out here.
 const STREAK_LOOKBACK_DAYS = 400;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+// What the app knows about the payment it just made: its block, so the
+// contract is read there, and its transaction, kept as a link.
+export type CheckInPayment = { block?: bigint; txHash?: Hex };
 
 @Injectable()
 export class ProgressService {
@@ -101,8 +110,19 @@ export class ProgressService {
   // paid one and counts for the day it was paid for; otherwise it's free and
   // counts for today. `paidAtBlock` is the block of the payment the app just
   // made, so it's read there rather than from a lagging latest block.
-  async checkIn(user: AuthUser, paidAtBlock?: bigint, now = new Date()) {
-    const at = this.contract ? await this.paidDay(user, paidAtBlock, now) : now;
+  async checkIn(
+    user: AuthUser,
+    payment: CheckInPayment = {},
+    now = new Date(),
+  ) {
+    const at = this.contract
+      ? await this.paidDay(user, payment.block, now)
+      : now;
+    // Kept only when it's this wallet's payment for the day being credited.
+    const txHash =
+      this.contract && payment.txHash
+        ? await this.verifiedTxHash(user, payment.txHash, at)
+        : null;
 
     const checkedIn = new Set(await this.recentCheckInDays(user.id, at));
     const bonusPoints = completesWeek(checkedIn, at) ? FULL_WEEK_BONUS_XP : 0;
@@ -117,6 +137,7 @@ export class ProgressService {
         day: utcDay(at),
         points: CHECK_IN_XP,
         bonusPoints,
+        txHash,
       })
       .onConflictDoNothing()
       .returning({
@@ -173,6 +194,28 @@ export class ProgressService {
     // Also right after paying: our RPC can be a block behind the wallet's.
     if (!isCreditableDay(day, now)) throw this.notConfirmedYet();
     return new Date(day * DAY_MS);
+  }
+
+  // `txHash` if it's `user`'s payment for the day of `at` on our contract,
+  // else null. It's only a link for the record, so a failed lookup credits
+  // the check-in without one rather than failing it.
+  private async verifiedTxHash(user: AuthUser, txHash: Hex, at: Date) {
+    try {
+      const receipt = await this.client.getTransactionReceipt({
+        hash: txHash,
+      });
+      return isCheckInPayment(
+        receipt,
+        this.contract!,
+        user.address as Address,
+        unixDay(at),
+      )
+        ? txHash
+        : null;
+    } catch (err) {
+      this.logger.warn(`Check-in receipt failed: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   // The app retries on this message (frontend use-progress.ts), so a
