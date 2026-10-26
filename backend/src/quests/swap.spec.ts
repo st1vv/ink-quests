@@ -9,8 +9,14 @@ import type { ExplorerTx } from './explorer.client';
 import {
   INKYSWAP_UNIVERSAL_ROUTER,
   INKYSWAP_V2_ROUTER,
+  inkySwapValue,
   inkySwapWethValue,
 } from './swap';
+import {
+  V4_ETH_TO_USDT0,
+  V4_ETH_TO_USDT0_VALUE,
+  V4_USDT0_TO_ETH,
+} from './swap.fixtures';
 
 const WETH: Address = '0x4200000000000000000000000000000000000006';
 const MEME: Address = '0x1111111111111111111111111111111111111111';
@@ -229,5 +235,196 @@ describe('InkySwap V2 router swaps', () => {
   it('other contracts are ignored', () => {
     const input = call('swapExactETHForTokens', [1n, [WETH, MEME], ME, 1n]);
     expect(inkySwapWethValue(tx(OTHER, input, ETH))).toBe(0n);
+  });
+});
+
+describe('InkySwap V4 swaps', () => {
+  const USDT0: Address = '0x0200C29006150606B650577BBE7B6248F58470c1';
+  const NATIVE: Address = '0x0000000000000000000000000000000000000000';
+  const SWAP_EXACT_IN_SINGLE = 0x06;
+  const SWAP_EXACT_IN = 0x07;
+  const SWAP_EXACT_OUT_SINGLE = 0x08;
+  const SWAP_EXACT_OUT = 0x09;
+  const SETTLE_ALL = 0x0c;
+  const TAKE_ALL = 0x0f;
+  const NO_HOOK_DATA: Hex = '0x';
+
+  const poolKey = {
+    type: 'tuple',
+    components: [
+      { name: 'currency0', type: 'address' },
+      { name: 'currency1', type: 'address' },
+      { name: 'fee', type: 'uint24' },
+      { name: 'tickSpacing', type: 'int24' },
+      { name: 'hooks', type: 'address' },
+    ],
+  } as const;
+  const single = (
+    zeroForOne: boolean,
+    amount: bigint,
+    bound: bigint,
+    currency0: Address = NATIVE,
+    currency1: Address = USDT0,
+  ) =>
+    encodeAbiParameters(
+      [
+        {
+          type: 'tuple',
+          components: [
+            { name: 'poolKey', ...poolKey },
+            { name: 'zeroForOne', type: 'bool' },
+            { name: 'amount', type: 'uint128' },
+            { name: 'bound', type: 'uint128' },
+            { name: 'hookData', type: 'bytes' },
+          ],
+        },
+      ],
+      [
+        {
+          poolKey: {
+            currency0,
+            currency1,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: NATIVE,
+          },
+          zeroForOne,
+          amount,
+          bound,
+          hookData: '0x',
+        },
+      ],
+    );
+  const multi = (
+    currency: Address,
+    path: Address[],
+    amount: bigint,
+    bound: bigint,
+  ) =>
+    encodeAbiParameters(
+      [
+        {
+          type: 'tuple',
+          components: [
+            { name: 'currency', type: 'address' },
+            {
+              name: 'path',
+              type: 'tuple[]',
+              components: [
+                { name: 'intermediateCurrency', type: 'address' },
+                { name: 'fee', type: 'uint24' },
+                { name: 'tickSpacing', type: 'int24' },
+                { name: 'hooks', type: 'address' },
+                { name: 'hookData', type: 'bytes' },
+              ],
+            },
+            { name: 'amount', type: 'uint128' },
+            { name: 'bound', type: 'uint128' },
+          ],
+        },
+      ],
+      [
+        {
+          currency,
+          path: path.map((intermediateCurrency) => ({
+            intermediateCurrency,
+            fee: 3000,
+            tickSpacing: 60,
+            hooks: NATIVE,
+            hookData: NO_HOOK_DATA,
+          })),
+          amount,
+          bound,
+        },
+      ],
+    );
+  const v4 = (actions: number[], params: Hex[]) =>
+    encodeAbiParameters(
+      [{ type: 'bytes' }, { type: 'bytes[]' }],
+      [
+        `0x${actions.map((a) => a.toString(16).padStart(2, '0')).join('')}`,
+        params,
+      ],
+    );
+  const router = (input: Hex, value = 0n) =>
+    tx(INKYSWAP_UNIVERSAL_ROUTER, input, value);
+
+  it('real USD₮0 -> ETH swap: counts the 5.066669 USD₮0 paid in', () => {
+    const value = inkySwapValue(router(V4_USDT0_TO_ETH));
+    expect(value?.usdt0).toBe(5_066_669n);
+    // And the guaranteed ETH out.
+    expect(value?.weth).toBeGreaterThan(0n);
+  });
+
+  it('real ETH -> USD₮0 swap: the ETH sent and the minimum USD₮0 out', () => {
+    expect(
+      inkySwapValue(router(V4_ETH_TO_USDT0, V4_ETH_TO_USDT0_VALUE)),
+    ).toEqual({ weth: V4_ETH_TO_USDT0_VALUE, usdt0: 45_243n });
+  });
+
+  it('exact out single: only the exact amount out counts', () => {
+    // USD₮0 -> exactly 0.002 ETH, paying at most 9 USD₮0.
+    const input = execute(
+      [V4_SWAP],
+      [
+        v4(
+          [SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL],
+          [single(false, ETH / 500n, 9_000_000n), '0x', '0x'],
+        ),
+      ],
+    );
+    expect(inkySwapValue(router(input))).toEqual({
+      weth: ETH / 500n,
+      usdt0: 0n,
+    });
+  });
+
+  it('multi-hop exact in: the amount in and the minimum out at the end', () => {
+    // 7 USD₮0 -> MEME -> ETH, at least 0.001 ETH out.
+    const input = execute(
+      [V4_SWAP],
+      [
+        v4(
+          [SWAP_EXACT_IN],
+          [multi(USDT0, [MEME, NATIVE], 7_000_000n, ETH / 1000n)],
+        ),
+      ],
+    );
+    expect(inkySwapValue(router(input))).toEqual({
+      weth: ETH / 1000n,
+      usdt0: 7_000_000n,
+    });
+  });
+
+  it('multi-hop exact out: only the exact amount out counts', () => {
+    // MEME -> exactly 3 USD₮0, at most a lot of MEME.
+    const input = execute(
+      [V4_SWAP],
+      [v4([SWAP_EXACT_OUT], [multi(USDT0, [MEME], 3_000_000n, ETH)])],
+    );
+    expect(inkySwapValue(router(input))).toEqual({
+      weth: 0n,
+      usdt0: 3_000_000n,
+    });
+  });
+
+  it('token -> token with neither asset: nothing known', () => {
+    const input = execute(
+      [V4_SWAP],
+      [v4([SWAP_EXACT_IN_SINGLE], [single(true, ETH, ETH, MEME, OTHER)])],
+    );
+    expect(inkySwapValue(router(input))).toEqual({ weth: 0n, usdt0: 0n });
+  });
+});
+
+describe('InkySwap USD₮0 on V2 paths', () => {
+  const USDT0: Address = '0x0200C29006150606B650577BBE7B6248F58470c1';
+
+  it('USD₮0 -> WETH exact in: counts the USD₮0 paid in too', () => {
+    const input = execute([V2_IN], [v2Input(6_000_000n, 1n, [USDT0, WETH])]);
+    expect(inkySwapValue(tx(INKYSWAP_UNIVERSAL_ROUTER, input))).toEqual({
+      weth: 1n,
+      usdt0: 6_000_000n,
+    });
   });
 });

@@ -206,7 +206,7 @@ const QUESTS: SeedQuest[] = [
     slug: 'daily-velodrome-swap',
     title: (usd) => `Swap $${usd} on Velodrome`,
     description: (usd) =>
-      `Swap at least $${usd} worth on Velodrome to complete this daily quest. Swaps to or from ETH or USDT0 count.`,
+      `Swap at least $${usd} worth on Velodrome to complete this daily quest. Swaps to or from ETH or USD₮0 count.`,
     actionUrl: 'https://velo.drome.eth.limo/swap?chain0=57073&chain1=57073',
     points: 30,
     sortOrder: 3,
@@ -226,9 +226,9 @@ const QUESTS: SeedQuest[] = [
   }),
   ...tiered({
     slug: 'daily-tydro-supply-usdt',
-    title: (usd) => `Supply ${usd} USDT on Tydro`,
+    title: (usd) => `Supply ${usd} USD₮0 on Tydro`,
     description: (usd) =>
-      `Supply at least ${usd} USDT to the Tydro lending market to complete this daily quest.`,
+      `Supply at least ${usd} USD₮0 to the Tydro lending market to complete this daily quest.`,
     actionUrl:
       'https://app.tydro.com/reserve-overview/?underlyingAsset=0x0200c29006150606b650577bbe7b6248f58470c1&marketName=proto_ink_v3',
     points: 30,

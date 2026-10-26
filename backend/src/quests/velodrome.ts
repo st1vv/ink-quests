@@ -6,6 +6,7 @@ import {
 } from 'viem';
 import type { ExplorerTx } from './explorer.client';
 import type { SwapValue } from './swap';
+import { addV4SwapLegs } from './v4-swap';
 
 // Velodrome's UniversalRouter, the one its app (velo.drome.eth.limo) sends
 // swaps to on Ink: VITE_UNIVERSAL_ROUTER_ADDRESS_57073 in the app's build. The same address on every Superchain
@@ -116,7 +117,14 @@ export const velodromeSwapValue = (tx: ExplorerTx): SwapValue | null => {
     let swapped = false;
     [...Buffer.from(commands.slice(2), 'hex')].forEach((raw, i) => {
       const command = raw & COMMAND_MASK;
-      if (command === V4_SWAP) swapped = true;
+      if (command === V4_SWAP) {
+        swapped = true;
+        try {
+          addV4SwapLegs(value, inputs[i]);
+        } catch {
+          // Unreadable V4 data: only the ETH sent with it is known.
+        }
+      }
       if (
         command !== V3_SWAP_EXACT_IN &&
         command !== V3_SWAP_EXACT_OUT &&

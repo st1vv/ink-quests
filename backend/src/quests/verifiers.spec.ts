@@ -1,6 +1,12 @@
 import type { Address } from 'viem';
 import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
+import { INKYSWAP_UNIVERSAL_ROUTER } from './swap';
+import {
+  V4_ETH_TO_USDT0,
+  V4_ETH_TO_USDT0_VALUE,
+  V4_USDT0_TO_ETH,
+} from './swap.fixtures';
 import {
   findMatchingTx,
   isOffchain,
@@ -279,5 +285,30 @@ describe('task types', () => {
   it('counts a Nado futures trade as an onchain action for referrals', () => {
     expect(taskTypeOf('nado-perp-trade')).toBe('onchain');
     expect(isOffchain(VERIFIERS['nado-perp-trade'])).toBe(false);
+  });
+});
+
+describe('inkyswap-swap', () => {
+  // The real swap a user made for the $5 daily: 5.066669 USD₮0 -> ETH
+  // through an InkySwap V4 pool, so no ETH was sent with it.
+  const usdtToEth = tx(INKYSWAP_UNIVERSAL_ROUTER, V4_USDT0_TO_ETH);
+
+  it('counts USD₮0 paid into a V4 swap at $1', async () => {
+    expect(
+      await matches(withMinUsd(VERIFIERS['inkyswap-swap'], 5), usdtToEth),
+    ).toBe(true);
+  });
+
+  it('still needs the full amount', async () => {
+    expect(
+      await matches(withMinUsd(VERIFIERS['inkyswap-swap'], 10), usdtToEth),
+    ).toBe(false);
+  });
+
+  it('a swap worth $0.05 in ETH misses the $1 tier', async () => {
+    const small = tx(INKYSWAP_UNIVERSAL_ROUTER, V4_ETH_TO_USDT0, {
+      value: V4_ETH_TO_USDT0_VALUE.toString(),
+    });
+    expect(await matches(VERIFIERS['inkyswap-swap'], small)).toBe(false);
   });
 });

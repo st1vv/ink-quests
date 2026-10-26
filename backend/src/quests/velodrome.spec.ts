@@ -8,6 +8,7 @@ import {
 } from 'viem';
 import type { ExplorerTx } from './explorer.client';
 import { VELODROME_UNIVERSAL_ROUTER, velodromeSwapValue } from './velodrome';
+import { V4_USDT0_TO_ETH } from './swap.fixtures';
 import {
   findMatchingTx,
   USD_PRICE_UNIT,
@@ -165,6 +166,20 @@ describe('velodromeSwapValue', () => {
   it('gives zeros for a token-to-token swap with no WETH or USD₮0', () => {
     const input = execute([[V3_IN, swap(ETH, ETH, v3Path([MEME, OTHER]))]]);
     expect(velodromeSwapValue(tx(input))).toEqual({ weth: 0n, usdt0: 0n });
+  });
+
+  it('reads V4 swaps: USD₮0 paid into a V4 pool counts', () => {
+    // The same UniversalRouter V4 encoding as InkySwap's: a real
+    // 5.066669 USD₮0 -> ETH swap, sent to Velodrome's router here.
+    expect(velodromeSwapValue(tx(V4_USDT0_TO_ETH))?.usdt0).toBe(5_066_669n);
+  });
+
+  it('unreadable V4 data: only the ETH sent counts', () => {
+    const input = execute([[0x10, '0x1234']]);
+    expect(velodromeSwapValue(tx(input, ETH / 10n))).toEqual({
+      weth: ETH / 10n,
+      usdt0: 0n,
+    });
   });
 
   it('ignores calls with no swap, failed calls and other contracts', () => {

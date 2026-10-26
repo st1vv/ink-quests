@@ -2,7 +2,7 @@ import type { Address, Hex } from 'viem';
 import { ink } from 'viem/chains';
 import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
-import { inkySwapWethValue } from './swap';
+import { inkySwapValue, type SwapValue } from './swap';
 import { velodromeSwapValue } from './velodrome';
 
 // A minimum USD value the transaction has to move.
@@ -50,8 +50,9 @@ export type RelayBridgeSpec = {
   minUsd: number;
 };
 
-// A successful swap on InkySwap (its UniversalRouter or V2 router) worth
-// at least `minUsd`, valued by its ETH/WETH side (see swap.ts).
+// A successful swap on InkySwap (its UniversalRouter, V2 or V4 pools, or
+// its V2 router) worth at least `minUsd`, valued by its WETH side (oracle
+// price) or USD₮0 side ($1), whichever passes. See swap.ts.
 export type InkySwapSpec = {
   type: 'inkyswap-swap';
   minUsd: number;
@@ -345,6 +346,19 @@ const meetsMinimum = async (min: MinUsd, tx: ExplorerTx, priceOf: PriceOf) => {
   return worthAtLeast(txAmount(min, tx), min.decimals, price, min.usd);
 };
 
+// A swap is worth `usd` if either side is: its USD₮0 at exactly $1 (like
+// the Tydro USDT quest), or its WETH at the oracle price.
+const swapWorthAtLeast = async (
+  value: SwapValue | null,
+  usd: number,
+  priceOf: PriceOf,
+) => {
+  if (!value) return false;
+  if (worthAtLeast(value.usdt0, 6, USD_PRICE_UNIT, usd)) return true;
+  if (value.weth === 0n) return false;
+  return worthAtLeast(value.weth, 18, await priceOf(WETH), usd);
+};
+
 const txMatches = async (
   spec: VerifierSpec,
   tx: ExplorerTx,
@@ -355,17 +369,10 @@ const txMatches = async (
     return !spec.minUsd || meetsMinimum(spec.minUsd, tx, priceOf);
   }
   if (spec.type === 'inkyswap-swap') {
-    const wei = inkySwapWethValue(tx);
-    if (wei === 0n) return false;
-    return worthAtLeast(wei, 18, await priceOf(WETH), spec.minUsd);
+    return swapWorthAtLeast(inkySwapValue(tx), spec.minUsd, priceOf);
   }
   if (spec.type === 'dex-swap') {
-    const value = SWAP_VALUE_OF[spec.dex](tx);
-    if (!value) return false;
-    // USD₮0 counts at exactly $1, like the Tydro USDT quest.
-    if (worthAtLeast(value.usdt0, 6, USD_PRICE_UNIT, spec.minUsd)) return true;
-    if (value.weth === 0n) return false;
-    return worthAtLeast(value.weth, 18, await priceOf(WETH), spec.minUsd);
+    return swapWorthAtLeast(SWAP_VALUE_OF[spec.dex](tx), spec.minUsd, priceOf);
   }
   // Holding and bridge specs aren't about the user's own transactions.
   return false;
