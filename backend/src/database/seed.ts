@@ -114,6 +114,15 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'ink-bunnies',
+    title: 'Ink Bunnies',
+    description: '2222 Unique Bunnies NFTs on Ink Chain',
+    imageUrl: '/campaigns/ink-bunnies.webp',
+    websiteUrl: 'https://inkbunnies.xyz/',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -289,7 +298,7 @@ const QUESTS: SeedQuest[] = [
     kind: 'daily',
     title: 'Hold an INK Bunnies NFT',
     description:
-      'Hold at least one INK Bunnies NFT in your wallet to claim this daily reward.',
+      'Hold at least one INK Bunnies NFT in your wallet or staked on stake.inkbunnies.xyz to claim this daily reward.',
     actionUrl: 'https://opensea.io/collection/inkbunnies',
     points: 50,
     sortOrder: 8,
@@ -616,6 +625,42 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 4,
+    verifier: 'any-daily-quest',
+  },
+  // Ink Bunnies
+  {
+    slug: 'ink-bunnies-hold-ink-bunnies',
+    kind: 'partner',
+    partner: 'ink-bunnies',
+    title: 'Hold an Ink Bunnies NFT',
+    description:
+      'Hold at least one Ink Bunnies NFT in your wallet or staked on stake.inkbunnies.xyz.',
+    actionUrl: 'https://opensea.io/collection/inkbunnies',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-ink-bunnies',
+  },
+  {
+    slug: 'ink-bunnies-follow-inkbunniesnft',
+    kind: 'partner',
+    partner: 'ink-bunnies',
+    title: 'Follow @InkBunniesNFT on X',
+    description:
+      'Follow Ink Bunnies on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=InkBunniesNFT',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-inkbunniesnft',
+  },
+  {
+    slug: 'ink-bunnies-complete-daily-quest',
+    kind: 'partner',
+    partner: 'ink-bunnies',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
     verifier: 'any-daily-quest',
   },
 ];

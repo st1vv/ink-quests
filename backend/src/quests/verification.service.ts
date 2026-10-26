@@ -5,6 +5,7 @@ import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import { ExplorerClient } from './explorer.client';
 import { NadoClient } from './nado.client';
+import { isActiveStakeOf, MAX_STAKES_CHECKED, nftStakeAbi } from './nft-stake';
 import { PriceService } from './price.service';
 import { RelayClient } from './relay.client';
 import {
@@ -49,7 +50,7 @@ export class VerificationService {
       (s): s is NftHolderSpec => s.type === 'nft-holder',
     );
     for (const spec of holdings) {
-      if (await this.holds(spec.contract, user)) {
+      if (await this.holds(spec, user)) {
         return { done: true, txHash: null };
       }
     }
@@ -126,13 +127,45 @@ export class VerificationService {
   }
 
   // Read straight from the chain, so a token bought a second ago counts.
-  private async holds(collection: Address, user: Address) {
+  private async holds(spec: NftHolderSpec, user: Address) {
     const balance = await this.client.readContract({
-      address: collection,
+      address: spec.contract,
       abi: erc721Abi,
       functionName: 'balanceOf',
       args: [user],
     });
-    return balance > 0n;
+    if (balance > 0n) return true;
+
+    for (const staking of spec.stakedIn ?? []) {
+      if (await this.hasActiveStake(staking, spec.contract, user)) return true;
+    }
+    return false;
+  }
+
+  // Whether `user` has an NFT of `collection` staked in `staking` right
+  // now, looking at their newest stakes first.
+  private async hasActiveStake(
+    staking: Address,
+    collection: Address,
+    user: Address,
+  ) {
+    const ids = await this.client.readContract({
+      address: staking,
+      abi: nftStakeAbi,
+      functionName: 'getUserStakeIds',
+      args: [user],
+    });
+    const recent = [...ids].reverse().slice(0, MAX_STAKES_CHECKED);
+    const stakes = await Promise.all(
+      recent.map((id) =>
+        this.client.readContract({
+          address: staking,
+          abi: nftStakeAbi,
+          functionName: 'getStakeInfo',
+          args: [id],
+        }),
+      ),
+    );
+    return stakes.some((info) => isActiveStakeOf(info, collection, user));
   }
 }

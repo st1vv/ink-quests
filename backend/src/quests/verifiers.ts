@@ -39,6 +39,10 @@ export type ContractCallSpec = {
 export type NftHolderSpec = {
   type: 'nft-holder';
   contract: Address;
+  // Staking contracts (NFTStake kind, see nft-stake.ts) where an NFT of
+  // the collection the wallet has staked, and not yet unstaked, counts as
+  // held too: staking moves it out of the wallet.
+  stakedIn?: Address[];
 };
 
 // A successful Relay bridge to Ink, received by the user's wallet, from one
@@ -243,6 +247,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-nadohq': [{ type: 'x-follow', handle: 'nadoHQ' }],
   'x-follow-tydrohq': [{ type: 'x-follow', handle: 'tydrohq' }],
   'x-follow-0x-snatch': [{ type: 'x-follow', handle: '0x_snatch' }],
+  'x-follow-inkbunniesnft': [{ type: 'x-follow', handle: 'InkBunniesNFT' }],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],
@@ -260,10 +265,12 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       contract: '0x25Aa78Ab6785A4b0aeFF5c170998992Fd958d43d',
     },
   ],
+  // Many Bunnies are staked in their NFTStake contract, which still counts.
   'hold-ink-bunnies': [
     {
       type: 'nft-holder',
       contract: '0x4443970B315d3c08C2f962fe00770c52396AFDb7',
+      stakedIn: ['0x058413de8D9c4B76df94CCefC6617ACc5BFE7C57'],
     },
   ],
   'hold-ink-hornet': [
