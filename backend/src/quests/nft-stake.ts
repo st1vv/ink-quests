@@ -1,8 +1,22 @@
 import { parseAbi, type Address } from 'viem';
 
-// NFT staking contracts of the NFTStake kind (e.g. Ink Bunnies' on Ink): a
-// staked NFT sits in the contract, so the wallet's balanceOf no longer
-// shows it, but the contract keeps who staked what.
+// A staked NFT sits in the staking contract, so the wallet's balanceOf no
+// longer shows it, but the contract keeps who staked what. How to ask
+// depends on the contract:
+// - 'stake-ids' (NFTStake, e.g. Ink Bunnies'): the wallet's stake ids,
+//   each with its collection and whether it's still active. Takes any
+//   collection, so the collection is checked per stake.
+// - 'held-count' (e.g. Boink's BoinkOGStake): one collection per contract
+//   and heldCountOf(wallet), the NFTs the wallet has in it right now.
+export type StakingContract = {
+  kind: 'stake-ids' | 'held-count';
+  address: Address;
+};
+
+export const heldCountAbi = parseAbi([
+  'function heldCountOf(address holder) view returns (uint256)',
+]);
+
 export const nftStakeAbi = parseAbi([
   'function getUserStakeIds(address user) view returns (uint256[])',
   'function getStakeInfo(uint256 stakeId) view returns (address staker, address nftContract, uint256 tokenId, uint256 planId, uint256 stakedAt, uint256 lockedPointsReward, bool isActive)',

@@ -5,7 +5,13 @@ import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import { ExplorerClient } from './explorer.client';
 import { NadoClient } from './nado.client';
-import { isActiveStakeOf, MAX_STAKES_CHECKED, nftStakeAbi } from './nft-stake';
+import {
+  heldCountAbi,
+  isActiveStakeOf,
+  MAX_STAKES_CHECKED,
+  nftStakeAbi,
+  type StakingContract,
+} from './nft-stake';
 import { PriceService } from './price.service';
 import { RelayClient } from './relay.client';
 import {
@@ -137,13 +143,32 @@ export class VerificationService {
     if (balance > 0n) return true;
 
     for (const staking of spec.stakedIn ?? []) {
-      if (await this.hasActiveStake(staking, spec.contract, user)) return true;
+      if (await this.hasStaked(staking, spec.contract, user)) return true;
     }
     return false;
   }
 
   // Whether `user` has an NFT of `collection` staked in `staking` right
-  // now, looking at their newest stakes first.
+  // now (see nft-stake.ts for the kinds of staking contract).
+  private async hasStaked(
+    staking: StakingContract,
+    collection: Address,
+    user: Address,
+  ) {
+    if (staking.kind === 'held-count') {
+      const held = await this.client.readContract({
+        address: staking.address,
+        abi: heldCountAbi,
+        functionName: 'heldCountOf',
+        args: [user],
+      });
+      return held > 0n;
+    }
+    return this.hasActiveStake(staking.address, collection, user);
+  }
+
+  // NFTStake: the user's newest stakes first, any still active of the
+  // collection.
   private async hasActiveStake(
     staking: Address,
     collection: Address,

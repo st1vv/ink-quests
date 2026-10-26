@@ -322,7 +322,7 @@ const QUESTS: SeedQuest[] = [
     kind: 'daily',
     title: 'Hold a Boink NFT',
     description:
-      'Hold at least one Boink NFT in your wallet to claim this daily reward.',
+      'Hold at least one Boink NFT in your wallet or staked on boinkverse.ink/boink-staking to claim this daily reward.',
     actionUrl: 'https://opensea.io/collection/boinknfts',
     points: 50,
     sortOrder: 11,
@@ -433,7 +433,8 @@ const QUESTS: SeedQuest[] = [
     kind: 'partner',
     partner: 'boink',
     title: 'Hold a Boink NFT',
-    description: 'Hold at least one Boink NFT in your wallet.',
+    description:
+      'Hold at least one Boink NFT in your wallet or staked on boinkverse.ink/boink-staking.',
     actionUrl: 'https://opensea.io/collection/boinknfts',
     points: 0,
     sortOrder: 1,

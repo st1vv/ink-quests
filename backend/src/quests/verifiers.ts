@@ -3,6 +3,7 @@ import { ink } from 'viem/chains';
 import type { ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
 import { inkySwapValue, type SwapValue } from './swap';
+import type { StakingContract } from './nft-stake';
 import { velodromeSwapValue } from './velodrome';
 
 // A minimum USD value the transaction has to move.
@@ -42,7 +43,7 @@ export type NftHolderSpec = {
   // Staking contracts (NFTStake kind, see nft-stake.ts) where an NFT of
   // the collection the wallet has staked, and not yet unstaked, counts as
   // held too: staking moves it out of the wallet.
-  stakedIn?: Address[];
+  stakedIn?: StakingContract[];
 };
 
 // A successful Relay bridge to Ink, received by the user's wallet, from one
@@ -270,7 +271,12 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     {
       type: 'nft-holder',
       contract: '0x4443970B315d3c08C2f962fe00770c52396AFDb7',
-      stakedIn: ['0x058413de8D9c4B76df94CCefC6617ACc5BFE7C57'],
+      stakedIn: [
+        {
+          kind: 'stake-ids',
+          address: '0x058413de8D9c4B76df94CCefC6617ACc5BFE7C57',
+        },
+      ],
     },
   ],
   'hold-ink-hornet': [
@@ -279,10 +285,18 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       contract: '0x4d243f15743f6df7c832fcd5ee9a3e8453d47a4b',
     },
   ],
+  // Boinks staked in BoinkOGStake (its collection() is this contract)
+  // still count.
   'hold-boink': [
     {
       type: 'nft-holder',
       contract: '0x3132e1e8c7a46638b2df26b9252ac5d88d9e04c5',
+      stakedIn: [
+        {
+          kind: 'held-count',
+          address: '0x318432e6b670a55Ad19cc052474362FE3D8Ad0d7',
+        },
+      ],
     },
   ],
   // Behind a minimal proxy; balanceOf goes through it.
