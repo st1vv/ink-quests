@@ -24,7 +24,7 @@ export class LeaderboardController {
     return this.leaderboard.rankOf(user.id);
   }
 
-  // Public: the current (or last, or next) weekly challenge and its top
+  // Public: the current (or last, or next) challenge and its top
   // players: { challenge: { slug, title, startsAt, endsAt, status, places,
   // prize, postUrl, referralLimit, xRequired } | null, top: { rank,
   // address, name, score }[] }.

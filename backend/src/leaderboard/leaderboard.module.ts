@@ -4,7 +4,7 @@ import { LeaderboardController } from './leaderboard.controller';
 import { ChallengeService } from './challenge.service';
 import { LeaderboardService } from './leaderboard.service';
 
-// Users ranked by total XP, and the weekly challenge standings.
+// Users ranked by total XP, and the challenge standings.
 @Module({
   imports: [AuthModule],
   controllers: [LeaderboardController],

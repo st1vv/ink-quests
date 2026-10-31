@@ -191,7 +191,8 @@ const QUESTS: SeedQuest[] = [
     slug: 'daily-gm-to-inkquests',
     kind: 'daily',
     title: 'Send a GM to InkQuests',
-    description: 'Send a GM to the InkQuests wallet on the official platform.',
+    description:
+      'Send a GM to the InkQuests wallet 0x99014f787Fa9b21112194E9C8C0A3E4a22D33670 on the official platform.',
     actionUrl:
       'https://www.gm.ink?to=0x99014f787Fa9b21112194E9C8C0A3E4a22D33670',
     points: 20,
@@ -668,7 +669,7 @@ const QUESTS: SeedQuest[] = [
 
 type SeedChallenge = Omit<typeof challenges.$inferInsert, 'id' | 'createdAt'>;
 
-// Weekly challenges, each with its own leaderboard (see
+// Challenges, each with its own leaderboard (see
 // leaderboard/challenge.service.ts). Times are UTC; `endsAt` is exclusive.
 // Only daily quests, check-ins and up to 5 referrals made during the
 // challenge count, and only for wallets with a linked X account. Prizes are

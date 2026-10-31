@@ -223,7 +223,7 @@ export type ChallengePrizeItem = {
   url: string;
 };
 
-// Weekly challenges with their own leaderboard (see challenge.service.ts),
+// Challenges with their own leaderboard (see challenge.service.ts),
 // set in seed.ts. Prizes are handed out by hand from the final standings.
 export const challenges = pgTable('challenges', {
   id: serial().primaryKey(),

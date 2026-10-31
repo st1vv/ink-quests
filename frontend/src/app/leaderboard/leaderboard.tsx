@@ -5,7 +5,7 @@ import { ChallengeBoard } from "@/app/leaderboard/challenge/challenge-board";
 
 type Board = "all" | "challenge";
 
-// The leaderboard page: the all-time board or the weekly challenge, picked
+// The leaderboard page: the all-time board or the challenge, picked
 // with tabs.
 export const Leaderboard = () => {
   // Kept in the URL (?board=challenge) so it survives a reload and can be
@@ -30,7 +30,7 @@ export const Leaderboard = () => {
       <TabButton
         selected={board === "challenge"}
         onClick={() => setBoard("challenge")}
-        label="Weekly challenge"
+        label="Challenges"
       />
     </div>
   );

@@ -220,7 +220,7 @@ frontend shows them at `/statistics`, which isn't linked anywhere.
   `STATS_VIEWS` in `statistics.service.ts` for each list's fields). `address` narrows it to one
   wallet.
 
-## Weekly challenge
+## Challenges
 
 A challenge has its own leaderboard. Challenges are set by hand in `CHALLENGES` in `seed.ts`
 (slug, title, `startsAt`, exclusive `endsAt`, prize `places`, `prize`, optional `postUrl`) and

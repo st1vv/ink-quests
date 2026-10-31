@@ -35,7 +35,7 @@ export const ChallengeHeader = ({ challenge }: { challenge: Challenge }) => {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="mb-2 text-sm font-medium text-ink-light">
-            Weekly challenge
+            Challenges
           </p>
           <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
             {challenge.title}

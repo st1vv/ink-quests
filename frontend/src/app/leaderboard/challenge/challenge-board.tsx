@@ -11,7 +11,7 @@ import { PrizesCard } from "@/app/leaderboard/challenge/prizes-card";
 import { RulesCard } from "@/app/leaderboard/challenge/rules-card";
 import { YourProgressCard } from "@/app/leaderboard/challenge/your-progress-card";
 
-// The weekly challenge: header, prizes and the player's progress side by
+// The challenge: header, prizes and the player's progress side by
 // side, the rules, then the standings.
 export const ChallengeBoard = ({ tabs }: { tabs: ReactNode }) => {
   const { address } = useAuth();
@@ -25,14 +25,12 @@ export const ChallengeBoard = ({ tabs }: { tabs: ReactNode }) => {
       <div className="flex flex-col gap-4">
         {tabs}
         <PageIntro
-          eyebrow="Weekly challenge"
-          title={
-            overview.isPending ? "Weekly challenge" : "No challenge right now"
-          }
+          eyebrow="Challenges"
+          title={overview.isPending ? "Challenges" : "No challenge right now"}
           description={
             overview.isPending
               ? undefined
-              : "The next weekly challenge is on its way. Follow @inkquests on X to hear when it starts."
+              : "The next challenge is on its way. Follow @inkquests on X to hear when it starts."
           }
         />
       </div>

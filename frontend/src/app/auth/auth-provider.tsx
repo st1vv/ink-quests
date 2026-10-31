@@ -1,5 +1,7 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAccount, useConfig } from "wagmi";
+import { reconnect } from "wagmi/actions";
 import {
   RainbowKitAuthenticationProvider,
   createAuthenticationAdapter,
@@ -19,11 +21,57 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// How long the silent reconnect on page load may take before we give up.
+const RECONNECT_TIMEOUT = 10_000;
+
+// The silent reconnect on page load, to the last used wallet only (the
+// WagmiProvider's own one is off). wagmi's would ask every wallet in the
+// list and every installed extension for its accounts, one by one, and wait
+// for all of them: one extension that never answers kept the button on
+// "Connecting…" even with Rabby already connected.
+// It has no timeout either: if the wallet itself never answers (an
+// extension that hasn't woken up, a stale WalletConnect session), give up
+// after a while so the button shows "Connect Wallet"; connecting from the
+// modal wakes the wallet up. The backend session is kept, so the same
+// wallet doesn't have to sign again.
+const useReconnect = () => {
+  const config = useConfig();
+  const { status } = useAccount();
+
+  useEffect(() => {
+    const run = async () => {
+      const recentId = await config.storage?.getItem("recentConnectorId");
+      const connector = config.connectors.find((x) => x.id === recentId);
+      // No connectors means all of them to wagmi, so skip it instead.
+      if (connector) await reconnect(config, { connectors: [connector] });
+    };
+    void run();
+  }, [config]);
+
+  useEffect(() => {
+    if (status !== "reconnecting") return;
+    const timer = setTimeout(() => {
+      config.setState((x) =>
+        x.status === "reconnecting"
+          ? {
+              ...x,
+              status: "disconnected",
+              current: null,
+              connections: new Map(),
+            }
+          : x,
+      );
+    }, RECONNECT_TIMEOUT);
+    return () => clearTimeout(timer);
+  }, [config, status]);
+};
+
 // Sign-In with Ethereum: RainbowKit asks for a signature right after the
 // wallet connects, and signs out on disconnect or account switch.
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
   const { status } = useAuth();
+  useReconnect();
 
   const adapter = useMemo(
     () =>
