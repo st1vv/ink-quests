@@ -8,6 +8,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { useAuth } from "@/app/auth/use-auth";
@@ -369,10 +370,9 @@ const StatsTable = <T extends { id: number | string }>({
           >
             {list.isPending &&
               Array.from({ length: 5 }, (_, i) => (
-                <div
+                <Skeleton
                   key={i}
-                  aria-hidden
-                  className="h-[61px] animate-pulse border-b border-white/10 bg-white/[0.02] last:border-b-0"
+                  className="h-[61px] border-b border-white/10 bg-white/[0.02] last:border-b-0"
                 />
               ))}
 

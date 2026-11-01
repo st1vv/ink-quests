@@ -3,6 +3,7 @@ import { ink } from "viem/chains";
 import { useReadContract } from "wagmi";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
+import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
@@ -18,8 +19,10 @@ const NO_CHECK_INS = WEEKDAYS.map(() => false);
 export const HomeProgress = () => {
   const { status: authStatus } = useAuth();
   const requireAuth = useRequireAuth();
-  // Signed-out visitors and the first load show placeholders.
-  const { data: progress } = useProgress();
+  // Signed-out visitors see placeholders, the first load skeletons.
+  const { data: progress, isPending } = useProgress();
+  const loading =
+    authStatus === "loading" || (authStatus === "authenticated" && isPending);
   const checkIn = useCheckIn();
 
   // How far into the current level, not from zero, so the bar restarts
@@ -43,18 +46,26 @@ export const HomeProgress = () => {
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm text-white/50">Daily streak</p>
             <p className="font-semibold text-white tabular-nums">
-              {progress
-                ? `${progress.streak} ${progress.streak === 1 ? "day" : "days"}`
-                : PLACEHOLDER}
+              {loading ? (
+                <ValueSkeleton />
+              ) : progress ? (
+                `${progress.streak} ${progress.streak === 1 ? "day" : "days"}`
+              ) : (
+                PLACEHOLDER
+              )}
             </p>
           </div>
           <WeekFlames week={progress?.week ?? NO_CHECK_INS} />
           <p className="mt-2 text-xs text-white/40">
-            {!progress
-              ? "Check in every day to build your streak"
-              : progress.week.every(Boolean)
-                ? `Full week! +${progress.fullWeekBonusXp} XP bonus earned`
-                : `Check in Monday to Sunday for +${progress.fullWeekBonusXp} XP bonus`}
+            {loading ? (
+              <ValueSkeleton className="w-48" />
+            ) : !progress ? (
+              "Check in every day to build your streak"
+            ) : progress.week.every(Boolean) ? (
+              `Full week! +${progress.fullWeekBonusXp} XP bonus earned`
+            ) : (
+              `Check in Monday to Sunday for +${progress.fullWeekBonusXp} XP bonus`
+            )}
           </p>
         </div>
 
@@ -62,7 +73,9 @@ export const HomeProgress = () => {
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm text-white/50">Total XP</p>
             <p className="font-semibold text-white tabular-nums">
-              {progress ? (
+              {loading ? (
+                <ValueSkeleton className="w-24" />
+              ) : progress ? (
                 <>
                   {formatNumber(progress.totalXp)} XP{" "}
                   <span className="font-medium text-white/50">
@@ -81,9 +94,13 @@ export const HomeProgress = () => {
             />
           </div>
           <p className="mt-2 text-xs text-white/40">
-            {progress
-              ? `${formatNumber(progress.nextLevelXp - progress.totalXp)} XP to level ${progress.level + 1}`
-              : "Sign in to track your XP and streak"}
+            {loading ? (
+              <ValueSkeleton className="w-32" />
+            ) : progress ? (
+              `${formatNumber(progress.nextLevelXp - progress.totalXp)} XP to level ${progress.level + 1}`
+            ) : (
+              "Sign in to track your XP and streak"
+            )}
           </p>
         </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
+import { Skeleton, ValueSkeleton } from "@/shared/ui/skeleton";
 import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useDailyQuests } from "@/app/quests/catalog";
@@ -67,7 +68,11 @@ export const HomeDailyQuests = () => {
               Daily quests
             </h2>
             <span className="text-sm text-white/40 tabular-nums">
-              {completedCount}/{quests.length}
+              {dailyQuests.isPending ? (
+                <ValueSkeleton className="w-8" />
+              ) : (
+                `${completedCount}/${quests.length}`
+              )}
             </span>
           </div>
           {timeLeft && (
@@ -119,10 +124,9 @@ export const HomeDailyQuests = () => {
 
 const QuestsPlaceholder = () =>
   [0, 1, 2].map((i) => (
-    <div
+    <Skeleton
       key={i}
-      aria-hidden
-      className="h-[86px] animate-pulse rounded-3xl border border-white/10 bg-white/[0.03]"
+      className="h-[86px] rounded-3xl border border-white/10 bg-white/[0.03]"
     />
   ));
 

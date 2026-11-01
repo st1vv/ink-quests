@@ -6,6 +6,7 @@ import { TabButton } from "@/shared/ui/tab-button";
 import { Badge } from "@/shared/ui/badge";
 import { badgeColors, type BadgeVariant } from "@/shared/ui/badge-colors";
 import { buttonStyles } from "@/shared/ui/button-styles";
+import { CardSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { usePartners, type CampaignSummary } from "@/app/quests/catalog";
 import { CampaignCover } from "@/app/quests/campaign-cover";
@@ -152,13 +153,7 @@ export const Quests = () => {
           className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
         >
           {campaigns.isPending &&
-            [0, 1, 2].map((i) => (
-              <div
-                key={i}
-                aria-hidden
-                className="h-80 animate-pulse rounded-[32px] border border-white/10 bg-white/5"
-              />
-            ))}
+            [0, 1, 2].map((i) => <CardSkeleton key={i} className="h-80" />)}
 
           {shown.map((campaign) => (
             <CampaignCard

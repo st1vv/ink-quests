@@ -4,6 +4,7 @@ import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Button } from "@/shared/ui/button";
+import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { BoardTable } from "@/app/leaderboard/board-table";
@@ -16,7 +17,7 @@ import {
 
 // The all-time board: the top 100 by total XP.
 export const GlobalBoard = ({ tabs }: { tabs: ReactNode }) => {
-  const { address } = useAuth();
+  const { address, status } = useAuth();
   const leaderboard = useLeaderboard();
   const myRank = useMyRank();
   const entries = leaderboard.data ?? [];
@@ -24,7 +25,11 @@ export const GlobalBoard = ({ tabs }: { tabs: ReactNode }) => {
   return (
     <div className="flex flex-col gap-4">
       {tabs}
-      <LeaderboardIntro signedIn={Boolean(address)} myRank={myRank.data} />
+      <LeaderboardIntro
+        signedIn={Boolean(address)}
+        loading={status === "loading" || (Boolean(address) && myRank.isPending)}
+        myRank={myRank.data}
+      />
       <Surface>
         <div className="flex flex-col gap-4">
           <div>
@@ -60,11 +65,33 @@ export const GlobalBoard = ({ tabs }: { tabs: ReactNode }) => {
 
 type LeaderboardIntroProps = {
   signedIn: boolean;
+  // Signing in or the rank still on its way.
+  loading: boolean;
   myRank: MyRank | undefined;
 };
 
-const LeaderboardIntro = ({ signedIn, myRank }: LeaderboardIntroProps) => {
+const LeaderboardIntro = ({
+  signedIn,
+  loading,
+  myRank,
+}: LeaderboardIntroProps) => {
   const { openConnectModal } = useConnectModal();
+
+  if (loading) {
+    return (
+      <PageIntro
+        eyebrow="Your position"
+        title={<ValueSkeleton className="w-56 max-w-full" />}
+        description={<ValueSkeleton className="w-72 max-w-full" />}
+        aside={
+          <div className="grid grid-cols-2 gap-4 md:min-w-[420px]">
+            <StatCard label="Total XP" value={<ValueSkeleton />} />
+            <StatCard label="To next rank" value={<ValueSkeleton />} />
+          </div>
+        }
+      />
+    );
+  }
 
   if (!signedIn) {
     return (

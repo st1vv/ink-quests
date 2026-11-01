@@ -6,6 +6,7 @@ import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
+import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import {
@@ -39,6 +40,11 @@ import {
 
 const PLACEHOLDER = "—";
 
+// What a value shows without its data: a skeleton while it loads, a dash
+// when loading failed.
+const placeholder = (pending: boolean, className?: string) =>
+  pending ? <ValueSkeleton className={className} /> : PLACEHOLDER;
+
 export const Profile = () => {
   const { address, status } = useAuth();
 
@@ -49,17 +55,24 @@ export const Profile = () => {
 const SignedOutProfile = ({ loading }: { loading: boolean }) => {
   const { openConnectModal } = useConnectModal();
 
+  // The wallet may still turn out to be signed in.
+  if (loading) {
+    return (
+      <PageIntro
+        eyebrow="Profile"
+        title={<ValueSkeleton className="w-40" />}
+        description={<ValueSkeleton className="w-64 max-w-full" />}
+      />
+    );
+  }
+
   return (
     <PageIntro
       eyebrow="Profile"
       title="Your profile"
       description="Connect your wallet to see your XP, level, streaks and activity."
       aside={
-        <Button
-          onClick={openConnectModal}
-          disabled={loading}
-          className="w-full md:w-auto"
-        >
+        <Button onClick={openConnectModal} className="w-full md:w-auto">
           Connect wallet
         </Button>
       }
@@ -70,9 +83,9 @@ const SignedOutProfile = ({ loading }: { loading: boolean }) => {
 const SignedInProfile = ({ address }: { address: Address }) => {
   // Back from X's consent page: toast the outcome.
   useXLinkResult();
-  const { data: progress } = useProgress();
-  const { data: rank } = useMyRank();
-  const { data: stats } = useProfileStats();
+  const { data: progress, isPending: progressPending } = useProgress();
+  const { data: rank, isPending: rankPending } = useMyRank();
+  const { data: stats, isPending: statsPending } = useProfileStats();
   const { data: x } = useXAccount();
   // The name being typed; null when not editing.
   const [draft, setDraft] = useState<string | null>(null);
@@ -99,6 +112,7 @@ const SignedInProfile = ({ address }: { address: Address }) => {
             <ProfileTitle
               address={address}
               name={name}
+              loading={statsPending}
               onEdit={stats ? () => setDraft(name ?? "") : undefined}
             />
           )
@@ -117,6 +131,8 @@ const SignedInProfile = ({ address }: { address: Address }) => {
             ]
               .filter(Boolean)
               .join(" · ")
+          ) : statsPending ? (
+            <ValueSkeleton className="w-48" />
           ) : undefined
         }
       >
@@ -124,20 +140,31 @@ const SignedInProfile = ({ address }: { address: Address }) => {
           <StatCard
             label="Total XP"
             value={
-              progress ? `${formatNumber(progress.totalXp)} XP` : PLACEHOLDER
+              progress
+                ? `${formatNumber(progress.totalXp)} XP`
+                : placeholder(progressPending)
             }
           />
-          <StatCard label="Level" value={progress?.level ?? PLACEHOLDER} />
+          <StatCard
+            label="Level"
+            value={progress?.level ?? placeholder(progressPending, "w-8")}
+          />
           <StatCard
             label="Rank"
             value={
-              rank?.rank != null ? `#${formatNumber(rank.rank)}` : PLACEHOLDER
+              rank?.rank != null
+                ? `#${formatNumber(rank.rank)}`
+                : placeholder(rankPending, "w-10")
             }
             hint={rank && rank.rank === null ? "Not ranked yet" : undefined}
           />
           <StatCard
             label="Quests completed"
-            value={stats ? formatNumber(stats.questsCompleted) : PLACEHOLDER}
+            value={
+              stats
+                ? formatNumber(stats.questsCompleted)
+                : placeholder(statsPending, "w-10")
+            }
           />
         </div>
       </PageIntro>
@@ -155,15 +182,26 @@ const SignedInProfile = ({ address }: { address: Address }) => {
 type ProfileTitleProps = {
   address: Address;
   name: string | null | undefined;
+  // The name isn't known yet: a skeleton, not the address it may replace.
+  loading: boolean;
   onEdit?: () => void;
 };
 
 // The display name when set; the copy button always copies the wallet.
-const ProfileTitle = ({ address, name, onEdit }: ProfileTitleProps) => (
+const ProfileTitle = ({
+  address,
+  name,
+  loading,
+  onEdit,
+}: ProfileTitleProps) => (
   <span className="inline-flex max-w-full min-w-0 items-center gap-3">
-    <span title={address} className={`truncate ${name ? "" : "font-mono"}`}>
-      {name ?? shortAddress(address)}
-    </span>
+    {loading ? (
+      <ValueSkeleton className="w-40" />
+    ) : (
+      <span title={address} className={`truncate ${name ? "" : "font-mono"}`}>
+        {name ?? shortAddress(address)}
+      </span>
+    )}
     <CopyButton text={address} label="address" />
     {onEdit && (
       <IconButton
@@ -353,7 +391,7 @@ const XAccountCard = () => {
 };
 
 const ReferralCard = () => {
-  const { data: referrals } = useReferrals();
+  const { data: referrals, isPending } = useReferrals();
   // A linked X account is also required once X linking is set up.
   const { data: x } = useXAccount();
   const link = referrals
@@ -377,7 +415,7 @@ const ReferralCard = () => {
 
         <div className="flex items-center gap-2 rounded-3xl border border-white/10 bg-black/20 py-2 pr-2 pl-4">
           <span className="min-w-0 flex-1 truncate font-mono text-sm text-white/80">
-            {link ?? PLACEHOLDER}
+            {link ?? placeholder(isPending, "w-64 max-w-full")}
           </span>
           {link && <CopyButton text={link} label="invite link" />}
         </div>
@@ -385,16 +423,26 @@ const ReferralCard = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard
             label="Signed up"
-            value={referrals ? formatNumber(referrals.invited) : PLACEHOLDER}
+            value={
+              referrals
+                ? formatNumber(referrals.invited)
+                : placeholder(isPending, "w-10")
+            }
           />
           <StatCard
             label="Rewarded"
-            value={referrals ? formatNumber(referrals.rewarded) : PLACEHOLDER}
+            value={
+              referrals
+                ? formatNumber(referrals.rewarded)
+                : placeholder(isPending, "w-10")
+            }
           />
           <StatCard
             label="XP earned"
             value={
-              referrals ? `${formatNumber(referrals.xpEarned)} XP` : PLACEHOLDER
+              referrals
+                ? `${formatNumber(referrals.xpEarned)} XP`
+                : placeholder(isPending)
             }
           />
         </div>

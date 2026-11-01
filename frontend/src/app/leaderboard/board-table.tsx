@@ -1,6 +1,7 @@
 import { isAddressEqual, type Address } from "viem";
 import { Badge } from "@/shared/ui/badge";
 import { GiftIcon } from "@/shared/ui/icons";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { formatNumber, shortAddress } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { PODIUM_STYLES } from "@/app/leaderboard/podium";
@@ -59,10 +60,9 @@ export const BoardTable = ({
       <div className="flex flex-col">
         {pending &&
           Array.from({ length: 5 }, (_, i) => (
-            <div
+            <Skeleton
               key={i}
-              aria-hidden
-              className="h-[53px] animate-pulse border-b border-white/10 bg-white/[0.02] last:border-b-0"
+              className="h-[53px] border-b border-white/10 bg-white/[0.02] last:border-b-0"
             />
           ))}
 

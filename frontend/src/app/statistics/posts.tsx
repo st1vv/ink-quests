@@ -5,6 +5,7 @@ import { PageIntro } from "@/shared/ui/page-intro";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
 import {
@@ -67,10 +68,7 @@ const SocialPostsPanel = () => {
     <Surface>
       <div className="flex flex-col gap-4">
         {posts.isPending && (
-          <div
-            aria-hidden
-            className="h-40 animate-pulse rounded-3xl border border-white/10 bg-white/[0.02]"
-          />
+          <Skeleton className="h-40 rounded-3xl border border-white/10 bg-white/[0.02]" />
         )}
         {posts.isError && (
           <p className="text-sm text-white/60">

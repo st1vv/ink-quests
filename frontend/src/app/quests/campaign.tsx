@@ -4,6 +4,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
+import { CardSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/app/auth/use-auth";
@@ -38,12 +39,7 @@ export const Campaign = () => {
   const campaign = useCampaign(slug);
 
   if (campaign.isPending) {
-    return (
-      <div
-        aria-hidden
-        className="h-96 animate-pulse rounded-[32px] border border-white/10 bg-white/5"
-      />
-    );
+    return <CardSkeleton className="h-96" />;
   }
 
   if (campaign.error instanceof ApiError && campaign.error.status === 404) {

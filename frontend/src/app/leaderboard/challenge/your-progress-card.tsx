@@ -3,6 +3,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Surface } from "@/shared/ui/surface";
 import { Button } from "@/shared/ui/button";
 import { CheckIcon, XLogoIcon } from "@/shared/ui/icons";
+import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { connectX } from "@/app/x/use-x";
 import { PLACEHOLDER } from "@/app/leaderboard/podium";
@@ -12,6 +13,8 @@ import type { Challenge, MyChallenge } from "@/app/leaderboard/use-leaderboard";
 type YourProgressCardProps = {
   challenge: Challenge;
   signedIn: boolean;
+  // Signing in or the player's standing still on its way.
+  loading: boolean;
   me: MyChallenge | null;
 };
 
@@ -19,12 +22,14 @@ type YourProgressCardProps = {
 export const YourProgressCard = ({
   challenge,
   signedIn,
+  loading,
   me,
 }: YourProgressCardProps) => {
   const { openConnectModal } = useConnectModal();
+  const placeholder = loading ? <ValueSkeleton /> : PLACEHOLDER;
 
   let body: ReactNode;
-  if (!signedIn) {
+  if (!signedIn && !loading) {
     body = (
       <>
         <p className="text-sm leading-6 text-white/60">
@@ -54,7 +59,7 @@ export const YourProgressCard = ({
       // Rows share the card's height, so it lines up with Prizes.
       <dl className="flex flex-1 flex-col divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
         <ProgressRow label="Place">
-          {me?.rank != null ? `#${me.rank}` : PLACEHOLDER}
+          {me?.rank != null ? `#${me.rank}` : placeholder}
           {prizePlace && (
             <span className="ml-2 text-xs font-medium text-amber-300">
               prize place 🎁
@@ -62,19 +67,23 @@ export const YourProgressCard = ({
           )}
         </ProgressRow>
         <ProgressRow label="Challenge XP">
-          {me ? `${formatNumber(me.score)} XP` : PLACEHOLDER}
+          {me ? `${formatNumber(me.score)} XP` : placeholder}
         </ProgressRow>
         <ProgressRow label="Referrals counted">
           {me
             ? `${me.referralsCounted}/${challenge.referralLimit}`
-            : PLACEHOLDER}
+            : placeholder}
         </ProgressRow>
         {challenge.xRequired && (
           <ProgressRow label="X account">
-            <span className="inline-flex items-center gap-1.5 text-emerald-300">
-              <CheckIcon className="h-3.5 w-3.5" />
-              Connected
-            </span>
+            {loading ? (
+              placeholder
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-emerald-300">
+                <CheckIcon className="h-3.5 w-3.5" />
+                Connected
+              </span>
+            )}
           </ProgressRow>
         )}
       </dl>
