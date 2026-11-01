@@ -88,7 +88,9 @@ export const QuestRow = ({
             <TagBadges tags={quest.tags} />
           </div>
 
-          <p className="mt-1 text-sm leading-6 text-white/60">
+          {/* break-words: long unbroken text (a wallet address) wraps
+              instead of running out of the card. */}
+          <p className="mt-1 text-sm leading-6 break-words text-white/60">
             {quest.description}
           </p>
         </div>
