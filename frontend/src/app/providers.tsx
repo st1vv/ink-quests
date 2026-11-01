@@ -30,8 +30,7 @@ interface ProvidersProps {
 
 export const Providers = ({ children }: ProvidersProps) => {
   return (
-    // Reconnecting on page load is done by AuthProvider (see useReconnect).
-    <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <RainbowKitProvider theme={theme} modalSize="compact">

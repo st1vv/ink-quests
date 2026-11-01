@@ -23,11 +23,14 @@ export const ConnectWallet = () => {
         openAccountModal,
       }) => {
         // The connect modal stays open through picking a wallet, approving
-        // the connection and signing the SIWE message.
+        // the connection and signing the SIWE message. A wallet that still
+        // has its session signs in without a signature, and then RainbowKit
+        // leaves the modal "open" (it just draws nothing), so a signed-in
+        // wallet is done whatever the modal says.
         if (
           !mounted ||
           authenticationStatus === "loading" ||
-          connectModalOpen
+          (connectModalOpen && authenticationStatus !== "authenticated")
         ) {
           return (
             <WalletButton disabled icon={<SpinnerIcon />}>

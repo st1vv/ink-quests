@@ -1,7 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAccount, useConfig, type Connector } from "wagmi";
-import { reconnect } from "wagmi/actions";
+import { useAccount, useConfig } from "wagmi";
 import {
   RainbowKitAuthenticationProvider,
   createAuthenticationAdapter,
@@ -21,44 +20,19 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// RainbowKit's wallet id (`rkDetails` isn't in wagmi's types). EIP-6963
-// connectors found on the page have none, their own id is the wallet's.
-const walletId = (connector: Connector) =>
-  (connector as { rkDetails?: { id?: string } }).rkDetails?.id ?? connector.id;
-
 // How long the silent reconnect on page load may take before we give up.
-const RECONNECT_TIMEOUT = 10_000;
+// Generous: on a phone a WalletConnect session first loads its library and
+// reaches the relay.
+const RECONNECT_TIMEOUT = 20_000;
 
-// The silent reconnect on page load, to the last used wallet only (the
-// WagmiProvider's own one is off). wagmi's would ask every wallet in the
-// list and every installed extension for its accounts, one by one, and wait
-// for all of them: one extension that never answers kept the button on
-// "Connecting…" even with Rabby already connected.
-// It has no timeout either: if the wallet itself never answers (an
-// extension that hasn't woken up, a stale WalletConnect session), give up
-// after a while so the button shows "Connect Wallet"; connecting from the
-// modal wakes the wallet up. The backend session is kept, so the same
-// wallet doesn't have to sign again.
-const useReconnect = () => {
+// wagmi's reconnect on page load has no timeout: a wallet that never answers
+// (an extension that hasn't woken up, a stale WalletConnect session) keeps
+// the button on "Connecting…" for good. Give up after a while so it shows
+// "Connect Wallet"; connecting from the modal wakes the wallet up. The
+// backend session is kept, so the same wallet doesn't have to sign again.
+const useReconnectTimeout = () => {
   const config = useConfig();
   const { status } = useAccount();
-
-  useEffect(() => {
-    const run = async () => {
-      const recentId = await config.storage?.getItem("recentConnectorId");
-      const sameId = config.connectors.filter((x) => x.id === recentId);
-      // Every WalletConnect wallet (Kraken, MetaMask on mobile, …) is a
-      // "walletConnect" connector, and the QR modal one keeps its sessions
-      // apart, so tell them apart by the wallet RainbowKit saved as the
-      // last one picked.
-      const latestWalletId = localStorage.getItem("rk-latest-id");
-      const picked = sameId.filter((x) => walletId(x) === latestWalletId);
-      const connectors = picked.length ? picked : sameId;
-      // No connectors means all of them to wagmi, so skip it instead.
-      if (connectors.length) await reconnect(config, { connectors });
-    };
-    void run();
-  }, [config]);
 
   useEffect(() => {
     if (status !== "reconnecting") return;
@@ -83,7 +57,7 @@ const useReconnect = () => {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
   const { status } = useAuth();
-  useReconnect();
+  useReconnectTimeout();
 
   const adapter = useMemo(
     () =>
