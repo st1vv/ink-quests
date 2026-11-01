@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAccount, useConfig } from "wagmi";
+import { useAccount, useConfig, type Connector } from "wagmi";
 import { reconnect } from "wagmi/actions";
 import {
   RainbowKitAuthenticationProvider,
@@ -20,6 +20,11 @@ import {
 interface AuthProviderProps {
   children: ReactNode;
 }
+
+// RainbowKit's wallet id (`rkDetails` isn't in wagmi's types). EIP-6963
+// connectors found on the page have none, their own id is the wallet's.
+const walletId = (connector: Connector) =>
+  (connector as { rkDetails?: { id?: string } }).rkDetails?.id ?? connector.id;
 
 // How long the silent reconnect on page load may take before we give up.
 const RECONNECT_TIMEOUT = 10_000;
@@ -41,9 +46,16 @@ const useReconnect = () => {
   useEffect(() => {
     const run = async () => {
       const recentId = await config.storage?.getItem("recentConnectorId");
-      const connector = config.connectors.find((x) => x.id === recentId);
+      const sameId = config.connectors.filter((x) => x.id === recentId);
+      // Every WalletConnect wallet (Kraken, MetaMask on mobile, …) is a
+      // "walletConnect" connector, and the QR modal one keeps its sessions
+      // apart, so tell them apart by the wallet RainbowKit saved as the
+      // last one picked.
+      const latestWalletId = localStorage.getItem("rk-latest-id");
+      const picked = sameId.filter((x) => walletId(x) === latestWalletId);
+      const connectors = picked.length ? picked : sameId;
       // No connectors means all of them to wagmi, so skip it instead.
-      if (connector) await reconnect(config, { connectors: [connector] });
+      if (connectors.length) await reconnect(config, { connectors });
     };
     void run();
   }, [config]);
