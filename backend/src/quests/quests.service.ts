@@ -44,6 +44,8 @@ const missingMessage = (
     // Nado's own stats run up to ~20 minutes behind its trades.
     case 'futures':
       return `No Nado futures trades of at least $${minUsd} found yet. Nado's trading stats can take up to 20 minutes to update, so if you just traded, try again a bit later`;
+    case 'token':
+      return `No purchase of at least $${minUsd} of this token found yet today. If you just bought it, try again in a minute`;
     case 'bridge':
       return `No Relay bridge of at least $${minUsd} to Ink found yet today (from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute`;
   }

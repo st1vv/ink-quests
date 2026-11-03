@@ -1,5 +1,5 @@
 import type { Address } from 'viem';
-import type { ExplorerTx } from './explorer.client';
+import type { ExplorerTokenTransfer, ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
 import { INKYSWAP_UNIVERSAL_ROUTER } from './swap';
 import {
@@ -9,6 +9,7 @@ import {
 } from './swap.fixtures';
 import {
   findMatchingTx,
+  findTokenBuy,
   isOffchain,
   matchingRelayBridge,
   minUsdOf,
@@ -310,5 +311,83 @@ describe('inkyswap-swap', () => {
       value: V4_ETH_TO_USDT0_VALUE.toString(),
     });
     expect(await matches(VERIFIERS['inkyswap-swap'], small)).toBe(false);
+  });
+});
+
+describe('buy-anita', () => {
+  const [spec] = VERIFIERS['buy-anita'];
+  if (spec.type !== 'token-buy') throw new Error('unexpected spec type');
+  const ANITA = '0x0606fc632ee812ba970af72f8489baaa443c4b98';
+  const POOL = '0x00000000000000000000000000000000000000c0';
+  const FRIEND = '0x00000000000000000000000000000000000000f0';
+  // $0.001 a token, so $1 is 1000 tokens.
+  const PRICE = 0.001;
+  const isContract = (address: Address) =>
+    Promise.resolve(address.toLowerCase() === POOL);
+  const transfer = (
+    tokens: bigint,
+    over: Partial<ExplorerTokenTransfer> = {},
+  ): ExplorerTokenTransfer => ({
+    hash: '0xbuy',
+    from: POOL,
+    to: '0x00000000000000000000000000000000000000aa',
+    contractAddress: ANITA,
+    value: (tokens * ETH).toString(),
+    tokenDecimal: '18',
+    timeStamp: '0',
+    ...over,
+  });
+  // The USD of ETH the user sent with each transaction; none by default.
+  const find = (
+    transfers: ExplorerTokenTransfer[],
+    paid: Record<string, number> = {},
+  ) =>
+    findTokenBuy(spec, transfers, PRICE, isContract, (hash) =>
+      Promise.resolve(paid[hash] ?? 0),
+    );
+
+  it('accepts $1 of the token received from a contract', async () => {
+    expect(await find([transfer(1000n)])).toBe('0xbuy');
+  });
+
+  it('accepts $0.95, a few cents short of $1', async () => {
+    expect(await find([transfer(950n)])).toBe('0xbuy');
+    expect(await find([transfer(10n)], { '0xbuy': 0.95 })).toBe('0xbuy');
+  });
+
+  it('rejects less than $0.95, of tokens and of ETH paid', async () => {
+    expect(await find([transfer(949n)])).toBeNull();
+    expect(await find([transfer(949n)], { '0xbuy': 0.94 })).toBeNull();
+  });
+
+  // A real $1 buy on InkyPump: fees and the explorer's price put the
+  // tokens at $0.996.
+  it('accepts $1 of ETH paid even when the tokens come out short', async () => {
+    expect(await find([transfer(996n)], { '0xbuy': 1 })).toBe('0xbuy');
+  });
+
+  it('rejects the token sent from another wallet', async () => {
+    expect(await find([transfer(5000n, { from: FRIEND })])).toBeNull();
+  });
+
+  it('rejects another token, whatever the amount', async () => {
+    expect(
+      await find([transfer(10n ** 9n, { contractAddress: `0x${USDC}` })]),
+    ).toBeNull();
+  });
+
+  it('skips a small buy and finds a big enough one later', async () => {
+    expect(
+      await find([
+        transfer(10n, { hash: '0xsmall' }),
+        transfer(2000n, { hash: '0xbig' }),
+      ]),
+    ).toBe('0xbig');
+  });
+
+  it('is an onchain task with a $1 minimum', () => {
+    expect(taskTypeOf('buy-anita')).toBe('onchain');
+    expect(isOffchain(VERIFIERS['buy-anita'])).toBe(false);
+    expect(minUsdOf(VERIFIERS['buy-anita'])).toBe(1);
   });
 });

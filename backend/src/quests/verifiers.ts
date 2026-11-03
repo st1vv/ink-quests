@@ -1,6 +1,6 @@
-import type { Address, Hex } from 'viem';
+import { formatUnits, type Address, type Hex } from 'viem';
 import { ink } from 'viem/chains';
-import type { ExplorerTx } from './explorer.client';
+import type { ExplorerTokenTransfer, ExplorerTx } from './explorer.client';
 import type { RelayRequest } from './relay.client';
 import { inkySwapValue, type SwapValue } from './swap';
 import type { StakingContract } from './nft-stake';
@@ -80,6 +80,20 @@ export type NadoPerpVolumeSpec = {
   minUsd: number;
 };
 
+// Buying at least `minUsd` of an ERC-20 during the quest's window: the
+// user's wallet received `token` from a contract (a pool, router or
+// aggregator), valued at its explorer (CoinGecko) price or by the ETH the
+// user paid for it (see findTokenBuy). Any DEX or
+// aggregator counts, and so do smart wallets: what's checked is the token
+// arriving, not the transaction that bought it. A plain send from another
+// wallet doesn't count; adding liquidity's refund does, which is fine at
+// these amounts.
+export type TokenBuySpec = {
+  type: 'token-buy';
+  token: Address;
+  minUsd: number;
+};
+
 const SWAP_VALUE_OF = {
   velodrome: velodromeSwapValue,
 };
@@ -118,6 +132,7 @@ export type VerifierSpec =
   | InkySwapSpec
   | DexSwapSpec
   | NadoPerpVolumeSpec
+  | TokenBuySpec
   | XFollowSpec
   | DailyQuestDoneSpec
   | VisitSpec
@@ -238,6 +253,29 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   // Futures on Nado. Its smallest order is $100 of notional, so that's the
   // lowest daily tier; the partner task takes any trade at all.
   'nado-perp-trade': [{ type: 'nado-perp-volume', minUsd: MIN_QUEST_USD }],
+
+  // Ink community tokens (ERC-20, 18 decimals, priced on the explorer).
+  'buy-krakmask': [
+    {
+      type: 'token-buy',
+      token: '0x32bCB803f696C99Eb263D60a05CAfD8689026575', // Krak Mask
+      minUsd: MIN_QUEST_USD,
+    },
+  ],
+  'buy-anita': [
+    {
+      type: 'token-buy',
+      token: '0x0606FC632ee812bA970af72F8489baAa443C4B98', // ANITA
+      minUsd: MIN_QUEST_USD,
+    },
+  ],
+  'buy-beast': [
+    {
+      type: 'token-buy',
+      token: '0xD95B9A5Fa7C2708fD4FE0E07E59bDE1Ef35b194a', // Kraken Mascot
+      minUsd: MIN_QUEST_USD,
+    },
+  ],
 
   // Campaign tasks (partner quests).
   'x-follow-inkquests': [{ type: 'x-follow', handle: 'inkquests' }],
@@ -436,6 +474,36 @@ export const matchingRelayBridge = (
   return ok && inkTx ? (inkTx.hash as Hex) : null;
 };
 
+// The share of a token buy's minimum that passes ($0.95 of a $1 quest).
+const TOKEN_BUY_TOLERANCE = 0.95;
+
+// The first transfer (newest first, as the explorer returns them) from a
+// contract that buys at least `spec.minUsd`: worth that at `usdPrice`, or
+// paid for with that much ETH (`paidUsd` of its transaction). The ETH side
+// matters: fees, slippage and a lagging token price leave a $1 buy short
+// of $1 of tokens. Even the ETH can come out a few cents short when the
+// DEX prices ETH above our oracle, so 95% of the minimum is enough. Its
+// transaction hash, or null. `transfers` are the ones the user received
+// during the quest's window.
+export const findTokenBuy = async (
+  spec: TokenBuySpec,
+  transfers: ExplorerTokenTransfer[],
+  usdPrice: number,
+  isContract: (address: Address) => Promise<boolean>,
+  paidUsd: (hash: Hex) => Promise<number>,
+) => {
+  const token = spec.token.toLowerCase();
+  const enough = spec.minUsd * TOKEN_BUY_TOLERANCE;
+  for (const t of transfers) {
+    if (t.contractAddress.toLowerCase() !== token) continue;
+    if (!(await isContract(t.from as Address))) continue;
+    const amount = Number(formatUnits(BigInt(t.value), Number(t.tokenDecimal)));
+    if (amount * usdPrice >= enough) return t.hash;
+    if ((await paidUsd(t.hash)) >= enough) return t.hash;
+  }
+  return null;
+};
+
 // The verifier with every amount check set to `usd` (a quest's own
 // minimum, e.g. its $5 variant); null keeps the verifier's defaults.
 export const withMinUsd = (
@@ -452,7 +520,8 @@ export const withMinUsd = (
           spec.type === 'relay-bridge' ||
           spec.type === 'inkyswap-swap' ||
           spec.type === 'dex-swap' ||
-          spec.type === 'nado-perp-volume'
+          spec.type === 'nado-perp-volume' ||
+          spec.type === 'token-buy'
         ) {
           return { ...spec, minUsd: usd };
         }
@@ -468,7 +537,8 @@ export const minUsdOf = (specs: VerifierSpec[]): number | null => {
       spec.type === 'relay-bridge' ||
       spec.type === 'inkyswap-swap' ||
       spec.type === 'dex-swap' ||
-      spec.type === 'nado-perp-volume'
+      spec.type === 'nado-perp-volume' ||
+      spec.type === 'token-buy'
     ) {
       return spec.minUsd;
     }

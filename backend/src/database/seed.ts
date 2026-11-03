@@ -29,7 +29,8 @@ type QuestTag =
   | 'Bridge'
   | 'NFT'
   | 'Perp DEX'
-  | 'Social';
+  | 'Social'
+  | 'Token';
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -269,6 +270,27 @@ const QUESTS: SeedQuest[] = [
     tags: ['Perp DEX'],
     tiers: [100, 150, 200],
   }),
+  // Buy a community token: one group, so at most one of them a day.
+  ...[
+    { symbol: 'KRAKMASK', token: '0x32bCB803f696C99Eb263D60a05CAfD8689026575' },
+    { symbol: 'ANITA', token: '0x0606FC632ee812bA970af72F8489baAa443C4B98' },
+    { symbol: 'BEAST', token: '0xD95B9A5Fa7C2708fD4FE0E07E59bDE1Ef35b194a' },
+  ].map(
+    ({ symbol, token }): SeedQuest => ({
+      slug: `daily-buy-${symbol.toLowerCase()}`,
+      kind: 'daily',
+      title: `Buy $1 of ${symbol}`,
+      description: `Buy at least $1 worth of ${symbol} on Ink, on InkyPump or any DEX, to complete this daily quest.`,
+      // The token's trading page; any other DEX or aggregator counts too.
+      actionUrl: `https://inkypump.com/ink/trade/${token}`,
+      points: 30,
+      sortOrder: 15,
+      verifier: `buy-${symbol.toLowerCase()}`,
+      minUsd: 1,
+      groupKey: 'daily-buy-token',
+      tags: ['Token'],
+    }),
+  ),
   // Paused for now: uncomment to put it back in the rotation.
   // {
   //   slug: 'daily-hold-templars-of-the-storm',

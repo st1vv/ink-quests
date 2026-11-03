@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { erc721Abi, type Address, type Hex } from 'viem';
+import { erc721Abi, formatUnits, type Address, type Hex } from 'viem';
 import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
-import { ExplorerClient } from './explorer.client';
+import { ExplorerClient, type ExplorerTx } from './explorer.client';
 import { NadoClient } from './nado.client';
 import {
   heldCountAbi,
@@ -16,19 +16,27 @@ import { PriceService } from './price.service';
 import { RelayClient } from './relay.client';
 import {
   findMatchingTx,
+  findTokenBuy,
   matchingRelayBridge,
   type NadoPerpVolumeSpec,
   type NftHolderSpec,
   type RelayBridgeSpec,
+  type TokenBuySpec,
   type VerifierSpec,
 } from './verifiers';
+
+// ETH is priced as WETH by the oracle.
+const WETH: Address = '0x4200000000000000000000000000000000000006';
 
 export type Verification =
   // Done; txHash is the matching transaction, null for holding checks.
   | { done: true; txHash: Hex | null }
-  // Not done: no matching transaction, no token held, no bridge, or not
-  // enough futures volume on Nado.
-  | { done: false; missing: 'transaction' | 'nft' | 'bridge' | 'futures' };
+  // Not done: no matching transaction, no token held, no bridge, not
+  // enough futures volume on Nado, or no token bought.
+  | {
+      done: false;
+      missing: 'transaction' | 'nft' | 'bridge' | 'futures' | 'token';
+    };
 
 // Checks whether a user has done what a quest's verifier asks for. Throws
 // when the explorer, the RPC or the oracle can't be reached.
@@ -80,6 +88,12 @@ export class VerificationService {
       }
     }
 
+    const buys = specs.filter((s): s is TokenBuySpec => s.type === 'token-buy');
+    for (const spec of buys) {
+      const txHash = await this.findTokenBuy(spec, user, windowStart, now);
+      if (txHash) return { done: true, txHash };
+    }
+
     const hasCallSpecs = specs.some(
       (s) =>
         s.type === 'contract-call' ||
@@ -91,7 +105,9 @@ export class VerificationService {
         ? 'futures'
         : bridges.length
           ? 'bridge'
-          : 'nft';
+          : buys.length
+            ? 'token'
+            : 'nft';
       return { done: false, missing };
     }
 
@@ -120,6 +136,45 @@ export class VerificationService {
       }
     }
     return null;
+  }
+
+  // Prices and the user's own transactions are only looked up once the
+  // user has received the token.
+  private async findTokenBuy(
+    spec: TokenBuySpec,
+    user: Address,
+    since: Date,
+    now: Date,
+  ) {
+    const transfers = await this.explorer.receivedTokenTransfers(
+      user,
+      spec.token,
+      since,
+    );
+    if (!transfers.length) return null;
+    const usdPrice = await this.explorer.tokenUsdPrice(spec.token);
+
+    // The ETH the user sent with the buying transaction, when they sent
+    // it themselves (a smart wallet's relayed calls aren't in their list).
+    let sent: Promise<ExplorerTx[]> | undefined;
+    const paidUsd = async (hash: Hex) => {
+      sent ??= this.explorer.sentTransactions(user, since, now);
+      const tx = (await sent).find(
+        (t) => t.hash.toLowerCase() === hash.toLowerCase(),
+      );
+      const wei = BigInt(tx?.value || '0');
+      if (wei === 0n) return 0;
+      const ethUsd = await this.prices.usdPrice(WETH);
+      return Number(formatUnits(wei * ethUsd, 18 + 8));
+    };
+
+    return findTokenBuy(
+      spec,
+      transfers,
+      usdPrice,
+      async (address) => Boolean(await this.client.getCode({ address })),
+      paidUsd,
+    );
   }
 
   private async succeededOnInk(hash: Hex) {
