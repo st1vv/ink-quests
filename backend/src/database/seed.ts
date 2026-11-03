@@ -124,6 +124,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'krak-mask',
+    title: 'Krak Mask',
+    description:
+      'The mask stays on. A community meme token on Ink, and the home of 888 Krak Heads pulled straight from its daily memes.',
+    imageUrl: '/campaigns/krak-mask.webp',
+    websiteUrl: 'https://www.krakmask.ink/',
+    rewardXp: 100,
+    tags: ['Token', 'NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -685,6 +695,53 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // Krak Mask
+  {
+    slug: 'krak-mask-follow-krakmask',
+    kind: 'partner',
+    partner: 'krak-mask',
+    title: 'Follow @KrakMask on X',
+    description: 'Follow Krak Mask on X for the daily memes and news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=KrakMask',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'x-follow-krakmask',
+  },
+  {
+    slug: 'krak-mask-hold-10k-krakmask',
+    kind: 'partner',
+    partner: 'krak-mask',
+    title: 'Hold 10,000 KRAKMASK',
+    description: 'Hold at least 10,000 KRAKMASK tokens in your wallet.',
+    actionUrl:
+      'https://inkypump.com/ink/trade/0x32bCB803f696C99Eb263D60a05CAfD8689026575',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'hold-krakmask-10k',
+  },
+  {
+    slug: 'krak-mask-explore-krak-heads',
+    kind: 'partner',
+    partner: 'krak-mask',
+    title: 'Explore Krak Heads',
+    description:
+      'Open the Krak Heads collection on OpenSea and take a look around.',
+    actionUrl: 'https://opensea.io/collection/krak-heads-285086705',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-krak-heads',
+  },
+  {
+    slug: 'krak-mask-complete-daily-quest',
+    kind: 'partner',
+    partner: 'krak-mask',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
 ];

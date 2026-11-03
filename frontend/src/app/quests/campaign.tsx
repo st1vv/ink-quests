@@ -29,10 +29,12 @@ import { connectX, useXAccount } from "@/app/x/use-x";
 const secondaryLink =
   "inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:w-auto";
 
-// Tasks checked when claimed (holding an NFT, a daily quest done) can be
-// claimed right away; the rest go "open, wait, claim".
+// Tasks checked when claimed (holding an NFT or tokens, a daily quest done)
+// can be claimed right away; the rest go "open, wait, claim".
 const checkedOnClaim = (task: CampaignTask) =>
-  task.type === "nft-holder" || task.type === "daily-quest";
+  task.type === "nft-holder" ||
+  task.type === "token-holder" ||
+  task.type === "daily-quest";
 
 export const Campaign = () => {
   const { slug } = useParams();
@@ -257,6 +259,26 @@ const CampaignTaskRow = ({
               className={secondaryLink}
             >
               View collection ↗
+            </a>
+          }
+        />
+      );
+    case "token-holder":
+      return (
+        <QuestRow
+          quest={task}
+          claimLabel="Verify"
+          doneLabel="Verified"
+          marker={step}
+          onStart={onStart}
+          secondary={
+            <a
+              href={task.actionUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={secondaryLink}
+            >
+              Buy tokens ↗
             </a>
           }
         />

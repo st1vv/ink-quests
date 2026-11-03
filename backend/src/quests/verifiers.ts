@@ -94,6 +94,15 @@ export type TokenBuySpec = {
   minUsd: number;
 };
 
+// Holding at least `minBalance` whole tokens of an ERC-20 at claim time,
+// read with balanceOf over RPC. No transaction is involved.
+export type TokenHolderSpec = {
+  type: 'token-holder';
+  token: Address;
+  decimals: number;
+  minBalance: number;
+};
+
 const SWAP_VALUE_OF = {
   velodrome: velodromeSwapValue,
 };
@@ -133,6 +142,7 @@ export type VerifierSpec =
   | DexSwapSpec
   | NadoPerpVolumeSpec
   | TokenBuySpec
+  | TokenHolderSpec
   | XFollowSpec
   | DailyQuestDoneSpec
   | VisitSpec
@@ -287,6 +297,16 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-tydrohq': [{ type: 'x-follow', handle: 'tydrohq' }],
   'x-follow-0x-snatch': [{ type: 'x-follow', handle: '0x_snatch' }],
   'x-follow-inkbunniesnft': [{ type: 'x-follow', handle: 'InkBunniesNFT' }],
+  'x-follow-krakmask': [{ type: 'x-follow', handle: 'KrakMask' }],
+  'visit-krak-heads': [{ type: 'visit' }],
+  'hold-krakmask-10k': [
+    {
+      type: 'token-holder',
+      token: '0x32bCB803f696C99Eb263D60a05CAfD8689026575', // Krak Mask
+      decimals: 18,
+      minBalance: 10_000,
+    },
+  ],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],
@@ -547,10 +567,12 @@ export const minUsdOf = (specs: VerifierSpec[]): number | null => {
 };
 
 // What kind of task a quest is, for the frontend's buttons: follow on X,
-// hold an NFT, do a daily quest, open a page, or some onchain action.
+// hold an NFT or tokens, do a daily quest, open a page, or some onchain
+// action.
 export type TaskType =
   | 'x-follow'
   | 'nft-holder'
+  | 'token-holder'
   | 'daily-quest'
   | 'visit'
   | 'x-post'
@@ -560,6 +582,7 @@ export const taskTypeOf = (verifier: string | null): TaskType => {
   const type = verifier ? VERIFIERS[verifier]?.[0]?.type : undefined;
   if (type === 'x-follow') return 'x-follow';
   if (type === 'nft-holder') return 'nft-holder';
+  if (type === 'token-holder') return 'token-holder';
   if (type === 'daily-quest-done') return 'daily-quest';
   if (type === 'visit') return 'visit';
   if (type === 'x-like-repost') return 'x-post';

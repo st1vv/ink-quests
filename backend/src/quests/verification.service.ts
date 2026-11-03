@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { erc721Abi, formatUnits, type Address, type Hex } from 'viem';
+import {
+  erc20Abi,
+  erc721Abi,
+  formatUnits,
+  parseUnits,
+  type Address,
+  type Hex,
+} from 'viem';
 import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import { ExplorerClient, type ExplorerTx } from './explorer.client';
@@ -22,6 +29,7 @@ import {
   type NftHolderSpec,
   type RelayBridgeSpec,
   type TokenBuySpec,
+  type TokenHolderSpec,
   type VerifierSpec,
 } from './verifiers';
 
@@ -31,11 +39,17 @@ const WETH: Address = '0x4200000000000000000000000000000000000006';
 export type Verification =
   // Done; txHash is the matching transaction, null for holding checks.
   | { done: true; txHash: Hex | null }
-  // Not done: no matching transaction, no token held, no bridge, not
-  // enough futures volume on Nado, or no token bought.
+  // Not done: no matching transaction, no NFT held, no bridge, not enough
+  // futures volume on Nado, no token bought, or too few tokens held.
   | {
       done: false;
-      missing: 'transaction' | 'nft' | 'bridge' | 'futures' | 'token';
+      missing:
+        | 'transaction'
+        | 'nft'
+        | 'bridge'
+        | 'futures'
+        | 'token'
+        | 'balance';
     };
 
 // Checks whether a user has done what a quest's verifier asks for. Throws
@@ -65,6 +79,15 @@ export class VerificationService {
     );
     for (const spec of holdings) {
       if (await this.holds(spec, user)) {
+        return { done: true, txHash: null };
+      }
+    }
+
+    const balances = specs.filter(
+      (s): s is TokenHolderSpec => s.type === 'token-holder',
+    );
+    for (const spec of balances) {
+      if (await this.holdsTokens(spec, user)) {
         return { done: true, txHash: null };
       }
     }
@@ -107,7 +130,9 @@ export class VerificationService {
           ? 'bridge'
           : buys.length
             ? 'token'
-            : 'nft';
+            : balances.length
+              ? 'balance'
+              : 'nft';
       return { done: false, missing };
     }
 
@@ -201,6 +226,17 @@ export class VerificationService {
       if (await this.hasStaked(staking, spec.contract, user)) return true;
     }
     return false;
+  }
+
+  // Read straight from the chain, like holds().
+  private async holdsTokens(spec: TokenHolderSpec, user: Address) {
+    const balance = await this.client.readContract({
+      address: spec.token,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [user],
+    });
+    return balance >= parseUnits(String(spec.minBalance), spec.decimals);
   }
 
   // Whether `user` has an NFT of `collection` staked in `staking` right
