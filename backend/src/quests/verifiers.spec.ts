@@ -458,3 +458,74 @@ describe('cow-swap', () => {
     ).toBeUndefined();
   });
 });
+
+describe('cow-buy-wspyx', () => {
+  const [spec] = VERIFIERS['cow-buy-wspyx'];
+  if (spec.type !== 'cow-swap') throw new Error('unexpected spec type');
+  const since = new Date('2026-11-04T00:00:00Z');
+  const WSPYX = '0xe7e553cd128f0011777323a0b44a7b96ea1cb540';
+  const USDG = '0xe343167631d89b6ffc58b88d6b7fb0228795491d';
+  const WTSLAX = '0xc3fdbe3a68ee5de461d30415a8165cf9aefe1171';
+  const order = (over: Partial<CowOrder> = {}): CowOrder => ({
+    uid: '0xorder',
+    status: 'fulfilled',
+    creationDate: '2026-11-04T08:00:00Z',
+    sellToken: `0x${USDC}`,
+    buyToken: WSPYX,
+    executedSellAmount: String(5n * USDT_UNIT),
+    executedBuyAmount: '6600000000000000',
+    ...over,
+  });
+  const find = (o: CowOrder) => findCowSwap(spec, [o], since, prices);
+
+  it('accepts $5 of wSPYx bought with USDC', async () => {
+    expect(await find(order())).toBeDefined();
+  });
+
+  it('accepts $5 bought with USDG, ETH or USD₮0 too', async () => {
+    const fiveDollars = ((5n * ETH) / ETH_USD).toString();
+    expect(
+      await find(
+        order({ sellToken: `0x${WETH}`, executedSellAmount: fiveDollars }),
+      ),
+    ).toBeDefined();
+    expect(await find(order({ sellToken: `0x${USDT}` }))).toBeDefined();
+    expect(await find(order({ sellToken: USDG }))).toBeDefined();
+  });
+
+  it('rejects less than $5', async () => {
+    expect(
+      await find(order({ executedSellAmount: String(5n * USDT_UNIT - 1n) })),
+    ).toBeUndefined();
+  });
+
+  it('rejects another stock, whatever the amount', async () => {
+    expect(await find(order({ buyToken: WTSLAX }))).toBeUndefined();
+  });
+
+  it('rejects selling wSPYx', async () => {
+    expect(
+      await find(
+        order({
+          sellToken: WSPYX,
+          buyToken: `0x${USDC}`,
+          executedSellAmount: '6600000000000000',
+          executedBuyAmount: String(5n * USDT_UNIT),
+        }),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('keeps USDC out of the plain CoW swap quest', async () => {
+    const [plain] = VERIFIERS['cow-swap'];
+    if (plain.type !== 'cow-swap') throw new Error('unexpected spec type');
+    expect(
+      await findCowSwap(
+        plain,
+        [order({ buyToken: '0x0000000000000000000000000000000000000abc' })],
+        since,
+        prices,
+      ),
+    ).toBeUndefined();
+  });
+});

@@ -30,7 +30,8 @@ type QuestTag =
   | 'NFT'
   | 'Perp DEX'
   | 'Social'
-  | 'Token';
+  | 'Token'
+  | 'xStocks';
 
 type SeedQuest = Omit<
   typeof quests.$inferInsert,
@@ -246,6 +247,46 @@ const QUESTS: SeedQuest[] = [
     verifier: 'cow-swap',
     tags: ['DEX'],
   }),
+  // Buy a tokenized stock: one group, so at most one of them a day. These
+  // are Backed's wrapped xStocks, the ones with real pools on Ink (see the
+  // cow-buy-* verifiers), so $5 trades fine both ways.
+  ...[
+    {
+      symbol: 'wSPYx',
+      name: 'S&P 500',
+      token: '0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',
+    },
+    {
+      symbol: 'wQQQx',
+      name: 'Nasdaq',
+      token: '0x4C1AE29c159838fC1b224636E28E086EB69101f7',
+    },
+    {
+      symbol: 'wMSTRx',
+      name: 'MicroStrategy',
+      token: '0x30987adF0B11dc698438a99BA04ec3a1AB2c7EaB',
+    },
+    {
+      symbol: 'wAAPLx',
+      name: 'Apple',
+      token: '0x943BF64D566c32A2Bcd41AC92FB63C111cC9De8f',
+    },
+  ].map(
+    ({ symbol, name, token }): SeedQuest => ({
+      slug: `daily-buy-${symbol.toLowerCase()}`,
+      kind: 'daily',
+      title: `Buy $5 of ${symbol}`,
+      description: `Buy at least $5 of ${symbol}, the ${name} tokenized stock, on CoW Swap to complete this daily quest. Pay with USDG for the best price: the stock pools on Ink trade against it.`,
+      // Our referral code, on CoW Swap's Ink USDG → stock page.
+      actionUrl: `https://swap.cow.fi/?ref=INKQUESTS#/57073/swap/USDG/${token}`,
+      points: 40,
+      sortOrder: 6,
+      verifier: `cow-buy-${symbol.toLowerCase()}`,
+      minUsd: 5,
+      groupKey: 'daily-buy-stock',
+      tags: ['DEX', 'xStocks'],
+    }),
+  ),
   ...tiered({
     slug: 'daily-tydro-supply-weth',
     title: (usd) => `Supply $${usd} of ETH on Tydro`,

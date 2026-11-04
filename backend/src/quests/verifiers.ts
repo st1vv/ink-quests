@@ -98,9 +98,12 @@ export type TokenBuySpec = {
 // A CoW Swap order settled during the quest's window worth at least
 // `minUsd`, read from CoW's API (see cow.client.ts), valued like the other
 // swaps by its WETH (or ETH) side or its USD₮0 side.
+// With `buys` the order must buy that token, e.g. a tokenized stock, and
+// USDC and USDG (what the stock pools trade against) count at $1 too.
 export type CowSwapSpec = {
   type: 'cow-swap';
   minUsd: number;
+  buys?: Address;
 };
 
 // Holding at least `minBalance` whole tokens of an ERC-20 at claim time,
@@ -165,6 +168,8 @@ export const USD_PRICE_UNIT = 10n ** 8n;
 const WETH: Address = '0x4200000000000000000000000000000000000006';
 const USDT0: Address = '0x0200C29006150606B650577BBE7B6248F58470c1';
 const MIN_QUEST_USD = 1;
+// Tokenized stock buys (see the cow-buy-* verifiers).
+const MIN_STOCK_USD = 5;
 
 // gm.ink (formerly gm.inkonchain.com): ERC1967 proxy, implementation
 // GMV2Buyback. Re-check the selectors if the proxy is upgraded.
@@ -270,6 +275,39 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
     { type: 'dex-swap', dex: 'velodrome', minUsd: MIN_QUEST_USD },
   ],
   'cow-swap': [{ type: 'cow-swap', minUsd: MIN_QUEST_USD }],
+  // Tokenized stocks: Backed's wrapped xStocks (deployed by its
+  // WrappedBackedTokenFactory 0x28b4…Db2A), the ones with real pools on Ink
+  // (Uniswap, against USDG). The plain xStocks (NVDAX, …) have none: CoW
+  // takes them from $10 only and selling small amounts back loses most of
+  // it. The wrapped ones trade on CoW from $5 at about 0.2% round trip.
+  'cow-buy-wspyx': [
+    {
+      type: 'cow-swap',
+      minUsd: MIN_STOCK_USD,
+      buys: '0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',
+    },
+  ],
+  'cow-buy-wqqqx': [
+    {
+      type: 'cow-swap',
+      minUsd: MIN_STOCK_USD,
+      buys: '0x4C1AE29c159838fC1b224636E28E086EB69101f7',
+    },
+  ],
+  'cow-buy-wmstrx': [
+    {
+      type: 'cow-swap',
+      minUsd: MIN_STOCK_USD,
+      buys: '0x30987adF0B11dc698438a99BA04ec3a1AB2c7EaB',
+    },
+  ],
+  'cow-buy-waaplx': [
+    {
+      type: 'cow-swap',
+      minUsd: MIN_STOCK_USD,
+      buys: '0x943BF64D566c32A2Bcd41AC92FB63C111cC9De8f',
+    },
+  ],
 
   // Futures on Nado. Its smallest order is $100 of notional, so that's the
   // lowest daily tier; the partner task takes any trade at all.
@@ -471,9 +509,19 @@ const txMatches = async (
 // CoW sells and buys native ETH under this placeholder address.
 const NATIVE_ETH = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
-// What a settled CoW order swapped in WETH (ETH counts as WETH) and USD₮0;
-// null when it isn't settled.
-const cowOrderValue = (order: CowOrder): SwapValue | null => {
+// More dollars a stock buy can be paid in, 6 decimals like USD₮0.
+const STOCK_STABLES = [
+  '0x2d270e6886d130d724215a266106e6832161eaed', // USDC
+  '0xe343167631d89b6ffc58b88d6b7fb0228795491d', // USDG (Global Dollar)
+];
+
+// What a settled CoW order swapped in WETH (ETH counts as WETH) and USD₮0
+// (and USDC and USDG when `withStables`, at $1); null when it isn't
+// settled.
+const cowOrderValue = (
+  order: CowOrder,
+  withStables: boolean,
+): SwapValue | null => {
   if (order.status !== 'fulfilled') return null;
   const value: SwapValue = { weth: 0n, usdt0: 0n };
   const sides = [
@@ -484,7 +532,12 @@ const cowOrderValue = (order: CowOrder): SwapValue | null => {
     const t = token.toLowerCase();
     if (t === WETH.toLowerCase() || t === NATIVE_ETH)
       value.weth = BigInt(amount);
-    if (t === USDT0.toLowerCase()) value.usdt0 = BigInt(amount);
+    if (
+      t === USDT0.toLowerCase() ||
+      (withStables && STOCK_STABLES.includes(t))
+    ) {
+      value.usdt0 = BigInt(amount);
+    }
   }
   return value;
 };
@@ -497,11 +550,12 @@ export const findCowSwap = async (
   since: Date,
   priceOf: PriceOf,
 ) => {
+  const buys = spec.buys?.toLowerCase();
   for (const order of orders) {
     if (Date.parse(order.creationDate) < since.getTime()) continue;
-    if (await swapWorthAtLeast(cowOrderValue(order), spec.minUsd, priceOf)) {
-      return order;
-    }
+    if (buys && order.buyToken.toLowerCase() !== buys) continue;
+    const value = cowOrderValue(order, Boolean(buys));
+    if (await swapWorthAtLeast(value, spec.minUsd, priceOf)) return order;
   }
   return undefined;
 };
