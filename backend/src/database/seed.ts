@@ -235,6 +235,18 @@ const QUESTS: SeedQuest[] = [
     tags: ['DEX'],
   }),
   ...tiered({
+    slug: 'daily-cow-swap',
+    title: (usd) => `Swap $${usd} on CoW Swap`,
+    description: (usd) =>
+      `Swap at least $${usd} worth on CoW Swap to complete this daily quest. Swaps to or from ETH or USD₮0 count.`,
+    // Our referral code, on CoW Swap's Ink ETH → USD₮0 page.
+    actionUrl: 'https://swap.cow.fi/?ref=INKQUESTS#/57073/swap/ETH/USDT0',
+    points: 30,
+    sortOrder: 6,
+    verifier: 'cow-swap',
+    tags: ['DEX'],
+  }),
+  ...tiered({
     slug: 'daily-tydro-supply-weth',
     title: (usd) => `Supply $${usd} of ETH on Tydro`,
     description: (usd) =>

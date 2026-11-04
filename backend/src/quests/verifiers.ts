@@ -1,6 +1,7 @@
 import { formatUnits, type Address, type Hex } from 'viem';
 import { ink } from 'viem/chains';
 import type { ExplorerTokenTransfer, ExplorerTx } from './explorer.client';
+import type { CowOrder } from './cow.client';
 import type { RelayRequest } from './relay.client';
 import { inkySwapValue, type SwapValue } from './swap';
 import type { StakingContract } from './nft-stake';
@@ -94,6 +95,14 @@ export type TokenBuySpec = {
   minUsd: number;
 };
 
+// A CoW Swap order settled during the quest's window worth at least
+// `minUsd`, read from CoW's API (see cow.client.ts), valued like the other
+// swaps by its WETH (or ETH) side or its USD₮0 side.
+export type CowSwapSpec = {
+  type: 'cow-swap';
+  minUsd: number;
+};
+
 // Holding at least `minBalance` whole tokens of an ERC-20 at claim time,
 // read with balanceOf over RPC. No transaction is involved.
 export type TokenHolderSpec = {
@@ -143,6 +152,7 @@ export type VerifierSpec =
   | NadoPerpVolumeSpec
   | TokenBuySpec
   | TokenHolderSpec
+  | CowSwapSpec
   | XFollowSpec
   | DailyQuestDoneSpec
   | VisitSpec
@@ -259,6 +269,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'velodrome-swap': [
     { type: 'dex-swap', dex: 'velodrome', minUsd: MIN_QUEST_USD },
   ],
+  'cow-swap': [{ type: 'cow-swap', minUsd: MIN_QUEST_USD }],
 
   // Futures on Nado. Its smallest order is $100 of notional, so that's the
   // lowest daily tier; the partner task takes any trade at all.
@@ -457,6 +468,44 @@ const txMatches = async (
   return false;
 };
 
+// CoW sells and buys native ETH under this placeholder address.
+const NATIVE_ETH = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
+// What a settled CoW order swapped in WETH (ETH counts as WETH) and USD₮0;
+// null when it isn't settled.
+const cowOrderValue = (order: CowOrder): SwapValue | null => {
+  if (order.status !== 'fulfilled') return null;
+  const value: SwapValue = { weth: 0n, usdt0: 0n };
+  const sides = [
+    [order.sellToken, order.executedSellAmount],
+    [order.buyToken, order.executedBuyAmount],
+  ] as const;
+  for (const [token, amount] of sides) {
+    const t = token.toLowerCase();
+    if (t === WETH.toLowerCase() || t === NATIVE_ETH)
+      value.weth = BigInt(amount);
+    if (t === USDT0.toLowerCase()) value.usdt0 = BigInt(amount);
+  }
+  return value;
+};
+
+// The first of the user's CoW orders (newest first, as the API returns
+// them) placed since `since` that completes the quest, or undefined.
+export const findCowSwap = async (
+  spec: CowSwapSpec,
+  orders: CowOrder[],
+  since: Date,
+  priceOf: PriceOf,
+) => {
+  for (const order of orders) {
+    if (Date.parse(order.creationDate) < since.getTime()) continue;
+    if (await swapWorthAtLeast(cowOrderValue(order), spec.minUsd, priceOf)) {
+      return order;
+    }
+  }
+  return undefined;
+};
+
 // The first transaction (newest first, as the explorer returns them) that
 // completes the quest. Prices are only looked up for calls that otherwise
 // match.
@@ -541,7 +590,8 @@ export const withMinUsd = (
           spec.type === 'inkyswap-swap' ||
           spec.type === 'dex-swap' ||
           spec.type === 'nado-perp-volume' ||
-          spec.type === 'token-buy'
+          spec.type === 'token-buy' ||
+          spec.type === 'cow-swap'
         ) {
           return { ...spec, minUsd: usd };
         }
@@ -558,7 +608,8 @@ export const minUsdOf = (specs: VerifierSpec[]): number | null => {
       spec.type === 'inkyswap-swap' ||
       spec.type === 'dex-swap' ||
       spec.type === 'nado-perp-volume' ||
-      spec.type === 'token-buy'
+      spec.type === 'token-buy' ||
+      spec.type === 'cow-swap'
     ) {
       return spec.minUsd;
     }

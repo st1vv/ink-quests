@@ -4,6 +4,7 @@ import { CatalogModule } from '../catalog/catalog.module';
 import { ReferralsModule } from '../referrals/referrals.module';
 import { XModule } from '../x/x.module';
 import { ExplorerClient } from './explorer.client';
+import { CowClient } from './cow.client';
 import { NadoClient } from './nado.client';
 import { PriceService } from './price.service';
 import { QuestsController } from './quests.controller';
@@ -23,6 +24,7 @@ import { VerificationService } from './verification.service';
     PriceService,
     RelayClient,
     NadoClient,
+    CowClient,
   ],
 })
 export class QuestsModule {}

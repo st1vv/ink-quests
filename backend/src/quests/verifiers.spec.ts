@@ -1,5 +1,6 @@
 import type { Address } from 'viem';
 import type { ExplorerTokenTransfer, ExplorerTx } from './explorer.client';
+import type { CowOrder } from './cow.client';
 import type { RelayRequest } from './relay.client';
 import { INKYSWAP_UNIVERSAL_ROUTER } from './swap';
 import {
@@ -8,6 +9,7 @@ import {
   V4_USDT0_TO_ETH,
 } from './swap.fixtures';
 import {
+  findCowSwap,
   findMatchingTx,
   findTokenBuy,
   isOffchain,
@@ -389,5 +391,70 @@ describe('buy-anita', () => {
     expect(taskTypeOf('buy-anita')).toBe('onchain');
     expect(isOffchain(VERIFIERS['buy-anita'])).toBe(false);
     expect(minUsdOf(VERIFIERS['buy-anita'])).toBe(1);
+  });
+});
+
+describe('cow-swap', () => {
+  const [spec] = VERIFIERS['cow-swap'];
+  if (spec.type !== 'cow-swap') throw new Error('unexpected spec type');
+  const since = new Date('2026-11-04T00:00:00Z');
+  const NATIVE_ETH = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+  const order = (over: Partial<CowOrder> = {}): CowOrder => ({
+    uid: '0xorder',
+    status: 'fulfilled',
+    creationDate: '2026-11-04T06:45:08Z',
+    sellToken: `0x${USDT}`,
+    buyToken: `0x${WETH}`,
+    executedSellAmount: String(USDT_UNIT),
+    executedBuyAmount: '0',
+    ...over,
+  });
+  const find = (o: CowOrder) => findCowSwap(spec, [o], since, prices);
+
+  it('accepts a settled swap selling 1 USD₮0', async () => {
+    expect(await find(order())).toBeDefined();
+  });
+
+  it('accepts $1 of ETH sold or WETH bought, at the oracle price', async () => {
+    const dollar = (ETH / ETH_USD).toString();
+    expect(
+      await find(
+        order({
+          sellToken: NATIVE_ETH,
+          executedSellAmount: dollar,
+          buyToken: `0x${USDC}`,
+        }),
+      ),
+    ).toBeDefined();
+    expect(
+      await find(order({ sellToken: `0x${USDC}`, executedBuyAmount: dollar })),
+    ).toBeDefined();
+  });
+
+  it('rejects less than $1', async () => {
+    expect(
+      await find(order({ executedSellAmount: String(USDT_UNIT - 1n) })),
+    ).toBeUndefined();
+  });
+
+  it('rejects unsettled orders and orders from before today', async () => {
+    for (const status of ['open', 'cancelled', 'expired']) {
+      expect(await find(order({ status }))).toBeUndefined();
+    }
+    expect(
+      await find(order({ creationDate: '2026-11-03T23:59:59Z' })),
+    ).toBeUndefined();
+  });
+
+  it('rejects swaps with neither ETH nor USD₮0, whatever the amount', async () => {
+    expect(
+      await find(
+        order({
+          sellToken: `0x${USDC}`,
+          buyToken: '0x0000000000000000000000000000000000000abc',
+          executedSellAmount: String(1000n * USDT_UNIT),
+        }),
+      ),
+    ).toBeUndefined();
   });
 });

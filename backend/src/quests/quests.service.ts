@@ -44,6 +44,8 @@ const missingMessage = (
     // Nado's own stats run up to ~20 minutes behind its trades.
     case 'futures':
       return `No Nado futures trades of at least $${minUsd} found yet. Nado's trading stats can take up to 20 minutes to update, so if you just traded, try again a bit later`;
+    case 'order':
+      return `No settled CoW Swap swap of at least $${minUsd} found yet today. Orders take a few seconds to settle, so if you just swapped, try again in a minute`;
     case 'balance':
       return 'Not enough of this token in your wallet yet. Hold the amount the task asks for and try again';
     case 'token':

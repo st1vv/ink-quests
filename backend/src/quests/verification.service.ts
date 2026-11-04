@@ -11,6 +11,7 @@ import {
 import { createInkClient, type InkClient } from '../chain/ink-client';
 import type { Env } from '../config/env';
 import { ExplorerClient, type ExplorerTx } from './explorer.client';
+import { CowClient } from './cow.client';
 import { NadoClient } from './nado.client';
 import {
   heldCountAbi,
@@ -23,11 +24,13 @@ import { PriceService } from './price.service';
 import { RelayClient } from './relay.client';
 import {
   findMatchingTx,
+  findCowSwap,
   findTokenBuy,
   matchingRelayBridge,
   type NadoPerpVolumeSpec,
   type NftHolderSpec,
   type RelayBridgeSpec,
+  type CowSwapSpec,
   type TokenBuySpec,
   type TokenHolderSpec,
   type VerifierSpec,
@@ -49,7 +52,8 @@ export type Verification =
         | 'bridge'
         | 'futures'
         | 'token'
-        | 'balance';
+        | 'balance'
+        | 'order';
     };
 
 // Checks whether a user has done what a quest's verifier asks for. Throws
@@ -63,6 +67,7 @@ export class VerificationService {
     private readonly prices: PriceService,
     private readonly relay: RelayClient,
     private readonly nado: NadoClient,
+    private readonly cow: CowClient,
     config: ConfigService<Env, true>,
   ) {
     this.client = createInkClient(config.get('INK_RPC_URL', { infer: true }));
@@ -117,6 +122,18 @@ export class VerificationService {
       if (txHash) return { done: true, txHash };
     }
 
+    const cow = specs.filter((s): s is CowSwapSpec => s.type === 'cow-swap');
+    if (cow.length) {
+      const orders = await this.cow.orders(user);
+      for (const spec of cow) {
+        const order = await findCowSwap(spec, orders, windowStart, (asset) =>
+          this.prices.usdPrice(asset),
+        );
+        // A solver settled it, so there's no transaction of the user's own.
+        if (order) return { done: true, txHash: null };
+      }
+    }
+
     const hasCallSpecs = specs.some(
       (s) =>
         s.type === 'contract-call' ||
@@ -132,7 +149,9 @@ export class VerificationService {
             ? 'token'
             : balances.length
               ? 'balance'
-              : 'nft';
+              : cow.length
+                ? 'order'
+                : 'nft';
       return { done: false, missing };
     }
 
