@@ -10,7 +10,8 @@ const TAG_COLORS: Record<string, BadgeVariant> = {
   Lending: "sage",
   Bridge: "violet",
   "Perp DEX": "lime",
-  Social: "pink",
+  // Grey like X's logo.
+  Social: "neutral",
   xStocks: "turquoise",
 };
 
