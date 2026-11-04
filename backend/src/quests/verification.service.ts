@@ -27,6 +27,7 @@ import {
   findCowSwap,
   findTokenBuy,
   matchingRelayBridge,
+  PRICE_TOLERANCE,
   type NadoPerpVolumeSpec,
   type NftHolderSpec,
   type RelayBridgeSpec,
@@ -255,7 +256,13 @@ export class VerificationService {
       functionName: 'balanceOf',
       args: [user],
     });
-    return balance >= parseUnits(String(spec.minBalance), spec.decimals);
+    if ('minBalance' in spec) {
+      return balance >= parseUnits(String(spec.minBalance), spec.decimals);
+    }
+    if (balance === 0n) return false;
+    const usdPrice = await this.explorer.tokenUsdPrice(spec.token);
+    const held = Number(formatUnits(balance, spec.decimals));
+    return held * usdPrice >= spec.minUsd * PRICE_TOLERANCE;
   }
 
   // Whether `user` has an NFT of `collection` staked in `staking` right

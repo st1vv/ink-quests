@@ -13,7 +13,7 @@ loadEnvFile();
 
 // Badges on a partner's card. Add new ones here so every partner spells
 // them the same way.
-type PartnerTag = 'NFT' | 'Token' | 'Perp DEX' | 'Lending';
+type PartnerTag = 'NFT' | 'Token' | 'Perp DEX' | 'Lending' | 'xStocks';
 
 type SeedPartner = Omit<
   typeof partners.$inferInsert,
@@ -134,6 +134,17 @@ const PARTNERS: SeedPartner[] = [
     websiteUrl: 'https://www.krakmask.ink/',
     rewardXp: 100,
     tags: ['Token', 'NFT'],
+  },
+  {
+    slug: 'xstocks',
+    title: 'xStocks',
+    description:
+      'Tokenized US stocks and ETFs, backed 1:1 and tradable 24/7 onchain. Hold xStocks or put them to work in DeFi to earn xPoints.',
+    imageUrl: '/campaigns/xstocks.webp',
+    // Our referral link to the xPoints program.
+    websiteUrl: 'https://defi.xstocks.fi/points?ref=INKQUESTS',
+    rewardXp: 100,
+    tags: ['xStocks'],
   },
 ];
 
@@ -796,6 +807,44 @@ const QUESTS: SeedQuest[] = [
     points: 0,
     sortOrder: 4,
     verifier: 'any-daily-quest',
+  },
+  // xStocks
+  {
+    slug: 'xstocks-join-xpoints',
+    kind: 'partner',
+    partner: 'xstocks',
+    title: 'Join xStocks xPoints',
+    description:
+      'Open the xPoints page and connect your wallet to start earning points for your xStocks.',
+    actionUrl: 'https://defi.xstocks.fi/points?ref=INKQUESTS',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'visit-xstocks-points',
+  },
+  {
+    slug: 'xstocks-follow-xstocksfi',
+    kind: 'partner',
+    partner: 'xstocks',
+    title: 'Follow @xStocksFi on X',
+    description: 'Follow xStocks on X for new listings and xPoints news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=xStocksFi',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-xstocksfi',
+  },
+  {
+    slug: 'xstocks-hold-10usd-wspyx',
+    kind: 'partner',
+    partner: 'xstocks',
+    title: 'Hold $10 of wSPYx',
+    description:
+      'Buy wSPYx, the S&P 500 xStock, and hold at least $10 of it in your wallet. Pay with USDG for the best price.',
+    // Our referral code, on CoW Swap's Ink USDG → wSPYx page.
+    actionUrl:
+      'https://swap.cow.fi/?ref=INKQUESTS#/57073/swap/USDG/0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'hold-wspyx-10usd',
   },
 ];
 

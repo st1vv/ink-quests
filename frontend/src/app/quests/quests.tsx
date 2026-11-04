@@ -17,6 +17,16 @@ import { useAuth } from "@/app/auth/use-auth";
 
 type Tab = "active" | "completed";
 
+// Our own quest, the place to start.
+const PINNED_SLUG = "inkquests";
+
+// Active partners: ours first, then the newest ones. The API lists them in
+// the order they were added.
+const newestFirst = (campaigns: CampaignSummary[]) => [
+  ...campaigns.filter((c) => c.slug === PINNED_SLUG),
+  ...campaigns.filter((c) => c.slug !== PINNED_SLUG).reverse(),
+];
+
 export const Quests = () => {
   const campaigns = usePartners();
   const claimed = useClaimedCampaigns();
@@ -47,7 +57,7 @@ export const Quests = () => {
   const all = tag ? every.filter((c) => c.tags?.includes(tag)) : every;
 
   const isClaimed = (c: CampaignSummary) => claimed.data?.has(c.slug) ?? false;
-  const active = all.filter((c) => !isClaimed(c));
+  const active = newestFirst(all.filter((c) => !isClaimed(c)));
   const completed = all.filter(isClaimed);
   const shown = tab === "active" ? active : completed;
 

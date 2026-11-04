@@ -106,14 +106,14 @@ export type CowSwapSpec = {
   buys?: Address;
 };
 
-// Holding at least `minBalance` whole tokens of an ERC-20 at claim time,
-// read with balanceOf over RPC. No transaction is involved.
+// Holding an ERC-20 at claim time, read with balanceOf over RPC: at least
+// `minBalance` whole tokens, or tokens worth at least `minUsd` at the
+// explorer's (CoinGecko) price. No transaction is involved.
 export type TokenHolderSpec = {
   type: 'token-holder';
   token: Address;
   decimals: number;
-  minBalance: number;
-};
+} & ({ minBalance: number } | { minUsd: number });
 
 const SWAP_VALUE_OF = {
   velodrome: velodromeSwapValue,
@@ -354,6 +354,17 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       token: '0x32bCB803f696C99Eb263D60a05CAfD8689026575', // Krak Mask
       decimals: 18,
       minBalance: 10_000,
+    },
+  ],
+  'x-follow-xstocksfi': [{ type: 'x-follow', handle: 'xStocksFi' }],
+  'visit-xstocks-points': [{ type: 'visit' }],
+  // wSPYx, the wrapped S&P 500 xStock (see the cow-buy-* verifiers).
+  'hold-wspyx-10usd': [
+    {
+      type: 'token-holder',
+      token: '0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',
+      decimals: 18,
+      minUsd: 10,
     },
   ],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
@@ -597,8 +608,10 @@ export const matchingRelayBridge = (
   return ok && inkTx ? (inkTx.hash as Hex) : null;
 };
 
-// The share of a token buy's minimum that passes ($0.95 of a $1 quest).
-const TOKEN_BUY_TOLERANCE = 0.95;
+// The share of a USD minimum that passes when it's valued at a token's
+// price (a token buy, a token holding): $0.95 of $1, $9.50 of $10. Fees,
+// slippage and a lagging price leave an exact buy a few cents short.
+export const PRICE_TOLERANCE = 0.95;
 
 // The first transfer (newest first, as the explorer returns them) from a
 // contract that buys at least `spec.minUsd`: worth that at `usdPrice`, or
@@ -616,7 +629,7 @@ export const findTokenBuy = async (
   paidUsd: (hash: Hex) => Promise<number>,
 ) => {
   const token = spec.token.toLowerCase();
-  const enough = spec.minUsd * TOKEN_BUY_TOLERANCE;
+  const enough = spec.minUsd * PRICE_TOLERANCE;
   for (const t of transfers) {
     if (t.contractAddress.toLowerCase() !== token) continue;
     if (!(await isContract(t.from as Address))) continue;
