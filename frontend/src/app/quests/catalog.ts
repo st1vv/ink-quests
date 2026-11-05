@@ -19,6 +19,8 @@ export type Quest = {
   // The contract of the token the quest is about (to buy or hold), offered
   // to copy; null for other quests. Missing from an older API.
   token?: string | null;
+  // A campaign task the reward doesn't wait for. Missing from an older API.
+  optional?: boolean;
 };
 
 export type Partner = {

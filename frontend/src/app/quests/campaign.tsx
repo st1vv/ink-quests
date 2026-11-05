@@ -94,9 +94,13 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
   const claimedCampaigns = useClaimedCampaigns();
   const claimReward = useClaimCampaign();
 
-  const done = items.filter((t) => t.status === "completed").length;
-  const total = campaign.quests.length;
+  // The reward waits only for the required tasks; optional ones show but
+  // don't count.
+  const required = items.filter((t) => !t.optional);
+  const done = required.filter((t) => t.status === "completed").length;
+  const total = required.length;
   const allVerified = total > 0 && done === total;
+  const hasOptional = required.length < items.length;
   const rewardClaimed = claimedCampaigns.data?.has(campaign.slug) ?? false;
 
   // With X linking set up, X tasks ask a signed-in user to link X first.
@@ -181,14 +185,14 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
               <p className="font-semibold text-white">
                 {rewardClaimed
                   ? `You earned ${formatNumber(campaign.rewardXp)} XP`
-                  : `Verify all tasks to earn ${formatNumber(campaign.rewardXp)} XP`}
+                  : `Verify all ${hasOptional ? "required " : ""}tasks to earn ${formatNumber(campaign.rewardXp)} XP`}
               </p>
               <p className="mt-1 text-sm text-white/55">
                 {rewardClaimed
                   ? "This quest is complete."
                   : allVerified
-                    ? "All tasks are verified. Claim your reward."
-                    : `${total - done} of ${total} tasks left.`}
+                    ? `All ${hasOptional ? "required " : ""}tasks are verified. Claim your reward.`
+                    : `${total - done} of ${total} ${hasOptional ? "required " : ""}tasks left.`}
               </p>
             </div>
             {rewardClaimed ? (

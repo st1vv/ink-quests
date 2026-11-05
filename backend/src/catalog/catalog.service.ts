@@ -19,6 +19,8 @@ const questFields = {
   points: quests.points,
   tags: quests.tags,
   claimable: isNotNull(quests.verifier),
+  // A campaign task the reward doesn't wait for.
+  optional: quests.optional,
 };
 
 const partnerFields = {

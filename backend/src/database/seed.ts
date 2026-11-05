@@ -49,6 +49,13 @@ const NADO_URL = 'https://app.nado.xyz?join=inkquests';
 const TYDRO_WETH_URL =
   'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3';
 
+// BOI's W.O.R.K. app, routed by the hash (#guide, #merge, …).
+const BOI_WORK_URL = 'https://work.boi.market/';
+// Its Referrals page with our wallet as the referrer, filled in for the
+// user to register. Only the optional referral task uses it.
+const BOI_REFERRAL_URL =
+  'https://work.boi.market/?ref=0x99014f787Fa9b21112194E9C8C0A3E4a22D33670#referrals';
+
 const PARTNERS: SeedPartner[] = [
   {
     slug: 'inkquests',
@@ -146,6 +153,28 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['xStocks'],
   },
+  // BOI, one campaign per feature of its protocol: S.E.X. first, Merge and
+  // the rest to follow.
+  {
+    slug: 'boi-part-1',
+    title: 'BOI Part 1: S.E.X.',
+    description:
+      'An NFT economy on Ink. Start with S.E.X.: pair a BOI with a LadyBOI to birth a SmolBoi.',
+    imageUrl: '/campaigns/boi-part-1.webp',
+    websiteUrl: BOI_WORK_URL,
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
+  // {
+  //   slug: 'boi-part-2',
+  //   title: 'BOI Part 2: Merge',
+  //   description:
+  //     'Merge your SmolBois to level them up. A success levels one up; a failure can burn the fuel Smol.',
+  //   imageUrl: '/campaigns/boi-market.webp',
+  //   websiteUrl: BOI_WORK_URL,
+  //   rewardXp: 100,
+  //   tags: ['NFT'],
+  // },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -846,6 +875,106 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 3,
     verifier: 'hold-wspyx-10usd',
   },
+  // BOI Part 1: S.E.X.
+  {
+    slug: 'boi-1-join-referral',
+    kind: 'partner',
+    partner: 'boi-part-1',
+    title: 'Join BOI with our referral',
+    description:
+      "Connect your wallet on BOI's Referrals page and confirm InkQuests as your referrer. It's one onchain transaction, filled in for you.",
+    actionUrl: BOI_REFERRAL_URL,
+    points: 0,
+    // First, so the referral is set before the user does anything else.
+    sortOrder: 1,
+    // A nice-to-have: someone already referred by another wallet can't do it.
+    optional: true,
+    verifier: 'register-boi-referral',
+  },
+  {
+    slug: 'boi-1-follow-boi-market',
+    kind: 'partner',
+    partner: 'boi-part-1',
+    title: 'Follow @boi_market on X',
+    description: 'Follow BOI Market on X for BOI news and updates.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=boi_market',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-boi-market',
+  },
+  {
+    slug: 'boi-1-hold-boi',
+    kind: 'partner',
+    partner: 'boi-part-1',
+    title: 'Hold a BOI',
+    description:
+      'Hold at least one BOI in your wallet. It pairs with a LadyBOI.',
+    actionUrl: 'https://opensea.io/collection/boi-ink',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'hold-boi',
+  },
+  {
+    slug: 'boi-1-hold-ladyboi',
+    kind: 'partner',
+    partner: 'boi-part-1',
+    title: 'Hold a LadyBOI',
+    description:
+      'Hold at least one LadyBOI in your wallet. It pairs with a BOI.',
+    actionUrl: 'https://opensea.io/collection/ladyboi',
+    points: 0,
+    sortOrder: 4,
+    verifier: 'hold-ladyboi',
+  },
+  {
+    slug: 'boi-1-sex',
+    kind: 'partner',
+    partner: 'boi-part-1',
+    title: 'Start a S.E.X. event',
+    description:
+      'Pair your BOI with your LadyBOI on the S.E.X. page and start the event to birth a SmolBoi. It takes a small ETH fee.',
+    actionUrl: `${BOI_WORK_URL}#sex`,
+    points: 0,
+    sortOrder: 5,
+    verifier: 'sex-boi',
+  },
+  // BOI Part 2: Merge, not live yet.
+  // {
+  //   slug: 'boi-2-explore',
+  //   kind: 'partner',
+  //   partner: 'boi-part-2',
+  //   title: 'Explore W.O.R.K',
+  //   description:
+  //     'Open the W.O.R.K guide and see how SmolBois are born from BOIs and LadyBOIs, and how merging levels them up.',
+  //   actionUrl: `${BOI_WORK_URL}#guide`,
+  //   points: 0,
+  //   sortOrder: 3,
+  //   verifier: 'visit-boi',
+  // },
+  // {
+  //   slug: 'boi-2-hold-smolboi',
+  //   kind: 'partner',
+  //   partner: 'boi-part-2',
+  //   title: 'Hold a SmolBoi',
+  //   description:
+  //     'Hold at least one SmolBoi in your wallet. To merge, you need two of the same level.',
+  //   actionUrl: 'https://boi.market/collections/smolboi',
+  //   points: 0,
+  //   sortOrder: 4,
+  //   verifier: 'hold-smolboi',
+  // },
+  // {
+  //   slug: 'boi-2-merge',
+  //   kind: 'partner',
+  //   partner: 'boi-part-2',
+  //   title: 'Merge your SmolBois',
+  //   description:
+  //     'Start a merge of two SmolBois of the same level on the Merge page. A success levels one up; an unshielded failure burns the fuel Smol.',
+  //   actionUrl: `${BOI_WORK_URL}#merge`,
+  //   points: 0,
+  //   sortOrder: 5,
+  //   verifier: 'merge-smolboi',
+  // },
 ];
 
 type SeedChallenge = Omit<typeof challenges.$inferInsert, 'id' | 'createdAt'>;

@@ -40,10 +40,17 @@ export class CampaignsService {
       .limit(1);
     if (!campaign) throw new NotFoundException('Quest not found');
 
+    // Optional tasks don't hold the reward back.
     const tasks = await this.db
       .select({ id: quests.id })
       .from(quests)
-      .where(and(eq(quests.partnerId, campaign.id), eq(quests.isActive, true)));
+      .where(
+        and(
+          eq(quests.partnerId, campaign.id),
+          eq(quests.isActive, true),
+          eq(quests.optional, false),
+        ),
+      );
     if (!tasks.length || campaign.rewardXp <= 0) {
       throw new UnprocessableEntityException('This quest has no reward');
     }

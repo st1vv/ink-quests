@@ -1,0 +1,1 @@
+ALTER TABLE "quests" ADD COLUMN "optional" boolean DEFAULT false NOT NULL;

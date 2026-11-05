@@ -88,6 +88,11 @@ export const QuestRow = ({
             {quest.points > 0 && (
               <Badge className="px-2 py-0.5 text-xs">+{quest.points} XP</Badge>
             )}
+            {quest.optional && (
+              <Badge variant="neutral" className="px-2 py-0.5 text-xs">
+                Optional
+              </Badge>
+            )}
             {/* Only daily quests have tags; campaign tasks have none. */}
             <TagBadges tags={quest.tags} />
           </div>

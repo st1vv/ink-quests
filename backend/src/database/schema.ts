@@ -203,6 +203,9 @@ export const quests = pgTable(
     // quests. Set in seed.ts.
     tags: text().array().notNull().default([]),
     sortOrder: integer().notNull().default(0),
+    // A campaign task the campaign's reward doesn't wait for, e.g. joining
+    // the partner with our referral. Set in seed.ts.
+    optional: boolean().notNull().default(false),
     isActive: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

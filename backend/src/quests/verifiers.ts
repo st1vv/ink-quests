@@ -174,9 +174,9 @@ const MIN_STOCK_USD = 5;
 // gm.ink (formerly gm.inkonchain.com): ERC1967 proxy, implementation
 // GMV2Buyback. Re-check the selectors if the proxy is upgraded.
 const GM_CONTRACT: Address = '0x14Aec24CE62258FECDe22E928D8F37dD47165d4F';
-// The wallet "send us a GM" quests point at.
-const INKQUESTS_GM_RECIPIENT: Address =
-  '0x99014f787Fa9b21112194E9C8C0A3E4a22D33670';
+// Our wallet: where "send us a GM" quests point, and our referrer in
+// partner apps.
+const INKQUESTS_WALLET: Address = '0x99014f787Fa9b21112194E9C8C0A3E4a22D33670';
 
 // Tydro (Aave V3 on Ink). The pool takes any listed asset, so each supply
 // quest pins the asset as supply()'s first argument.
@@ -223,7 +223,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
         '0xe9c1b8bb', // gmUnlimitedTo(address)
         '0x96c32612', // gmPlusTo(address)
       ],
-      firstArg: INKQUESTS_GM_RECIPIENT,
+      firstArg: INKQUESTS_WALLET,
     },
   ],
 
@@ -367,6 +367,68 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       minUsd: 10,
     },
   ],
+  // BOI (work.boi.market), an NFT economy of BOIs, LadyBOIs and SmolBois,
+  // one campaign per feature. Its contracts are unverified; selectors are
+  // read from the app's ABI.
+  'x-follow-boi-market': [{ type: 'x-follow', handle: 'boi_market' }],
+  // Registering our wallet as the referrer on SmolBoi's ReferralRegistry
+  // (its app's Referrals page, opened from our ?ref= link).
+  'register-boi-referral': [
+    {
+      type: 'contract-call',
+      contracts: ['0xA4B4f96f169d47Acb9f595b015335F566E218AF1'],
+      methods: ['0x9ea7685a'], // registerReferrer(address)
+      firstArg: INKQUESTS_WALLET,
+    },
+  ],
+  // Part 1: S.E.X. A BOI and a LadyBOI are paired to birth a SmolBoi; the
+  // pair stays in the wallet (locked, not transferred), so holding them
+  // still passes after.
+  'hold-boi': [
+    {
+      type: 'nft-holder',
+      contract: '0x63FEbFa0a5474803F4261a1628763b1B2cC3AB83',
+    },
+  ],
+  'hold-ladyboi': [
+    {
+      type: 'nft-holder',
+      contract: '0xD4fF4Ab9286AfF65C89c9df61323E5994B5F78d1',
+    },
+  ],
+  // Starting a S.E.X. event on its SexEngine (paid in ETH). The SmolBoi is
+  // claimed later; starting is the user's move, so that's what counts.
+  'sex-boi': [
+    {
+      type: 'contract-call',
+      contracts: ['0x7f39e20CFbB415eF3425b56e90aA043be4641C28'],
+      methods: [
+        '0xebdc52ea', // startSex(uint256,uint256)
+        '0x5c9a1acc', // startSexBatch(uint256[],uint256[])
+      ],
+    },
+  ],
+  // Part 2: Merge, not live yet.
+  // 'visit-boi': [{ type: 'visit' }],
+  // 'hold-smolboi': [
+  //   {
+  //     type: 'nft-holder',
+  //     contract: '0x17c700F1e302069eE01249aa4C2313371f993b57',
+  //   },
+  // ],
+  // // Starting a merge of two SmolBois on its MergeEngine. A merge is
+  // // started, then finalized once its randomness lands; starting is the
+  // // user's move (and pays the fee), so that's what counts.
+  // 'merge-smolboi': [
+  //   {
+  //     type: 'contract-call',
+  //     contracts: ['0x9E9999D8150a2ccf7C834D5BD7a1C40ed1EA8525'],
+  //     methods: [
+  //       '0x1374cadb', // startMerge(uint256,uint256,bool)
+  //       '0xa1a87a3d', // startMergeBatch(uint256[],uint256[])
+  //     ],
+  //   },
+  // ],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],
