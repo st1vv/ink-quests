@@ -4,6 +4,7 @@ import { useReadContract } from "wagmi";
 import { Button } from "@/shared/ui/button";
 import { Surface } from "@/shared/ui/surface";
 import { ValueSkeleton } from "@/shared/ui/skeleton";
+import { FlameIcon } from "@/shared/ui/icons";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
@@ -161,7 +162,7 @@ const WeekFlames = ({ week }: { week: boolean[] }) => {
               checkedIn ? "bg-ink/20" : "bg-white/5"
             } ${i === today ? "ring-1 ring-ink-light/60" : ""}`}
           >
-            <span className={checkedIn ? "" : "opacity-25 grayscale"}>🔥</span>
+            <FlameIcon muted={!checkedIn} />
           </span>
           <span
             className={`text-[10px] font-medium uppercase tracking-wide ${

@@ -180,7 +180,7 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
             <div>
               <p className="font-semibold text-white">
                 {rewardClaimed
-                  ? `You earned ${formatNumber(campaign.rewardXp)} XP 🎉`
+                  ? `You earned ${formatNumber(campaign.rewardXp)} XP`
                   : `Verify all tasks to earn ${formatNumber(campaign.rewardXp)} XP`}
               </p>
               <p className="mt-1 text-sm text-white/55">

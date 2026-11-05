@@ -14,7 +14,11 @@ import {
   CheckIcon,
   CloseIcon,
   ExternalLinkIcon,
+  FlameIcon,
+  GiftIcon,
   PencilIcon,
+  QuestsIcon,
+  UsersIcon,
   XLogoIcon,
 } from "@/shared/ui/icons";
 import {
@@ -481,13 +485,14 @@ const ActivityList = () => {
 
 const ACTIVITY_ICONS: Record<
   Activity["type"],
-  { icon: string; style: string }
+  { icon: ReactNode; style: string }
 > = {
-  "check-in": { icon: "🔥", style: "bg-ink/20" },
-  quest: { icon: "✓", style: "bg-emerald-400/15 text-emerald-300" },
-  referral: { icon: "🤝", style: "bg-sky-400/15" },
-  campaign: { icon: "🏆", style: "bg-amber-400/15" },
-  bonus: { icon: "🎁", style: "bg-fuchsia-400/15" },
+  "check-in": { icon: <FlameIcon />, style: "bg-ink/20" },
+  quest: { icon: <CheckIcon />, style: "bg-emerald-400/15 text-emerald-300" },
+  referral: { icon: <UsersIcon />, style: "bg-sky-400/15 text-sky-300" },
+  // The sword is also the Quests icon in the nav.
+  campaign: { icon: <QuestsIcon />, style: "bg-amber-400/15 text-amber-300" },
+  bonus: { icon: <GiftIcon />, style: "bg-fuchsia-400/15 text-fuchsia-300" },
 };
 
 // "Oct 22" for a UTC day (YYYY-MM-DD).

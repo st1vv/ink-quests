@@ -78,7 +78,7 @@ export const useClaimCampaign = () => {
       }),
     onSuccess: (result, { title }) => {
       toast.success(`+${result.points} XP`, {
-        description: `${title} quest completed 🎉`,
+        description: `${title} quest completed`,
       });
       return Promise.all(
         ["campaigns", "progress", "leaderboard", "rank", "activity"].map(

@@ -659,7 +659,7 @@ const CHECK_IN_COLUMNS: Column<StatsCheckIn>[] = [
         <Strong>{xp(c.points + c.bonusPoints)}</Strong>
         {c.bonusPoints > 0 && (
           <p className="text-xs text-white/40">
-            incl. +{formatNumber(c.bonusPoints)} weekly bonus
+            +{formatNumber(c.bonusPoints)} weekly bonus
           </p>
         )}
       </>

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { CheckIcon } from "@/shared/ui/icons";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { CopyIconSwap } from "@/shared/ui/copy-button";
@@ -75,7 +76,7 @@ export const QuestRow = ({
               : "bg-white/5 text-white/60"
           }`}
         >
-          {isCompleted ? "✓" : marker}
+          {isCompleted ? <CheckIcon /> : marker}
         </span>
 
         <div className="min-w-0">

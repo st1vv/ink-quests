@@ -1,4 +1,4 @@
-import type { ReactNode, SVGProps } from "react";
+import { useId, type ReactNode, type SVGProps } from "react";
 
 export type IconProps = SVGProps<SVGSVGElement>;
 
@@ -105,6 +105,51 @@ export const GiftIcon = (props: IconProps) => (
     <path d="M7.5 8a2.5 2.5 0 0 1 0-5C9.5 3 12 5 12 8c0-3 2.5-5 4.5-5a2.5 2.5 0 0 1 0 5" />
   </Icon>
 );
+
+export const UsersIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </Icon>
+);
+
+// The check-in flame, filled in the brand purples. `muted` greys it out,
+// e.g. for a day without a check-in.
+export const FlameIcon = ({
+  muted = false,
+  className = "h-4 w-4",
+  ...props
+}: IconProps & { muted?: boolean }) => {
+  // Unique per flame: several share a page and gradient ids are global.
+  const gradient = useId();
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={`shrink-0 ${className}`}
+      {...props}
+    >
+      <defs>
+        <linearGradient id={gradient} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#7132f5" />
+          <stop offset="1" stopColor="#c4a8ff" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M12 2c.6 3.2 2.6 5 4.3 7 1.5 1.8 2.7 3.6 2.7 6.2A7 7 0 0 1 12 22a7 7 0 0 1-7-6.8c0-2.4 1.1-4.4 2.7-5.9.3 1.6 1 2.8 2.2 3.5C9.4 8.9 10.4 5.2 12 2Z"
+        fill={muted ? "rgb(255 255 255 / 0.15)" : `url(#${gradient})`}
+      />
+      <path
+        d="M12 13c1.3 1.4 2.5 2.6 2.5 4.4A2.5 2.5 0 0 1 12 20a2.5 2.5 0 0 1-2.5-2.6c0-1.6 1.1-3 2.5-4.4Z"
+        fill={muted ? "rgb(255 255 255 / 0.1)" : "#ede4ff"}
+      />
+    </svg>
+  );
+};
 
 export const CloseIcon = (props: IconProps) => (
   <Icon {...props}>

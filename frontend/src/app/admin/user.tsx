@@ -356,7 +356,7 @@ const ActivityRow = ({ item }: { item: UserActivity }) => {
         <XpAmount points={total} />
         {item.bonusPoints > 0 && (
           <Badge className="px-2 py-0.5 text-[10px]">
-            incl. +{item.bonusPoints} week bonus
+            +{item.bonusPoints} week bonus
           </Badge>
         )}
       </div>

@@ -183,7 +183,7 @@ export const Quests = () => {
                   />
                 ) : all.length > 0 ? (
                   <EmptyCard
-                    title="All caught up 🎉"
+                    title="All caught up"
                     text="You've completed every quest. New ones are on the way."
                   />
                 ) : (

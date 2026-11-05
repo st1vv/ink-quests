@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Surface } from "@/shared/ui/surface";
 import { Button } from "@/shared/ui/button";
-import { CheckIcon, XLogoIcon } from "@/shared/ui/icons";
+import { CheckIcon, GiftIcon, XLogoIcon } from "@/shared/ui/icons";
 import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { connectX } from "@/app/x/use-x";
@@ -61,8 +61,9 @@ export const YourProgressCard = ({
         <ProgressRow label="Place">
           {me?.rank != null ? `#${me.rank}` : placeholder}
           {prizePlace && (
-            <span className="ml-2 text-xs font-medium text-amber-300">
-              prize place 🎁
+            <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium text-amber-300">
+              prize place
+              <GiftIcon className="h-3.5 w-3.5" />
             </span>
           )}
         </ProgressRow>

@@ -234,7 +234,7 @@ export const useCheckIn = () => {
       if (!result) toast.info("Already checked in today");
       else if (result.bonusPoints > 0) {
         toast.success(`Checked in: +${result.points + result.bonusPoints} XP`, {
-          description: `Includes +${result.bonusPoints} XP for a full week of check-ins 🔥`,
+          description: `Includes +${result.bonusPoints} XP for a full week of check-ins`,
         });
       } else toast.success(`Checked in: +${result.points} XP`);
 
