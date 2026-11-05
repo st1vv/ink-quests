@@ -9,7 +9,7 @@ import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { AuthService } from '../auth/auth.service';
 
 // A signed-in wallet from ADMIN_ADDRESSES. Anyone else gets a 404, so the
-// statistics routes look like they don't exist.
+// admin routes look like they don't exist.
 @Injectable()
 export class AdminGuard extends AuthGuard {
   private readonly admins: Set<string>;

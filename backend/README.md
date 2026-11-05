@@ -52,7 +52,7 @@ See `.env.example`. The app refuses to start if a variable is missing or invalid
 | `RELAY_API_URL`    | Relay API for bridge quests (default: https://api.relay.link)                       |
 | `NADO_ARCHIVE_URL` | Nado archive API for futures quests (default: https://api.prod.nado.xyz/archive/v1) |
 | `CHECKIN_CONTRACT` | Paid CheckIn contract on Ink (`contracts/`); unset keeps check-ins free             |
-| `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the `/statistics` page                       |
+| `ADMIN_ADDRESSES`  | Comma-separated wallets allowed to see the admin pages (`/admin`)                   |
 
 ## Auth (Sign-In with Ethereum)
 
@@ -202,23 +202,29 @@ Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
   taken), and names that could pass for the team (`admin`, `support`, `kraken`, …) are refused.
   Rules live in `src/profile/display-name.ts`.
 - `GET /me/activity`: the latest 10 XP-earning actions, newest first, as
-  `{ type: 'check-in' | 'quest', title, points, bonusPoints, at, txHash }[]`.
+  `{ type: 'check-in' | 'quest' | 'referral' | 'campaign' | 'bonus', title, points, bonusPoints, at, txHash, day }[]`.
 
-## Statistics
+## Admin
 
 Open only to signed-in wallets listed in `ADMIN_ADDRESSES`; everyone else gets a 404. The
-frontend shows them at `/statistics`, which isn't linked anywhere.
+frontend shows them in its admin pages (`/admin`, `/admin/posts`, `/admin/xp`), which aren't
+linked anywhere.
 
-- `GET /statistics`: the counts on the stat cards (`users`, `usersWithXp`, `questsCompleted`,
+- `GET /admin/stats`: the counts on the stat cards (`users`, `usersWithXp`, `questsCompleted`,
   `dailyQuestsCompleted`, `partnerQuestsCompleted`, `checkIns`, `transactions`,
   `transactionUsers`). A partner quest counts once its whole campaign is done, so
   `questsCompleted` is daily + finished campaigns; `transactions` counts completions with a
   `tx_hash`.
-- `GET /statistics/:view?page=&address=`: the list behind one card, 50 per page, as
+- `GET /admin/stats/:view?page=&address=`: the list behind one card, 50 per page, as
   `{ total, page, pageSize, items }`. `view` is one of `users`, `users-with-xp`, `quests`,
   `daily-quests`, `partner-quests`, `check-ins`, `transactions`, `transaction-wallets` (see
   `STATS_VIEWS` in `statistics.service.ts` for each list's fields). `address` narrows it to one
   wallet.
+- `GET /admin/xp-grants`: the latest 50 XP grants, newest first, as
+  `{ id, address, name, points, reason, grantedBy, createdAt }[]`.
+- `POST /admin/xp-grants` with `{ address, points, reason }`: gives a signed-up user XP by
+  hand (`xp_grants`); negative `points` take it away. It counts everywhere XP does except
+  challenge boards, and shows in the user's activity as a `bonus` row with the reason as title.
 
 ## Challenges
 
@@ -242,8 +248,8 @@ upserted by slug on every seed. Prizes are handed out by hand from the final sta
 **Like & repost.** The daily quest `daily-x-like-repost` (verifier `{ type: 'x-like-repost' }`)
 isn't in the rotation: it shows, after the rotating quests, on every UTC day that has a post of
 the day (`social_posts`), and that post is its link. Taken on trust like a follow, with the same
-linked-X rule. Admins set the posts on the statistics page: `GET /statistics/social-posts` (a week
-back to two weeks ahead) and `PUT /statistics/social-posts/:day` with `{ postUrl }` (an x.com or
+linked-X rule. Admins set the posts on the admin posts page: `GET /admin/social-posts` (a week
+back to two weeks ahead) and `PUT /admin/social-posts/:day` with `{ postUrl }` (an x.com or
 twitter.com post link; empty removes it).
 
 ## Referrals

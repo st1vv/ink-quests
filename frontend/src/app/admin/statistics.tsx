@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import type { Address } from "viem";
 import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
+import { AdminNav } from "@/app/admin/admin-nav";
 import {
   isNotFound,
   useStatsList,
@@ -24,7 +24,7 @@ import {
   type StatsTransactionWallet,
   type StatsUser,
   type StatsView,
-} from "@/app/statistics/use-statistics";
+} from "@/app/admin/use-admin";
 
 const PLACEHOLDER = "—";
 const DEFAULT_VIEW: StatsView = "transactions";
@@ -127,6 +127,7 @@ export const Statistics = () => {
 
   return (
     <div className="flex flex-col gap-4">
+      <AdminNav />
       <StatsOverview
         stats={stats.data}
         onRetry={stats.isError ? () => stats.refetch() : undefined}
@@ -169,17 +170,6 @@ const StatsOverview = ({
       ) : (
         "Users, quests and onchain transactions across the whole app. Pick a card to list what it counts."
       )
-    }
-    aside={
-      <Link
-        to="/statistics/posts"
-        className={buttonStyles({
-          variant: "ghost",
-          className: "w-full md:w-auto",
-        })}
-      >
-        Posts of the day →
-      </Link>
     }
   >
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -75,6 +75,28 @@ export const referralRewards = pgTable('referral_rewards', {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+// XP given (or, when negative, taken) by an admin by hand, e.g. for a
+// contest win or to fix a mistake. Shows in the user's activity with its
+// reason. Not counted on challenge boards.
+export const xpGrants = pgTable(
+  'xp_grants',
+  {
+    id: serial().primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    points: integer().notNull(),
+    // Shown to the user in their activity.
+    reason: text().notNull(),
+    // The admin who gave it.
+    grantedById: integer().references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.userId)],
+);
+
 // Single-use SIWE nonces; a row is deleted when a signed message consumes it.
 export const authNonces = pgTable('auth_nonces', {
   // viem's generateSiweNonce() returns 96 chars.

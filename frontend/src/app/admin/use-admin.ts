@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { useAuth } from "@/app/auth/use-auth";
 import { ApiError, apiFetch } from "@/lib/api";
+import { shortAddress } from "@/lib/format";
 import { toast } from "@/lib/notify";
 
 export type StatsSummary = {
@@ -18,7 +19,7 @@ export type StatsSummary = {
   transactionUsers: number;
 };
 
-// The lists behind the stat cards, one per card (GET /statistics/:view).
+// The lists behind the stat cards, one per card (GET /admin/stats/:view).
 export type StatsView =
   | "users"
   | "users-with-xp"
@@ -127,8 +128,8 @@ export const isNotFound = (error: Error | null) =>
 export const useStatsSummary = () => {
   const { address } = useAuth();
   return useQuery({
-    queryKey: ["statistics", "stats", address],
-    queryFn: () => apiFetch<StatsSummary>("/statistics"),
+    queryKey: ["admin", "stats", address],
+    queryFn: () => apiFetch<StatsSummary>("/admin/stats"),
     enabled: Boolean(address),
     retry: retryUnlessNotFound,
   });
@@ -145,14 +146,61 @@ export const useStatsList = <T>(
   if (filter) params.set("address", filter);
 
   return useQuery({
-    queryKey: ["statistics", view, address, page, filter],
-    queryFn: () => apiFetch<StatsPage<T>>(`/statistics/${view}?${params}`),
+    queryKey: ["admin", view, address, page, filter],
+    queryFn: () => apiFetch<StatsPage<T>>(`/admin/stats/${view}?${params}`),
     enabled: Boolean(address),
     retry: retryUnlessNotFound,
     // Keeps the current page on screen while the next one of the same list
     // loads; another list's rows have other fields, so not across lists.
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[1] === view ? previous : undefined,
+  });
+};
+
+// XP an admin gave by hand; negative points took XP away.
+export type XpGrant = {
+  id: number;
+  address: Address;
+  name: string | null;
+  points: number;
+  // Shown to the user in their activity.
+  reason: string;
+  // The admin who gave it; null once their account is gone.
+  grantedBy: Address | null;
+  createdAt: string;
+};
+
+export const useXpGrants = () => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "xp-grants", address],
+    queryFn: () => apiFetch<XpGrant[]>("/admin/xp-grants"),
+    enabled: Boolean(address),
+    retry: retryUnlessNotFound,
+  });
+};
+
+export const useGrantXp = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (grant: { address: string; points: number; reason: string }) =>
+      apiFetch<{ address: Address; points: number }>("/admin/xp-grants", {
+        method: "POST",
+        body: JSON.stringify(grant),
+      }),
+    onSuccess: (result) => {
+      toast.success(
+        `${result.points > 0 ? "Gave" : "Took"} ${Math.abs(result.points)} XP ${
+          result.points > 0 ? "to" : "from"
+        } ${shortAddress(result.address)}`,
+      );
+      // The grant list, and XP in the stats and on the boards.
+      return Promise.all(
+        ["admin", "leaderboard", "rank"].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      );
+    },
   });
 };
 
@@ -166,8 +214,8 @@ export type SocialPosts = {
 export const useSocialPosts = () => {
   const { address } = useAuth();
   return useQuery({
-    queryKey: ["statistics", "social-posts", address],
-    queryFn: () => apiFetch<SocialPosts>("/statistics/social-posts"),
+    queryKey: ["admin", "social-posts", address],
+    queryFn: () => apiFetch<SocialPosts>("/admin/social-posts"),
     enabled: Boolean(address),
     retry: retryUnlessNotFound,
   });
@@ -180,7 +228,7 @@ export const useSetSocialPost = () => {
   return useMutation({
     mutationFn: ({ day, postUrl }: { day: string; postUrl: string }) =>
       apiFetch<{ day: string; postUrl: string | null }>(
-        `/statistics/social-posts/${day}`,
+        `/admin/social-posts/${day}`,
         { method: "PUT", body: JSON.stringify({ postUrl }) },
       ),
     onSuccess: (result) => {
@@ -191,7 +239,7 @@ export const useSetSocialPost = () => {
       );
       return Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ["statistics", "social-posts"],
+          queryKey: ["admin", "social-posts"],
         }),
         // Today's post is the "like & repost" quest's link.
         queryClient.invalidateQueries({ queryKey: ["quests", "daily"] }),

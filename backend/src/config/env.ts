@@ -38,7 +38,7 @@ const envSchema = z.object({
   // Overridable so the OAuth flow can be tested against a fake X.
   X_AUTHORIZE_URL: z.url().default('https://x.com/i/oauth2/authorize'),
   X_API_URL: z.url().default('https://api.x.com'),
-  // Comma-separated wallets allowed to open the /statistics page. Empty means
+  // Comma-separated wallets allowed to open the admin pages (/admin). Empty means
   // nobody can.
   ADMIN_ADDRESSES: z
     .string()

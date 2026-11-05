@@ -32,10 +32,12 @@ export const useSetDisplayName = () => {
 };
 
 export type Activity = {
-  type: "check-in" | "quest" | "referral" | "campaign";
+  // "bonus" is XP the team gave (or took) by hand.
+  type: "check-in" | "quest" | "referral" | "campaign" | "bonus";
   // Quest or campaign title, the invited friend's address for referrals,
-  // null for check-ins.
+  // the reason for a bonus, null for check-ins.
   title: string | null;
+  // Negative only for a bonus that took XP away.
   points: number;
   // Full-week bonus paid with a Sunday check-in.
   bonusPoints: number;

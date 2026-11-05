@@ -7,7 +7,8 @@ import { campaignRewards, questCompletions, users } from '../database/schema';
 export const ACTIVITY_LIMIT = 10;
 
 type ActivityRow = {
-  type: 'check-in' | 'quest' | 'referral' | 'campaign';
+  // 'bonus' is XP an admin gave (or took) by hand; its title is the reason.
+  type: 'check-in' | 'quest' | 'referral' | 'campaign' | 'bonus';
   title: string | null;
   points: number;
   bonus_points: number;
@@ -99,6 +100,10 @@ export class ProfileService {
         from campaign_rewards cr
         join partners p on p.id = cr.partner_id
         where cr.user_id = ${userId}
+        union all
+        select 'bonus', g.reason, g.points, 0, g.created_at, null, null
+        from xp_grants g
+        where g.user_id = ${userId}
       ) a
       order by at desc
       limit ${ACTIVITY_LIMIT}

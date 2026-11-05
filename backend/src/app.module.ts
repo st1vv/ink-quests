@@ -9,7 +9,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProgressModule } from './progress/progress.module';
 import { ReferralsModule } from './referrals/referrals.module';
-import { StatisticsModule } from './statistics/statistics.module';
+import { AdminModule } from './admin/admin.module';
 import { XModule } from './x/x.module';
 import { QuestsModule } from './quests/quests.module';
 import { validateEnv } from './config/env';
@@ -31,7 +31,7 @@ import { HealthController } from './health/health.controller';
     ReferralsModule,
     XModule,
     CampaignsModule,
-    StatisticsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

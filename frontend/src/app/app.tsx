@@ -6,8 +6,9 @@ import { Quests } from "@/app/quests/quests";
 import { Campaign } from "@/app/quests/campaign";
 import { Faq } from "@/app/faq/faq";
 import { Profile } from "@/app/profile/profile";
-import { Statistics } from "@/app/statistics/statistics";
-import { SocialPosts } from "@/app/statistics/posts";
+import { Statistics } from "@/app/admin/statistics";
+import { SocialPosts } from "@/app/admin/posts";
+import { XpGrants } from "@/app/admin/xp-grants";
 import { NotFound } from "@/app/not-found/not-found";
 
 export const App = () => {
@@ -20,8 +21,9 @@ export const App = () => {
         <Route path="/quests/:slug" element={<Campaign />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/statistics" element={<Statistics />} />
-        <Route path="/statistics/posts" element={<SocialPosts />} />
+        <Route path="/admin" element={<Statistics />} />
+        <Route path="/admin/posts" element={<SocialPosts />} />
+        <Route path="/admin/xp" element={<XpGrants />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>

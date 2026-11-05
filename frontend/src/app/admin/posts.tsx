@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { Button } from "@/shared/ui/button";
-import { buttonStyles } from "@/shared/ui/button-styles";
 import { ExternalLinkIcon } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
+import { AdminNav } from "@/app/admin/admin-nav";
 import {
   isNotFound,
   useSetSocialPost,
   useSocialPosts,
-} from "@/app/statistics/use-statistics";
+} from "@/app/admin/use-admin";
 
 // Admin page for the X post of the day, which the daily "like & repost"
 // quest points at. Hidden like the statistics page: until the backend
@@ -26,21 +25,11 @@ export const SocialPosts = () => {
 
   return (
     <div className="flex flex-col gap-4">
+      <AdminNav />
       <PageIntro
         eyebrow="Admin"
         title="Posts of the day"
         description='The X post for the daily "Like & repost" quest, per UTC day. A day without a post has no such quest.'
-        aside={
-          <Link
-            to="/statistics"
-            className={buttonStyles({
-              variant: "ghost",
-              className: "w-full md:w-auto",
-            })}
-          >
-            ← Statistics
-          </Link>
-        }
       />
       <SocialPostsPanel />
     </div>

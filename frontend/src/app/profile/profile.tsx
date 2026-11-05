@@ -518,6 +518,7 @@ const ACTIVITY_ICONS: Record<
   quest: { icon: "✓", style: "bg-emerald-400/15 text-emerald-300" },
   referral: { icon: "🤝", style: "bg-sky-400/15" },
   campaign: { icon: "🏆", style: "bg-amber-400/15" },
+  bonus: { icon: "🎁", style: "bg-fuchsia-400/15" },
 };
 
 // "Oct 22" for a UTC day (YYYY-MM-DD).
@@ -577,7 +578,9 @@ const ActivityRow = ({ item }: { item: Activity }) => {
 
       <div className="flex shrink-0 flex-col items-end gap-1">
         <span className="text-sm font-semibold text-white tabular-nums md:text-base">
-          +{formatNumber(item.points + item.bonusPoints)} XP
+          {/* Only a bonus can take XP away. */}
+          {item.points < 0 ? "−" : "+"}
+          {formatNumber(Math.abs(item.points + item.bonusPoints))} XP
         </span>
         {item.bonusPoints > 0 && (
           <Badge className="px-2 py-0.5 text-[10px]">

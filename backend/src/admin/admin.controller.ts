@@ -7,11 +7,14 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { isAddress } from 'viem';
+import { CurrentUser } from '../auth/auth.guard';
+import type { AuthUser } from '../auth/auth.service';
 import { normalizePostUrl } from '../catalog/post-url';
 import { SocialPostsService } from '../catalog/social-posts.service';
 import { utcDay } from '../quests/period';
@@ -21,25 +24,27 @@ import {
   StatisticsService,
   type StatsView,
 } from './statistics.service';
+import { xpGrantBody, XpGrantsService } from './xp-grants.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-@Controller('statistics')
+// Everything behind the admin pages lives under /admin.
+@Controller('admin')
 @UseGuards(AdminGuard)
-export class StatisticsController {
+export class AdminController {
   constructor(
     private readonly statistics: StatisticsService,
     private readonly posts: SocialPostsService,
+    private readonly xpGrants: XpGrantsService,
   ) {}
 
   // { users, usersWithXp, questsCompleted, dailyQuestsCompleted,
   //   partnerQuestsCompleted, checkIns, transactions, transactionUsers }
-  @Get()
+  @Get('stats')
   stats() {
     return this.statistics.stats();
   }
 
-  // Declared before :view, which would otherwise take "social-posts".
   // { today, posts: { day, postUrl }[] }: the posts of the day from a week
   // ago to two weeks ahead (UTC days).
   @Get('social-posts')
@@ -76,9 +81,29 @@ export class StatisticsController {
     return { day, postUrl };
   }
 
-  // The list behind a stat card (see STATS_VIEWS), e.g. /statistics/users:
+  // The latest XP grants, newest first:
+  // { id, address, name, points, reason, grantedBy, createdAt }[]
+  @Get('xp-grants')
+  xpGrantList() {
+    return this.xpGrants.recent();
+  }
+
+  // { address, points, reason }: gives a user XP (negative takes it away),
+  // shown in their activity with the reason.
+  @Post('xp-grants')
+  grantXp(@CurrentUser() admin: AuthUser, @Body() body: unknown) {
+    const input = xpGrantBody.safeParse(body);
+    if (!input.success) {
+      throw new BadRequestException(
+        input.error.issues[0]?.message ?? 'Invalid grant',
+      );
+    }
+    return this.xpGrants.grant(admin.id, input.data);
+  }
+
+  // The list behind a stat card (see STATS_VIEWS), e.g. /admin/stats/users:
   // { total, page, pageSize, items }. Item fields depend on the list.
-  @Get(':view')
+  @Get('stats/:view')
   list(
     @Param('view') view: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
