@@ -9,6 +9,7 @@ import { Profile } from "@/app/profile/profile";
 import { Statistics } from "@/app/admin/statistics";
 import { SocialPosts } from "@/app/admin/posts";
 import { XpGrants } from "@/app/admin/xp-grants";
+import { AdminUser } from "@/app/admin/user";
 import { NotFound } from "@/app/not-found/not-found";
 
 export const App = () => {
@@ -24,6 +25,8 @@ export const App = () => {
         <Route path="/admin" element={<Statistics />} />
         <Route path="/admin/posts" element={<SocialPosts />} />
         <Route path="/admin/xp" element={<XpGrants />} />
+        <Route path="/admin/users" element={<AdminUser />} />
+        <Route path="/admin/users/:address" element={<AdminUser />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>

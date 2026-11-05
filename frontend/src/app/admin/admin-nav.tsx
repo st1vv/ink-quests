@@ -1,9 +1,12 @@
 import { NavLink } from "react-router";
 
 const PAGES = [
-  { to: "/admin", label: "Statistics" },
+  // end: only the exact path counts, so /admin isn't lit on its sub-pages.
+  { to: "/admin", label: "Statistics", end: true },
   { to: "/admin/posts", label: "Posts" },
   { to: "/admin/xp", label: "XP" },
+  // Lit on a user's page (/admin/users/0x…) too.
+  { to: "/admin/users", label: "Users" },
 ];
 
 // Tabs between the admin pages, styled like TabButton.
@@ -16,8 +19,7 @@ export const AdminNav = () => (
       <NavLink
         key={page.to}
         to={page.to}
-        // /admin would otherwise also match its sub-pages.
-        end
+        end={page.end}
         className={({ isActive }) =>
           `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${
             isActive

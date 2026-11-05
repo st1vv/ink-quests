@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { useAuth } from "@/app/auth/use-auth";
+import type { Activity } from "@/app/profile/use-profile";
 import { ApiError, apiFetch } from "@/lib/api";
 import { shortAddress } from "@/lib/format";
 import { toast } from "@/lib/notify";
@@ -118,6 +119,10 @@ export type StatsPage<T> = {
   items: T[];
 };
 
+// One row of a user's activity on the admin user page: the profile's
+// activity plus campaign tasks (quests worth 0 XP that name their partner).
+export type UserActivity = Activity & { partner: string | null };
+
 // The backend answers 404 to wallets that aren't admins; retrying won't help.
 const retryUnlessNotFound = (failureCount: number, error: Error) =>
   !(error instanceof ApiError && error.status === 404) && failureCount < 3;
@@ -154,6 +159,24 @@ export const useStatsList = <T>(
     // loads; another list's rows have other fields, so not across lists.
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[1] === view ? previous : undefined,
+  });
+};
+
+// Only for a wallet that is a user; an unknown one is a 400.
+export const useUserActivity = (user: string, page: number) => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "user-activity", address, user.toLowerCase(), page],
+    queryFn: () =>
+      apiFetch<StatsPage<UserActivity>>(
+        `/admin/users/${user}/activity?page=${page}`,
+      ),
+    enabled: Boolean(address),
+    retry: retryUnlessNotFound,
+    // Keeps the current page on screen while the next one loads, but not
+    // another user's rows.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[3] === user.toLowerCase() ? previous : undefined,
   });
 };
 

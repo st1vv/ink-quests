@@ -207,8 +207,8 @@ Signed-in extras for the profile page, next to `/me/progress` and `/me/rank`:
 ## Admin
 
 Open only to signed-in wallets listed in `ADMIN_ADDRESSES`; everyone else gets a 404. The
-frontend shows them in its admin pages (`/admin`, `/admin/posts`, `/admin/xp`), which aren't
-linked anywhere.
+frontend shows them in its admin pages (`/admin`, `/admin/posts`, `/admin/xp`,
+`/admin/users/:address`), which aren't linked anywhere.
 
 - `GET /admin/stats`: the counts on the stat cards (`users`, `usersWithXp`, `questsCompleted`,
   `dailyQuestsCompleted`, `partnerQuestsCompleted`, `checkIns`, `transactions`,
@@ -225,6 +225,9 @@ linked anywhere.
 - `POST /admin/xp-grants` with `{ address, points, reason }`: gives a signed-up user XP by
   hand (`xp_grants`); negative `points` take it away. It counts everywhere XP does except
   challenge boards, and shows in the user's activity as a `bonus` row with the reason as title.
+- `GET /admin/users/:address/activity?page=`: everything a user did, newest first, 50 per page,
+  as `{ total, page, pageSize, items }`. Items are `GET /me/activity` rows plus `partner`, and
+  campaign tasks (0 XP) are listed too. An unknown wallet is a 400, not a 404.
 
 ## Challenges
 

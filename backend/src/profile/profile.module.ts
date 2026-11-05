@@ -8,5 +8,7 @@ import { ProfileService } from './profile.service';
   imports: [AuthModule],
   controllers: [ProfileController],
   providers: [ProfileService],
+  // The admin user page lists a user's activity too.
+  exports: [ProfileService],
 })
 export class ProfileModule {}

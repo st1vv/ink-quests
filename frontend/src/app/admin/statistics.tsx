@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import type { Address } from "viem";
 import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { ExternalLinkIcon } from "@/shared/ui/icons";
+import { ExternalLinkIcon, UserIcon } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
@@ -444,14 +444,24 @@ const Wallet = ({
   filterBy: (address: Address) => void;
 }) => (
   <div className="min-w-0">
-    <button
-      type="button"
-      onClick={() => filterBy(address)}
-      title={`Show only ${address}`}
-      className="max-w-full cursor-pointer truncate font-mono text-sm text-white/70 transition hover:text-white"
-    >
-      {shortAddress(address)}
-    </button>
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => filterBy(address)}
+        title={`Show only ${address}`}
+        className="min-w-0 cursor-pointer truncate font-mono text-sm text-white/70 transition hover:text-white"
+      >
+        {shortAddress(address)}
+      </button>
+      <Link
+        to={`/admin/users/${address}`}
+        title="Open the user's activity"
+        aria-label={`Open ${address}`}
+        className="shrink-0 text-white/40 transition hover:text-ink-light"
+      >
+        <UserIcon className="h-3.5 w-3.5" />
+      </Link>
+    </div>
     {name && <p className="truncate text-xs text-white/40">{name}</p>}
   </div>
 );

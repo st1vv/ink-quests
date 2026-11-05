@@ -5,11 +5,14 @@ import { DB } from '../database/database.module';
 import { campaignRewards, questCompletions, users } from '../database/schema';
 
 export const ACTIVITY_LIMIT = 10;
+export const ACTIVITY_PAGE_SIZE = 50;
 
 type ActivityRow = {
   // 'bonus' is XP an admin gave (or took) by hand; its title is the reason.
   type: 'check-in' | 'quest' | 'referral' | 'campaign' | 'bonus';
   title: string | null;
+  // The campaign of a partner quest task; null for the rest.
+  partner: string | null;
   points: number;
   bonus_points: number;
   // Raw Postgres timestamp text (e.g. '2026-09-27 09:00:00+00').
@@ -72,53 +75,86 @@ export class ProfileService {
   // Latest XP-earning actions, newest first.
   async activity(userId: number) {
     const { rows } = await this.db.execute<ActivityRow>(sql`
-      select * from (
-        select
-          'check-in' as type,
-          null::text as title,
-          points,
-          bonus_points,
-          created_at as at,
-          tx_hash::text as tx_hash,
-          day::text as day
-        from check_ins
-        where user_id = ${userId}
-        union all
-        select 'quest', q.title, c.points, 0, c.completed_at, c.tx_hash, null
-        from quest_completions c
-        join quests q on q.id = c.quest_id
-        -- Campaign tasks are worth 0 XP on their own; the campaign's reward
-        -- shows up as its own row.
-        where c.user_id = ${userId} and c.points > 0
-        union all
-        select 'referral', u.address, r.points, 0, r.created_at, null, null
-        from referral_rewards r
-        join users u on u.id = r.referred_id
-        where r.referrer_id = ${userId}
-        union all
-        select 'campaign', p.title, cr.points, 0, cr.created_at, null, null
-        from campaign_rewards cr
-        join partners p on p.id = cr.partner_id
-        where cr.user_id = ${userId}
-        union all
-        select 'bonus', g.reason, g.points, 0, g.created_at, null, null
-        from xp_grants g
-        where g.user_id = ${userId}
-      ) a
-      order by at desc
+      select * from (${activityRows(userId, false)}) a
+      order by at desc, type, title
       limit ${ACTIVITY_LIMIT}
     `);
+    return rows.map(toActivity);
+  }
 
-    return rows.map((r) => ({
-      type: r.type,
-      title: r.title,
-      points: r.points,
-      bonusPoints: r.bonus_points,
-      // ISO, which every browser parses.
-      at: new Date(r.at).toISOString(),
-      txHash: r.tx_hash,
-      // A paid check-in can be credited after its day (see ProgressService).
-      day: r.day,
-    }));
+  // One page of everything the user did, for the admin user page. Unlike
+  // activity(), it also lists campaign tasks, which are worth 0 XP.
+  async activityPage(userId: number, page: number) {
+    const rows = activityRows(userId, true);
+    const [counted, listed] = await Promise.all([
+      this.db.execute<{ total: number }>(
+        sql`select count(*)::int as total from (${rows}) a`,
+      ),
+      this.db.execute<ActivityRow>(sql`
+        select * from (${rows}) a
+        order by at desc, type, title
+        limit ${ACTIVITY_PAGE_SIZE} offset ${(page - 1) * ACTIVITY_PAGE_SIZE}
+      `),
+    ]);
+
+    return {
+      total: counted.rows[0].total,
+      page,
+      pageSize: ACTIVITY_PAGE_SIZE,
+      items: listed.rows.map((r) => ({
+        ...toActivity(r),
+        // Campaign title for a campaign task.
+        partner: r.partner,
+      })),
+    };
   }
 }
+
+// Every XP-earning action of the user, one row each. withTasks adds the
+// campaign tasks, which are worth 0 XP on their own: the campaign's reward
+// shows up as its own row.
+const activityRows = (userId: number, withTasks: boolean) => sql`
+  select
+    'check-in' as type,
+    null::text as title,
+    null::text as partner,
+    points,
+    bonus_points,
+    created_at as at,
+    tx_hash::text as tx_hash,
+    day::text as day
+  from check_ins
+  where user_id = ${userId}
+  union all
+  select 'quest', q.title, p.title, c.points, 0, c.completed_at, c.tx_hash, null
+  from quest_completions c
+  join quests q on q.id = c.quest_id
+  left join partners p on p.id = q.partner_id
+  where c.user_id = ${userId} ${withTasks ? sql.empty() : sql`and c.points > 0`}
+  union all
+  select 'referral', u.address, null, r.points, 0, r.created_at, null, null
+  from referral_rewards r
+  join users u on u.id = r.referred_id
+  where r.referrer_id = ${userId}
+  union all
+  select 'campaign', p.title, null, cr.points, 0, cr.created_at, null, null
+  from campaign_rewards cr
+  join partners p on p.id = cr.partner_id
+  where cr.user_id = ${userId}
+  union all
+  select 'bonus', g.reason, null, g.points, 0, g.created_at, null, null
+  from xp_grants g
+  where g.user_id = ${userId}
+`;
+
+const toActivity = (r: ActivityRow) => ({
+  type: r.type,
+  title: r.title,
+  points: r.points,
+  bonusPoints: r.bonus_points,
+  // ISO, which every browser parses.
+  at: new Date(r.at).toISOString(),
+  txHash: r.tx_hash,
+  // A paid check-in can be credited after its day (see ProgressService).
+  day: r.day,
+});

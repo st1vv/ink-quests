@@ -118,4 +118,19 @@ export class AdminController {
     }
     return this.statistics.list(view as StatsView, page, address);
   }
+
+  // Everything a user did, newest first, campaign tasks included:
+  // { total, page, pageSize, items: { type, title, partner, points,
+  //   bonusPoints, at, txHash, day }[] }
+  @Get('users/:address/activity')
+  userActivity(
+    @Param('address') address: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  ) {
+    if (!isAddress(address, { strict: false })) {
+      throw new BadRequestException('Not an address');
+    }
+    if (page < 1) throw new BadRequestException('page must be 1 or more');
+    return this.statistics.userActivity(address, page);
+  }
 }

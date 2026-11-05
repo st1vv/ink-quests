@@ -1,9 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { sql, type SQL } from 'drizzle-orm';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { eq, sql, type SQL } from 'drizzle-orm';
 import { getAddress } from 'viem';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
+import { users } from '../database/schema';
 import { userXp } from '../leaderboard/leaderboard.service';
+import { ProfileService } from '../profile/profile.service';
 import { levelForXp } from '../progress/level';
 
 export const STATS_PAGE_SIZE = 50;
@@ -257,7 +259,22 @@ const LISTS: Record<StatsView, ListSpec> = {
 
 @Injectable()
 export class StatisticsService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly profile: ProfileService,
+  ) {}
+
+  // One page of everything a wallet did, newest first, for the admin user
+  // page. Not a 404 for an unknown wallet: the admin pages read 404 as "not
+  // an admin".
+  async userActivity(address: string, page: number) {
+    const [user] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.address, address.toLowerCase()));
+    if (!user) throw new BadRequestException('No user with this address');
+    return this.profile.activityPage(user.id, page);
+  }
 
   async stats() {
     const { rows } = await this.db.execute<StatsRow>(sql`

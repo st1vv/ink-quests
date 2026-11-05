@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import { isAddress } from "viem";
 import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
@@ -204,9 +205,13 @@ const GrantList = () => {
                   {g.reason}
                 </p>
                 <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-white/40">
-                  <span className="font-mono" title={g.address}>
+                  <Link
+                    to={`/admin/users/${g.address}`}
+                    title={g.address}
+                    className="font-mono text-white/60 transition hover:text-white"
+                  >
                     {g.name ?? shortAddress(g.address)}
-                  </span>
+                  </Link>
                   <time dateTime={g.createdAt}>
                     {formatDateTime(g.createdAt)}
                   </time>
