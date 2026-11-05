@@ -16,6 +16,9 @@ export type Quest = {
   type?: TaskType;
   // False until the backend has an onchain check for this quest.
   claimable: boolean;
+  // The contract of the token the quest is about (to buy or hold), offered
+  // to copy; null for other quests. Missing from an older API.
+  token?: string | null;
 };
 
 export type Partner = {

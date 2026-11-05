@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
+import { CopyIconSwap } from "@/shared/ui/copy-button";
+import { useCopy } from "@/shared/ui/use-copy";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useClaimQuest } from "@/app/quests/claims";
 import { TagBadges } from "@/app/quests/tag-badges";
@@ -81,6 +83,7 @@ export const QuestRow = ({
             <h3 className="text-base font-semibold text-white md:text-lg">
               {quest.title}
             </h3>
+            {quest.token && <CopyContract address={quest.token} />}
             {quest.points > 0 && (
               <Badge className="px-2 py-0.5 text-xs">+{quest.points} XP</Badge>
             )}
@@ -148,5 +151,23 @@ export const QuestRow = ({
         )}
       </div>
     </div>
+  );
+};
+
+// The token's contract, so it can be pasted into a DEX or wallet and the
+// right token is bought (lookalikes share names, never addresses).
+const CopyContract = ({ address }: { address: string }) => {
+  const { copied, copy } = useCopy(address, "contract address");
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={`Copy contract ${address}`}
+      aria-label={copied ? "Copied contract address" : "Copy contract address"}
+      className="inline-flex cursor-pointer items-center rounded-full p-1 text-white/40 transition hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-ink-light"
+    >
+      <CopyIconSwap copied={copied} className="h-3.5 w-3.5" />
+    </button>
   );
 };

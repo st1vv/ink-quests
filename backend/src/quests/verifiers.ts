@@ -707,6 +707,17 @@ export const taskTypeOf = (verifier: string | null): TaskType => {
   return 'onchain';
 };
 
+// The ERC-20 a quest is about (bought, held, or bought on CoW), so the app
+// can offer its contract address to copy; null for every other quest.
+export const tokenOf = (verifier: string | null): Address | null => {
+  const spec = verifier ? VERIFIERS[verifier]?.[0] : undefined;
+  if (spec?.type === 'token-buy' || spec?.type === 'token-holder') {
+    return spec.token;
+  }
+  if (spec?.type === 'cow-swap') return spec.buys ?? null;
+  return null;
+};
+
 // Checks that aren't an onchain action by the user; they don't count for
 // referral rewards.
 export const isOffchain = (specs: VerifierSpec[]) =>

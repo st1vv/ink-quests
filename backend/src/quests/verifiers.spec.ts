@@ -16,6 +16,7 @@ import {
   matchingRelayBridge,
   minUsdOf,
   taskTypeOf,
+  tokenOf,
   withMinUsd,
   USD_PRICE_UNIT,
   VERIFIERS,
@@ -527,5 +528,27 @@ describe('cow-buy-wspyx', () => {
         prices,
       ),
     ).toBeUndefined();
+  });
+});
+
+describe('tokenOf', () => {
+  it('is the token a quest buys or holds', () => {
+    expect(tokenOf('buy-anita')).toBe(
+      '0x0606FC632ee812bA970af72F8489baAa443C4B98',
+    );
+    expect(tokenOf('hold-krakmask-10k')).toBe(
+      '0x32bCB803f696C99Eb263D60a05CAfD8689026575',
+    );
+    expect(tokenOf('cow-buy-wspyx')).toBe(
+      '0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',
+    );
+  });
+
+  it('is null for quests without a token', () => {
+    expect(tokenOf('cow-swap')).toBeNull();
+    expect(tokenOf('velodrome-swap')).toBeNull();
+    expect(tokenOf('x-follow-inkquests')).toBeNull();
+    expect(tokenOf(null)).toBeNull();
+    expect(tokenOf('no-such-verifier')).toBeNull();
   });
 });

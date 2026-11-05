@@ -9,10 +9,10 @@ import { Badge } from "@/shared/ui/badge";
 import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { Button } from "@/shared/ui/button";
 import { buttonStyles } from "@/shared/ui/button-styles";
+import { CopyButton } from "@/shared/ui/copy-button";
 import {
   CheckIcon,
   CloseIcon,
-  CopyIcon,
   ExternalLinkIcon,
   PencilIcon,
   XLogoIcon,
@@ -304,37 +304,6 @@ const IconButton = ({
     {children}
   </button>
 );
-
-const CopyButton = ({ text, label }: { text: string; label: string }) => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success(`Copied ${label}`);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard blocked (e.g. insecure context or no permission).
-      toast.error(`Couldn't copy the ${label}`);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={copy}
-      aria-label={copied ? `Copied ${label}` : `Copy ${label}`}
-      className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-ink-light"
-    >
-      {copied ? (
-        <CheckIcon className="h-4 w-4 text-emerald-300" />
-      ) : (
-        <CopyIcon className="h-4 w-4" />
-      )}
-    </button>
-  );
-};
 
 const XAccountCard = () => {
   const { data: x } = useXAccount();

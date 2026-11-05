@@ -4,7 +4,7 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { partners, quests } from '../database/schema';
 import { utcDay } from '../quests/period';
-import { isPostOfTheDay, taskTypeOf } from '../quests/verifiers';
+import { isPostOfTheDay, taskTypeOf, tokenOf } from '../quests/verifiers';
 import { DailyScheduleService } from './daily-schedule.service';
 import { SocialPostsService } from './social-posts.service';
 
@@ -68,6 +68,8 @@ export class CatalogService {
     return [...rotation, ...postQuests].map(({ verifier, ...quest }) => ({
       ...quest,
       type: taskTypeOf(verifier),
+      // The token's contract, for the app's copy button; null for most quests.
+      token: tokenOf(verifier),
     }));
   }
 
@@ -111,6 +113,7 @@ export class CatalogService {
       quests: tasks.map(({ verifier, ...task }) => ({
         ...task,
         type: taskTypeOf(verifier),
+        token: tokenOf(verifier),
       })),
     };
   }
