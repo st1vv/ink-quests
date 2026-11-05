@@ -18,6 +18,7 @@ import { EXPLORER_ADDRESS_URL, EXPLORER_TX_URL } from "@/lib/explorer";
 import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
 import { AdminNav } from "@/app/admin/admin-nav";
+import { ActivityIcon } from "@/app/profile/activity-icon";
 import {
   isNotFound,
   useStatsList,
@@ -328,6 +329,8 @@ const ActivityRow = ({ item }: { item: UserActivity }) => {
 
   return (
     <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3 last:border-b-0 hover:bg-white/[0.03]">
+      <ActivityIcon type={item.type} />
+
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-white">
           {activityTitle(item)}

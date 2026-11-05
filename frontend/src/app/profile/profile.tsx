@@ -14,11 +14,7 @@ import {
   CheckIcon,
   CloseIcon,
   ExternalLinkIcon,
-  FlameIcon,
-  GiftIcon,
   PencilIcon,
-  QuestsIcon,
-  UsersIcon,
   XLogoIcon,
 } from "@/shared/ui/icons";
 import {
@@ -41,6 +37,7 @@ import {
   useSetDisplayName,
   type Activity,
 } from "@/app/profile/use-profile";
+import { ActivityIcon } from "@/app/profile/activity-icon";
 
 const PLACEHOLDER = "—";
 
@@ -483,18 +480,6 @@ const ActivityList = () => {
   );
 };
 
-const ACTIVITY_ICONS: Record<
-  Activity["type"],
-  { icon: ReactNode; style: string }
-> = {
-  "check-in": { icon: <FlameIcon />, style: "bg-ink/20" },
-  quest: { icon: <CheckIcon />, style: "bg-emerald-400/15 text-emerald-300" },
-  referral: { icon: <UsersIcon />, style: "bg-sky-400/15 text-sky-300" },
-  // The sword is also the Quests icon in the nav.
-  campaign: { icon: <QuestsIcon />, style: "bg-amber-400/15 text-amber-300" },
-  bonus: { icon: <GiftIcon />, style: "bg-fuchsia-400/15 text-fuchsia-300" },
-};
-
 // "Oct 22" for a UTC day (YYYY-MM-DD).
 const formatUtcDay = (day: string) =>
   new Date(`${day}T00:00:00Z`).toLocaleDateString("en-US", {
@@ -519,16 +504,9 @@ const activityTitle = (item: Activity) => {
 };
 
 const ActivityRow = ({ item }: { item: Activity }) => {
-  const { icon, style } = ACTIVITY_ICONS[item.type];
-
   return (
     <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3.5 last:border-b-0">
-      <span
-        aria-hidden
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm ${style}`}
-      >
-        {icon}
-      </span>
+      <ActivityIcon type={item.type} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-white md:text-base">
