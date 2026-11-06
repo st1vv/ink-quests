@@ -146,6 +146,16 @@ export type XPostSpec = {
   type: 'x-like-repost';
 };
 
+// Having `referrer` as the wallet's referrer on a partner's referral
+// registry (its referrerOf(address)), read over RPC at claim time. Unlike
+// a transaction check it passes however long ago the user registered, so
+// one partner can have the same referral task in several campaigns.
+export type ReferrerSpec = {
+  type: 'referrer';
+  registry: Address;
+  referrer: Address;
+};
+
 export type VerifierSpec =
   | ContractCallSpec
   | NftHolderSpec
@@ -159,7 +169,8 @@ export type VerifierSpec =
   | XFollowSpec
   | DailyQuestDoneSpec
   | VisitSpec
-  | XPostSpec;
+  | XPostSpec
+  | ReferrerSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
 export type PriceOf = (asset: Address) => Promise<bigint>;
@@ -371,14 +382,15 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   // one campaign per feature. Its contracts are unverified; selectors are
   // read from the app's ABI.
   'x-follow-boi-market': [{ type: 'x-follow', handle: 'boi_market' }],
-  // Registering our wallet as the referrer on SmolBoi's ReferralRegistry
-  // (its app's Referrals page, opened from our ?ref= link).
+  // Our wallet as the referrer on BOI's ReferralRegistry, registered on its
+  // app's Referrals page (opened from our ?ref= link). A referrer is set
+  // once, so it's read from the registry: a user who registered during
+  // Part 1 passes in Part 2 too.
   'register-boi-referral': [
     {
-      type: 'contract-call',
-      contracts: ['0xA4B4f96f169d47Acb9f595b015335F566E218AF1'],
-      methods: ['0x9ea7685a'], // registerReferrer(address)
-      firstArg: INKQUESTS_WALLET,
+      type: 'referrer',
+      registry: '0xA4B4f96f169d47Acb9f595b015335F566E218AF1',
+      referrer: INKQUESTS_WALLET,
     },
   ],
   // Part 1: S.E.X. A BOI and a LadyBOI are paired to birth a SmolBoi; the
@@ -408,27 +420,26 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
       ],
     },
   ],
-  // Part 2: Merge, not live yet.
-  // 'visit-boi': [{ type: 'visit' }],
-  // 'hold-smolboi': [
-  //   {
-  //     type: 'nft-holder',
-  //     contract: '0x17c700F1e302069eE01249aa4C2313371f993b57',
-  //   },
-  // ],
-  // // Starting a merge of two SmolBois on its MergeEngine. A merge is
-  // // started, then finalized once its randomness lands; starting is the
-  // // user's move (and pays the fee), so that's what counts.
-  // 'merge-smolboi': [
-  //   {
-  //     type: 'contract-call',
-  //     contracts: ['0x9E9999D8150a2ccf7C834D5BD7a1C40ed1EA8525'],
-  //     methods: [
-  //       '0x1374cadb', // startMerge(uint256,uint256,bool)
-  //       '0xa1a87a3d', // startMergeBatch(uint256[],uint256[])
-  //     ],
-  //   },
-  // ],
+  // Part 2: Merge. Two SmolBois of the same level are merged into one.
+  'hold-smolboi': [
+    {
+      type: 'nft-holder',
+      contract: '0x17c700F1e302069eE01249aa4C2313371f993b57',
+    },
+  ],
+  // Starting a merge on its MergeEngine. A merge is started, then finalized
+  // once its randomness lands; starting is the user's move (and pays the
+  // fee), so that's what counts.
+  'merge-smolboi': [
+    {
+      type: 'contract-call',
+      contracts: ['0x9E9999D8150a2ccf7C834D5BD7a1C40ed1EA8525'],
+      methods: [
+        '0x1374cadb', // startMerge(uint256,uint256,bool)
+        '0xa1a87a3d', // startMergeBatch(uint256[],uint256[])
+      ],
+    },
+  ],
   'any-daily-quest': [{ type: 'daily-quest-done' }],
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],

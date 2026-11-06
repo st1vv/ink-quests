@@ -165,16 +165,17 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
-  // {
-  //   slug: 'boi-part-2',
-  //   title: 'BOI Part 2: Merge',
-  //   description:
-  //     'Merge your SmolBois to level them up. A success levels one up; a failure can burn the fuel Smol.',
-  //   imageUrl: '/campaigns/boi-market.webp',
-  //   websiteUrl: BOI_WORK_URL,
-  //   rewardXp: 100,
-  //   tags: ['NFT'],
-  // },
+  {
+    slug: 'boi-part-2',
+    title: 'BOI Part 2: Merge',
+    description:
+      'Level up your SmolBois: merge two of the same level into one stronger Smol.',
+    // Until this file is added the card shows its gradient fallback.
+    imageUrl: '/campaigns/boi-part-2.webp',
+    websiteUrl: BOI_WORK_URL,
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -938,43 +939,56 @@ const QUESTS: SeedQuest[] = [
     sortOrder: 5,
     verifier: 'sex-boi',
   },
-  // BOI Part 2: Merge, not live yet.
-  // {
-  //   slug: 'boi-2-explore',
-  //   kind: 'partner',
-  //   partner: 'boi-part-2',
-  //   title: 'Explore W.O.R.K',
-  //   description:
-  //     'Open the W.O.R.K guide and see how SmolBois are born from BOIs and LadyBOIs, and how merging levels them up.',
-  //   actionUrl: `${BOI_WORK_URL}#guide`,
-  //   points: 0,
-  //   sortOrder: 3,
-  //   verifier: 'visit-boi',
-  // },
-  // {
-  //   slug: 'boi-2-hold-smolboi',
-  //   kind: 'partner',
-  //   partner: 'boi-part-2',
-  //   title: 'Hold a SmolBoi',
-  //   description:
-  //     'Hold at least one SmolBoi in your wallet. To merge, you need two of the same level.',
-  //   actionUrl: 'https://boi.market/collections/smolboi',
-  //   points: 0,
-  //   sortOrder: 4,
-  //   verifier: 'hold-smolboi',
-  // },
-  // {
-  //   slug: 'boi-2-merge',
-  //   kind: 'partner',
-  //   partner: 'boi-part-2',
-  //   title: 'Merge your SmolBois',
-  //   description:
-  //     'Start a merge of two SmolBois of the same level on the Merge page. A success levels one up; an unshielded failure burns the fuel Smol.',
-  //   actionUrl: `${BOI_WORK_URL}#merge`,
-  //   points: 0,
-  //   sortOrder: 5,
-  //   verifier: 'merge-smolboi',
-  // },
+  // BOI Part 2: Merge
+  {
+    slug: 'boi-2-join-referral',
+    kind: 'partner',
+    partner: 'boi-part-2',
+    title: 'Join BOI with our referral',
+    description:
+      "Connect your wallet on BOI's Referrals page and confirm InkQuests as your referrer. Already did it in Part 1? Just verify.",
+    actionUrl: BOI_REFERRAL_URL,
+    points: 0,
+    sortOrder: 1,
+    // The same check as in Part 1, read from BOI's registry.
+    optional: true,
+    verifier: 'register-boi-referral',
+  },
+  {
+    slug: 'boi-2-follow-boi-market',
+    kind: 'partner',
+    partner: 'boi-part-2',
+    title: 'Follow @boi_market on X',
+    description: 'Follow BOI Market on X for BOI news and updates.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=boi_market',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-boi-market',
+  },
+  {
+    slug: 'boi-2-hold-smolboi',
+    kind: 'partner',
+    partner: 'boi-part-2',
+    title: 'Hold a SmolBoi',
+    description:
+      'Hold at least one SmolBoi in your wallet. To merge, you need two of the same level.',
+    actionUrl: 'https://boi.market/collections/smolboi',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'hold-smolboi',
+  },
+  {
+    slug: 'boi-2-merge',
+    kind: 'partner',
+    partner: 'boi-part-2',
+    title: 'Merge your SmolBois',
+    description:
+      'Start a merge of two SmolBois of the same level on the Merge page. A success levels one up; an unshielded failure burns the fuel Smol.',
+    actionUrl: `${BOI_WORK_URL}#merge`,
+    points: 0,
+    sortOrder: 4,
+    verifier: 'merge-smolboi',
+  },
 ];
 
 type SeedChallenge = Omit<typeof challenges.$inferInsert, 'id' | 'createdAt'>;

@@ -50,6 +50,8 @@ const missingMessage = (
       return 'Not enough of this token in your wallet yet. Hold the amount the task asks for and try again';
     case 'token':
       return `No purchase of at least $${minUsd} of this token found yet today. If you just bought it, try again in a minute`;
+    case 'referrer':
+      return "InkQuests isn't your referrer there yet. Register with our link on the partner's Referrals page, then try again in a minute";
     case 'bridge':
       return `No Relay bridge of at least $${minUsd} to Ink found yet today (from Ethereum, Base, Arbitrum or Robinhood Chain). If you just bridged, try again in a minute`;
   }

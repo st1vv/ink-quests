@@ -4,6 +4,8 @@ import {
   erc20Abi,
   erc721Abi,
   formatUnits,
+  isAddressEqual,
+  parseAbi,
   parseUnits,
   type Address,
   type Hex,
@@ -30,12 +32,18 @@ import {
   PRICE_TOLERANCE,
   type NadoPerpVolumeSpec,
   type NftHolderSpec,
+  type ReferrerSpec,
   type RelayBridgeSpec,
   type CowSwapSpec,
   type TokenBuySpec,
   type TokenHolderSpec,
   type VerifierSpec,
 } from './verifiers';
+
+// A partner referral registry (see ReferrerSpec).
+const referralRegistryAbi = parseAbi([
+  'function referrerOf(address) view returns (address)',
+]);
 
 // ETH is priced as WETH by the oracle.
 const WETH: Address = '0x4200000000000000000000000000000000000006';
@@ -44,7 +52,8 @@ export type Verification =
   // Done; txHash is the matching transaction, null for holding checks.
   | { done: true; txHash: Hex | null }
   // Not done: no matching transaction, no NFT held, no bridge, not enough
-  // futures volume on Nado, no token bought, or too few tokens held.
+  // futures volume on Nado, no token bought, too few tokens held, or not
+  // the partner referrer we expect.
   | {
       done: false;
       missing:
@@ -54,7 +63,8 @@ export type Verification =
         | 'futures'
         | 'token'
         | 'balance'
-        | 'order';
+        | 'order'
+        | 'referrer';
     };
 
 // Checks whether a user has done what a quest's verifier asks for. Throws
@@ -94,6 +104,15 @@ export class VerificationService {
     );
     for (const spec of balances) {
       if (await this.holdsTokens(spec, user)) {
+        return { done: true, txHash: null };
+      }
+    }
+
+    const referrers = specs.filter(
+      (s): s is ReferrerSpec => s.type === 'referrer',
+    );
+    for (const spec of referrers) {
+      if (await this.hasReferrer(spec, user)) {
         return { done: true, txHash: null };
       }
     }
@@ -152,7 +171,9 @@ export class VerificationService {
               ? 'balance'
               : cow.length
                 ? 'order'
-                : 'nft';
+                : referrers.length
+                  ? 'referrer'
+                  : 'nft';
       return { done: false, missing };
     }
 
@@ -246,6 +267,17 @@ export class VerificationService {
       if (await this.hasStaked(staking, spec.contract, user)) return true;
     }
     return false;
+  }
+
+  // Read straight from the chain, like holds().
+  private async hasReferrer(spec: ReferrerSpec, user: Address) {
+    const referrer = await this.client.readContract({
+      address: spec.registry,
+      abi: referralRegistryAbi,
+      functionName: 'referrerOf',
+      args: [user],
+    });
+    return isAddressEqual(referrer, spec.referrer);
   }
 
   // Read straight from the chain, like holds().
