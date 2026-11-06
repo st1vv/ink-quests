@@ -1030,6 +1030,20 @@ const CHALLENGES: SeedChallenge[] = [
       },
     ],
   },
+  {
+    slug: 'challenge-3-boi',
+    title: 'Leaderboard Challenge #3',
+    // Nov 9 00:00 UTC through the Nov 15 23:59 UTC snapshot.
+    startsAt: new Date('2026-11-09T00:00:00Z'),
+    endsAt: new Date('2026-11-16T00:00:00Z'),
+    places: 5,
+    prize: '1 SmolBoi',
+    // The announcement on X; set once it's posted.
+    postUrl: null,
+    // Same prize for every place, so no per-place cards; the prize's
+    // picture is frontend/public/challenges/challenge-3-boi.png.
+    prizeItems: null,
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.
