@@ -1039,7 +1039,8 @@ const CHALLENGES: SeedChallenge[] = [
     places: 5,
     prize: '1 SmolBoi',
     // The announcement on X; set once it's posted.
-    postUrl: null,
+    postUrl:
+      'https://x.com/inkquests/status/2119369201718583604?a=YfdQ-MEnFb5X9EqS2_U&s=20',
     // Same prize for every place, so no per-place cards; the prize's
     // picture is frontend/public/challenges/challenge-3-boi.png.
     prizeItems: null,
