@@ -65,8 +65,9 @@ export class ChallengeService {
     this.xRequired = xLinkingConfigured(config);
   }
 
-  // The challenge to show: the one running now, else the last one that
-  // ended, else the next one to start. Null when there are none.
+  // The challenge to show: the one running now, else the next one to start
+  // (so an announced challenge shows right away), else the last one that
+  // ended. Null when there are none.
   async current(now = new Date()) {
     const [live] = await this.db
       .select()
@@ -76,21 +77,21 @@ export class ChallengeService {
       .limit(1);
     if (live) return { ...live, status: 'live' as const };
 
-    const [ended] = await this.db
-      .select()
-      .from(challenges)
-      .where(lte(challenges.endsAt, now))
-      .orderBy(desc(challenges.endsAt))
-      .limit(1);
-    if (ended) return { ...ended, status: 'ended' as const };
-
     const [upcoming] = await this.db
       .select()
       .from(challenges)
       .where(gt(challenges.startsAt, now))
       .orderBy(asc(challenges.startsAt))
       .limit(1);
-    return upcoming ? { ...upcoming, status: 'upcoming' as const } : null;
+    if (upcoming) return { ...upcoming, status: 'upcoming' as const };
+
+    const [ended] = await this.db
+      .select()
+      .from(challenges)
+      .where(lte(challenges.endsAt, now))
+      .orderBy(desc(challenges.endsAt))
+      .limit(1);
+    return ended ? { ...ended, status: 'ended' as const } : null;
   }
 
   // Everyone who scored, ranked: more points first, then whoever reached

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Surface } from "@/shared/ui/surface";
 import { GiftIcon } from "@/shared/ui/icons";
 import { PODIUM_STYLES } from "@/app/leaderboard/podium";
@@ -8,10 +9,10 @@ import type {
 } from "@/app/leaderboard/use-leaderboard";
 
 // The prize for each place: picture cards when the challenge lists its
-// prizes, else one row per place.
+// prizes, else one summary of the prize every place gets.
 export const PrizesCard = ({ challenge }: { challenge: Challenge }) => (
   <Surface className="h-full">
-    <div className="flex flex-col gap-4">
+    <div className="flex h-full flex-col gap-4">
       <CardTitle>Prizes</CardTitle>
       {challenge.prizeItems?.length ? (
         <ol className="grid grid-cols-3 gap-3">
@@ -22,7 +23,7 @@ export const PrizesCard = ({ challenge }: { challenge: Challenge }) => (
             ))}
         </ol>
       ) : (
-        <PrizeRows challenge={challenge} />
+        <PrizeSummary challenge={challenge} />
       )}
     </div>
   </Surface>
@@ -57,24 +58,53 @@ const PrizeTile = ({ item }: { item: ChallengePrizeItem }) => (
   </li>
 );
 
-// One row per prize place, styled like the table's podium.
-const PrizeRows = ({ challenge }: { challenge: Challenge }) => (
-  <ol className="flex flex-col gap-2">
-    {Array.from({ length: challenge.places }, (_, i) => i + 1).map((place) => (
-      <li
-        key={place}
-        className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5"
-      >
-        <span
-          className={`inline-flex min-w-11 items-center justify-center rounded-full px-2 py-1 text-sm font-semibold tabular-nums ${PODIUM_STYLES[place] ?? "bg-white/5 text-white/70"}`}
-        >
-          #{place}
-        </span>
-        <span className="flex-1 text-sm font-medium text-white">
-          {challenge.prize}
-        </span>
-        <GiftIcon className="h-4 w-4 text-amber-300" />
-      </li>
-    ))}
-  </ol>
+// The prize's picture: frontend/public/challenges/<challenge slug>.png,
+// added by hand for each challenge. A gift icon until it's there.
+const PrizeImage = ({ challenge }: { challenge: Challenge }) => {
+  const [missing, setMissing] = useState(false);
+
+  if (missing) {
+    return (
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-400/15 text-amber-300">
+        <GiftIcon className="h-6 w-6" />
+      </span>
+    );
+  }
+  return (
+    <img
+      src={`/challenges/${challenge.slug}.png`}
+      alt={challenge.prize}
+      onError={() => setMissing(true)}
+      className="h-28 w-28 rounded-2xl border border-white/10 object-cover"
+    />
+  );
+};
+
+// Every place wins the same prize: say it once, with the winning places as
+// podium-styled chips. Fills the card's height to line up with Progress.
+const PrizeSummary = ({ challenge }: { challenge: Challenge }) => (
+  <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-6 text-center">
+    {/* Keyed by the challenge, so the next one tries its own picture. */}
+    <PrizeImage key={challenge.slug} challenge={challenge} />
+    <p className="text-sm text-white/50">
+      <span className="text-lg font-semibold text-white">
+        {challenge.prize}
+      </span>{" "}
+      {challenge.places === 1
+        ? "for the winner"
+        : `for each of the top ${challenge.places}`}
+    </p>
+    <ol className="flex flex-wrap justify-center gap-2">
+      {Array.from({ length: challenge.places }, (_, i) => i + 1).map(
+        (place) => (
+          <li
+            key={place}
+            className={`inline-flex min-w-11 items-center justify-center rounded-full px-2 py-1 text-sm font-semibold tabular-nums ${PODIUM_STYLES[place] ?? "bg-white/5 text-white/70"}`}
+          >
+            #{place}
+          </li>
+        ),
+      )}
+    </ol>
+  </div>
 );

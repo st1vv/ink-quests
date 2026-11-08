@@ -242,7 +242,7 @@ upserted by slug on every seed. Prizes are handed out by hand from the final sta
 - Who takes part: wallets with a linked X account once X linking is set up (`X_CLIENT_*`),
   everyone until then. Our own wallets (`HIDDEN_ADDRESSES`) are left out, as on the leaderboard.
   Ties go to whoever reached the score first.
-- `GET /challenge`: the running challenge, else the last one that ended, else the next one, with
+- `GET /challenge`: the running challenge, else the next one, else the last one that ended, with
   its top 100 as `{ challenge, top }`. `challenge` is null when none is set, else it has `slug`,
   `title`, `startsAt`, `endsAt`, `status` (`live`, `ended`, `upcoming`), `places`, `prize`,
   `postUrl`, `referralLimit` and `xRequired`; `top` is `{ rank, address, name, score }[]`.
