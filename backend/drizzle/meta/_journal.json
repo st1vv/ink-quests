@@ -113,6 +113,13 @@
       "when": 1793874042359,
       "tag": "0015_optional_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794134046503,
+      "tag": "0016_challenge_prize_url",
+      "breakpoints": true
     }
   ]
 }

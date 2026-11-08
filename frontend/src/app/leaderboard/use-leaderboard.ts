@@ -56,6 +56,9 @@ export type Challenge = {
   // The top `places` win `prize`.
   places: number;
   prize: string;
+  // Where the prize picture links to (e.g. its OpenSea collection), if
+  // anywhere.
+  prizeUrl: string | null;
   // The announcement on X.
   postUrl: string | null;
   // One prize per place, shown as cards; null shows `prize` for every place.

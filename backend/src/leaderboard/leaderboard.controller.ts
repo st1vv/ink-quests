@@ -26,7 +26,7 @@ export class LeaderboardController {
 
   // Public: the current (or last, or next) challenge and its top
   // players: { challenge: { slug, title, startsAt, endsAt, status, places,
-  // prize, postUrl, referralLimit, xRequired } | null, top: { rank,
+  // prize, prizeUrl, postUrl, referralLimit, xRequired } | null, top: { rank,
   // address, name, score }[] }.
   @Get('challenge')
   challenge() {

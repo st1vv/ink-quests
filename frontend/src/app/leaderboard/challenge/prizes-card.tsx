@@ -59,7 +59,8 @@ const PrizeTile = ({ item }: { item: ChallengePrizeItem }) => (
 );
 
 // The prize's picture: frontend/public/challenges/<challenge slug>.png,
-// added by hand for each challenge. A gift icon until it's there.
+// added by hand for each challenge. A gift icon until it's there. Links to
+// the challenge's prizeUrl (e.g. the OpenSea collection) when it has one.
 const PrizeImage = ({ challenge }: { challenge: Challenge }) => {
   const [missing, setMissing] = useState(false);
 
@@ -70,13 +71,25 @@ const PrizeImage = ({ challenge }: { challenge: Challenge }) => {
       </span>
     );
   }
-  return (
+  const image = (
     <img
       src={`/challenges/${challenge.slug}.png`}
       alt={challenge.prize}
       onError={() => setMissing(true)}
-      className="h-28 w-28 rounded-2xl border border-white/10 object-cover"
+      className="h-28 w-28 rounded-2xl border border-white/10 object-cover transition group-hover:border-white/25"
     />
+  );
+  if (!challenge.prizeUrl) return image;
+  return (
+    <a
+      href={challenge.prizeUrl}
+      target="_blank"
+      rel="noreferrer"
+      title={`View ${challenge.prize}`}
+      className="group block overflow-hidden rounded-2xl"
+    >
+      {image}
+    </a>
   );
 };
 

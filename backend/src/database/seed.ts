@@ -1038,6 +1038,7 @@ const CHALLENGES: SeedChallenge[] = [
     endsAt: new Date('2026-11-16T00:00:00Z'),
     places: 5,
     prize: '1 SmolBoi',
+    prizeUrl: 'https://opensea.io/collection/smolboiwork',
     // The announcement on X; set once it's posted.
     postUrl:
       'https://x.com/inkquests/status/2119369201718583604?a=YfdQ-MEnFb5X9EqS2_U&s=20',

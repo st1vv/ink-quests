@@ -260,6 +260,9 @@ export const challenges = pgTable('challenges', {
   // The top `places` win `prize`.
   places: integer().notNull(),
   prize: text().notNull(),
+  // Where the prize picture links to (e.g. its OpenSea collection) when
+  // every place wins the same prize; null leaves the picture unlinked.
+  prizeUrl: text(),
   // The announcement on X, if any.
   postUrl: text(),
   // The prize for each place, shown as cards (e.g. a specific NFT); null

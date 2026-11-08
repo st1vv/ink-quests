@@ -193,6 +193,7 @@ export class ChallengeService {
       status: c.status,
       places: c.places,
       prize: c.prize,
+      prizeUrl: c.prizeUrl,
       postUrl: c.postUrl,
       prizeItems: c.prizeItems,
       referralLimit: CHALLENGE_REFERRAL_LIMIT,
