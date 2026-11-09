@@ -10,8 +10,8 @@ const TAG_COLORS: Record<string, BadgeVariant> = {
   Lending: "sage",
   Bridge: "violet",
   "Perp DEX": "lime",
-  // Grey like X's logo.
-  Social: "neutral",
+  // Twitter's classic sky blue.
+  Social: "cyan",
   xStocks: "turquoise",
 };
 
