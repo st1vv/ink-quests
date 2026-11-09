@@ -19,9 +19,7 @@ export const ChallengeBoard = ({ tabs }: { tabs: ReactNode }) => {
   const overview = useChallenge();
   const mine = useMyChallenge();
   const challenge = overview.data?.challenge ?? null;
-  // TEMP preview: treat the signed-in wallet as having X connected. Revert
-  // before committing.
-  const me = mine.data ? { ...mine.data, eligible: true, xLinked: true } : null;
+  const me = mine.data ?? null;
 
   // The page's own layout in skeletons: header, prizes and progress, rules,
   // standings.
