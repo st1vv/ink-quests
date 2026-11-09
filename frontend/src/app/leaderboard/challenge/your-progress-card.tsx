@@ -31,27 +31,26 @@ export const YourProgressCard = ({
   let body: ReactNode;
   if (!signedIn && !loading) {
     body = (
-      <>
-        <p className="text-sm leading-6 text-white/60">
-          Connect your wallet to see your place in the challenge.
-        </p>
-        <Button onClick={openConnectModal} className="w-full">
-          Connect wallet
-        </Button>
-      </>
+      <JoinPrompt
+        title="Connect your wallet"
+        text="See your place, XP and referrals in the challenge."
+        action="Connect wallet"
+        onClick={openConnectModal}
+      />
     );
   } else if (me && !me.eligible) {
     body = (
-      <>
-        <p className="text-sm leading-6 text-white/60">
-          Connect your X account to take part. Until then your XP doesn't count
-          in the challenge.
-        </p>
-        <Button onClick={connectX} className="w-full">
-          Connect
-          <XLogoIcon className="h-4 w-4" />
-        </Button>
-      </>
+      <JoinPrompt
+        title="Connect X to join"
+        text="Until then your XP doesn't count in the challenge."
+        action={
+          <>
+            Connect
+            <XLogoIcon className="h-4 w-4" />
+          </>
+        }
+        onClick={connectX}
+      />
     );
   } else {
     const prizePlace = me?.rank != null && me.rank <= challenge.places;
@@ -100,6 +99,25 @@ export const YourProgressCard = ({
     </Surface>
   );
 };
+
+type JoinPromptProps = {
+  title: string;
+  text: string;
+  action: ReactNode;
+  onClick?: () => void;
+};
+
+// What keeps the player out, centered in the card's free space: a line of
+// text and a button.
+const JoinPrompt = ({ title, text, action, onClick }: JoinPromptProps) => (
+  <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-black/20 px-6 py-6 text-center">
+    <div className="flex flex-col gap-1">
+      <p className="font-semibold text-white">{title}</p>
+      <p className="max-w-xs text-sm leading-6 text-white/60">{text}</p>
+    </div>
+    <Button onClick={onClick}>{action}</Button>
+  </div>
+);
 
 const ProgressRow = ({
   label,
