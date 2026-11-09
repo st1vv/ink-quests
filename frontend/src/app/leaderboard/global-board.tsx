@@ -5,6 +5,7 @@ import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Button } from "@/shared/ui/button";
 import { ValueSkeleton } from "@/shared/ui/skeleton";
+import { WalletIcon } from "@/shared/ui/icons";
 import { formatNumber } from "@/lib/format";
 import { useAuth } from "@/app/auth/use-auth";
 import { BoardTable } from "@/app/leaderboard/board-table";
@@ -101,7 +102,8 @@ const LeaderboardIntro = ({
         description="Complete daily quests and check in every day to climb the leaderboard."
         aside={
           <Button onClick={openConnectModal} className="w-full md:w-auto">
-            Connect wallet to see your rank
+            <WalletIcon className="h-4 w-4" />
+            Connect wallet
           </Button>
         }
       />

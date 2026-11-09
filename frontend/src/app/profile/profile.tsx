@@ -15,6 +15,7 @@ import {
   CloseIcon,
   ExternalLinkIcon,
   PencilIcon,
+  WalletIcon,
   XLogoIcon,
 } from "@/shared/ui/icons";
 import {
@@ -74,6 +75,7 @@ const SignedOutProfile = ({ loading }: { loading: boolean }) => {
       description="Connect your wallet to see your XP, level, streaks and activity."
       aside={
         <Button onClick={openConnectModal} className="w-full md:w-auto">
+          <WalletIcon className="h-4 w-4" />
           Connect wallet
         </Button>
       }

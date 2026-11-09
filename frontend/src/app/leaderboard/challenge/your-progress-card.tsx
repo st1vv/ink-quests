@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { Surface } from "@/shared/ui/surface";
 import { Button } from "@/shared/ui/button";
-import { CheckIcon, GiftIcon, XLogoIcon } from "@/shared/ui/icons";
+import { CheckIcon, GiftIcon, WalletIcon, XLogoIcon } from "@/shared/ui/icons";
 import { ValueSkeleton } from "@/shared/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import { connectX } from "@/app/x/use-x";
@@ -34,7 +34,12 @@ export const YourProgressCard = ({
       <JoinPrompt
         title="Connect your wallet"
         text="See your place, XP and referrals in the challenge."
-        action="Connect wallet"
+        action={
+          <>
+            <WalletIcon className="h-4 w-4" />
+            Connect wallet
+          </>
+        }
         onClick={openConnectModal}
       />
     );

@@ -42,7 +42,7 @@ export const ConnectWallet = () => {
         if (!account || !chain) {
           return (
             <WalletButton onClick={openConnectModal} icon={<WalletIcon />}>
-              Connect Wallet
+              Connect wallet
             </WalletButton>
           );
         }

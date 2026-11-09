@@ -7,6 +7,7 @@ import { Badge } from "@/shared/ui/badge";
 import { badgeColors, type BadgeVariant } from "@/shared/ui/badge-colors";
 import { buttonStyles } from "@/shared/ui/button-styles";
 import { CardSkeleton } from "@/shared/ui/skeleton";
+import { WalletIcon } from "@/shared/ui/icons";
 import { formatNumber } from "@/lib/format";
 import { usePartners, type CampaignSummary } from "@/app/quests/catalog";
 import { CampaignCover } from "@/app/quests/campaign-cover";
@@ -153,6 +154,7 @@ export const Quests = () => {
               disabled={status === "loading"}
               className={buttonStyles()}
             >
+              <WalletIcon className="h-4 w-4" />
               Connect wallet
             </button>
           }
