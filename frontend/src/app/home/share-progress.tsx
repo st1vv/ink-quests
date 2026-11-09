@@ -201,7 +201,7 @@ export const ShareProgress = ({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 md:px-6">
+        <div className="min-h-0 overflow-y-auto px-5 md:px-6">
           {/* Fixed 16:9 box, the card's own shape, so nothing moves when
               the image replaces the skeleton. */}
           <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10">
@@ -209,7 +209,7 @@ export const ShareProgress = ({
               <img
                 src={image.url}
                 alt={`InkQuests progress: ${progress.streak} day streak, level ${progress.level}`}
-                className="block h-full w-full"
+                className="block w-full"
               />
             ) : (
               <Skeleton className="h-full w-full bg-white/10" />
