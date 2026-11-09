@@ -10,6 +10,7 @@ import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useCheckIn, useProgress } from "@/app/home/use-progress";
 import { checkInAbi } from "@/lib/check-in-contract";
+import { ShareProgress } from "@/app/home/share-progress";
 
 const PLACEHOLDER = "—";
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -41,6 +42,7 @@ export const HomeProgress = () => {
           <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
             Your progress
           </h2>
+          {progress && <ShareProgress progress={progress} />}
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-black/20 p-4">
