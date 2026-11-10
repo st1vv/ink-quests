@@ -20,6 +20,11 @@ import { SocialPostsService } from '../catalog/social-posts.service';
 import { utcDay } from '../quests/period';
 import { AdminGuard } from './admin.guard';
 import {
+  GROWTH_RANGES,
+  GrowthService,
+  type GrowthRange,
+} from './growth.service';
+import {
   STATS_VIEWS,
   StatisticsService,
   type StatsView,
@@ -36,6 +41,7 @@ export class AdminController {
     private readonly statistics: StatisticsService,
     private readonly posts: SocialPostsService,
     private readonly xpGrants: XpGrantsService,
+    private readonly growthCharts: GrowthService,
   ) {}
 
   // { users, usersWithXp, questsCompleted, dailyQuestsCompleted,
@@ -43,6 +49,17 @@ export class AdminController {
   @Get('stats')
   stats() {
     return this.statistics.stats();
+  }
+
+  // The growth charts: { days: { day, newUsers, referred, active, onchain }[],
+  //   totals, cohorts: { week, size, active[] }[] }. `range` (30, 90 or
+  // all) is how many days the daily series cover.
+  @Get('growth')
+  growth(@Query('range', new DefaultValuePipe('30')) range: string) {
+    if (!GROWTH_RANGES.includes(range as GrowthRange)) {
+      throw new BadRequestException('range must be 30, 90 or all');
+    }
+    return this.growthCharts.growth(range as GrowthRange);
   }
 
   // { today, posts: { day, postUrl }[] }: the posts of the day from a week

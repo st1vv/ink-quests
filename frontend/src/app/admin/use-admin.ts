@@ -180,6 +180,53 @@ export const useUserActivity = (user: string, page: number) => {
   });
 };
 
+// How many days the growth page's daily charts cover.
+export type GrowthRange = "30" | "90" | "all";
+
+// One UTC day of the growth charts.
+export type GrowthDay = {
+  // YYYY-MM-DD
+  day: string;
+  newUsers: number;
+  // Of the new users, those who came by an invite link.
+  referred: number;
+  // Users who checked in, completed a quest or finished a campaign.
+  active: number;
+  // Users with an action proven by a transaction.
+  onchain: number;
+};
+
+export type Growth = {
+  // Every day of the range, oldest first, empty days included.
+  days: GrowthDay[];
+  // All time.
+  totals: {
+    users: number;
+    referred: number;
+    xLinked: number;
+    withXp: number;
+    // Active on 2+ and on 7+ different days.
+    returned: number;
+    regulars: number;
+    onchain: number;
+  };
+  // Weekly signup cohorts (the Monday, YYYY-MM-DD), oldest first. active[k]
+  // is how many of the cohort were active k weeks after the signup week.
+  cohorts: { week: string; size: number; active: number[] }[];
+};
+
+export const useGrowth = (range: GrowthRange) => {
+  const { address } = useAuth();
+  return useQuery({
+    queryKey: ["admin", "growth", address, range],
+    queryFn: () => apiFetch<Growth>(`/admin/growth?range=${range}`),
+    enabled: Boolean(address),
+    retry: retryUnlessNotFound,
+    // The old range stays on screen while the new one loads.
+    placeholderData: (previous) => previous,
+  });
+};
+
 // XP an admin gave by hand; negative points took XP away.
 export type XpGrant = {
   id: number;

@@ -7,6 +7,7 @@ import { Campaign } from "@/app/quests/campaign";
 import { Faq } from "@/app/faq/faq";
 import { Profile } from "@/app/profile/profile";
 import { Statistics } from "@/app/admin/statistics";
+import { Growth } from "@/app/admin/growth";
 import { SocialPosts } from "@/app/admin/posts";
 import { XpGrants } from "@/app/admin/xp-grants";
 import { AdminUser } from "@/app/admin/user";
@@ -23,6 +24,7 @@ export const App = () => {
         <Route path="/faq" element={<Faq />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<Statistics />} />
+        <Route path="/admin/growth" element={<Growth />} />
         <Route path="/admin/posts" element={<SocialPosts />} />
         <Route path="/admin/xp" element={<XpGrants />} />
         <Route path="/admin/users" element={<AdminUser />} />

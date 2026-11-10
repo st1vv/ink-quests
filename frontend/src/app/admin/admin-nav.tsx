@@ -3,6 +3,7 @@ import { NavLink } from "react-router";
 const PAGES = [
   // end: only the exact path counts, so /admin isn't lit on its sub-pages.
   { to: "/admin", label: "Statistics", end: true },
+  { to: "/admin/growth", label: "Growth" },
   { to: "/admin/posts", label: "Posts" },
   { to: "/admin/xp", label: "XP" },
   // Lit on a user's page (/admin/users/0x…) too.
