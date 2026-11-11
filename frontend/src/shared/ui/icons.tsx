@@ -186,6 +186,23 @@ export const XLogoIcon = ({ className = "h-4 w-4", ...props }: IconProps) => (
   </svg>
 );
 
+// Telegram's paper plane.
+export const TelegramIcon = ({
+  className = "h-4 w-4",
+  ...props
+}: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    className={`shrink-0 ${className}`}
+    {...props}
+  >
+    <path d="M21.94 4.3 18.9 18.65c-.23 1.01-.83 1.26-1.68.79l-4.63-3.41-2.23 2.15c-.25.25-.45.45-.93.45l.33-4.71 8.58-7.75c.37-.33-.08-.52-.58-.19L7.16 12.66 2.6 11.23c-.99-.31-1.01-.99.21-1.47L20.65 2.9c.83-.31 1.55.19 1.29 1.4z" />
+  </svg>
+);
+
 export const SpinnerIcon = ({ className = "", ...props }: IconProps) => (
   <Icon className={`h-4 w-4 animate-spin ${className}`} {...props}>
     <path d="M21 12a9 9 0 1 1-6.219-8.56" />

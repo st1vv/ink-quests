@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import { XLogoIcon } from "@/shared/ui/icons";
+import { TelegramIcon, XLogoIcon } from "@/shared/ui/icons";
 
 const X_URL = "https://x.com/inkquests";
+const TELEGRAM_URL = "https://t.me/inkquests";
 
 export const LayoutFooter = () => {
   return (
@@ -22,6 +23,16 @@ export const LayoutFooter = () => {
             className="inline-flex items-center transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-light"
           >
             <XLogoIcon className="h-4 w-4" />
+          </a>
+          <a
+            href={TELEGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="InkQuests on Telegram"
+            title="InkQuests on Telegram"
+            className="inline-flex items-center transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-light"
+          >
+            <TelegramIcon className="h-4 w-4" />
           </a>
         </div>
       </div>
