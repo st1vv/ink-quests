@@ -22,6 +22,9 @@ type QuestRowProps = {
   // Defaults: "Claim N XP" / "Completed". Campaign tasks say Verify.
   claimLabel?: string;
   doneLabel?: string;
+  // The claim needs a link from the user, e.g. their post on X: a field for
+  // it shows next to Claim.
+  proof?: { placeholder: string; label: string };
 };
 
 // The main button keeps one width (about "Go to quest ↗") through Claim in Ns,
@@ -37,8 +40,10 @@ export const QuestRow = ({
   secondary,
   claimLabel,
   doneLabel = "Completed",
+  proof,
 }: QuestRowProps) => {
   const [secondsLeft, setSecondsLeft] = useState(CLAIM_DELAY_S);
+  const [proofUrl, setProofUrl] = useState("");
   const requireAuth = useRequireAuth();
   const claim = useClaimQuest();
 
@@ -133,13 +138,28 @@ export const QuestRow = ({
 
         {quest.status === "claim_ready" && secondary}
 
+        {quest.status === "claim_ready" && quest.claimable && proof && (
+          <input
+            type="url"
+            value={proofUrl}
+            onChange={(e) => setProofUrl(e.target.value)}
+            placeholder={proof.placeholder}
+            aria-label={proof.label}
+            className="w-full min-w-0 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-ink/60 focus:outline-none md:w-56"
+          />
+        )}
+
         {quest.status === "claim_ready" && quest.claimable && (
           <Button
             variant="secondary"
             onClick={requireAuth(() =>
-              claim.mutate({ questId: quest.id, title: quest.title }),
+              claim.mutate({
+                questId: quest.id,
+                title: quest.title,
+                ...(proof && { proofUrl: proofUrl.trim() }),
+              }),
             )}
-            disabled={claim.isPending}
+            disabled={claim.isPending || (proof && !proofUrl.trim())}
             className={ACTION_WIDTH}
           >
             {claim.isPending

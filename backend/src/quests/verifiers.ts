@@ -146,6 +146,16 @@ export type XPostSpec = {
   type: 'x-like-repost';
 };
 
+// Posting your progress card on X, on the given UTC days (YYYY-MM-DD)
+// only. Not part of the daily rotation: it shows on those days next to it.
+// The user pastes their post's link, which is checked against X's public
+// oEmbed (see x/share-post.ts): it must exist, be posted that day, tag
+// @inkquests and, with X linking set up, be by the user's linked account.
+export type XShareProgressSpec = {
+  type: 'x-share-progress';
+  days: string[];
+};
+
 // Having `referrer` as the wallet's referrer on a partner's referral
 // registry (its referrerOf(address)), read over RPC at claim time. Unlike
 // a transaction check it passes however long ago the user registered, so
@@ -170,6 +180,7 @@ export type VerifierSpec =
   | DailyQuestDoneSpec
   | VisitSpec
   | XPostSpec
+  | XShareProgressSpec
   | ReferrerSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
@@ -444,6 +455,8 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'visit-nado-arcade': [{ type: 'visit' }],
   'visit-inkverse': [{ type: 'visit' }],
   'x-like-repost': [{ type: 'x-like-repost' }],
+  // Add a day here to run the quest again.
+  'x-share-progress': [{ type: 'x-share-progress', days: ['2026-11-11'] }],
 
   'hold-templars-of-the-storm': [
     {
@@ -767,6 +780,7 @@ export type TaskType =
   | 'daily-quest'
   | 'visit'
   | 'x-post'
+  | 'x-share'
   | 'onchain';
 
 export const taskTypeOf = (verifier: string | null): TaskType => {
@@ -777,6 +791,7 @@ export const taskTypeOf = (verifier: string | null): TaskType => {
   if (type === 'daily-quest-done') return 'daily-quest';
   if (type === 'visit') return 'visit';
   if (type === 'x-like-repost') return 'x-post';
+  if (type === 'x-share-progress') return 'x-share';
   return 'onchain';
 };
 
@@ -799,10 +814,22 @@ export const isOffchain = (specs: VerifierSpec[]) =>
       s.type === 'x-follow' ||
       s.type === 'daily-quest-done' ||
       s.type === 'visit' ||
-      s.type === 'x-like-repost',
+      s.type === 'x-like-repost' ||
+      s.type === 'x-share-progress',
   );
 
 // The daily "like & repost the post of the day" quest, which lives outside
 // the rotation.
 export const isPostOfTheDay = (verifier: string | null) =>
   taskTypeOf(verifier) === 'x-post';
+
+// The UTC days a "share your progress" quest is on; null if it isn't one.
+export const shareDaysOf = (verifier: string | null) => {
+  const spec = verifier ? VERIFIERS[verifier]?.[0] : undefined;
+  return spec?.type === 'x-share-progress' ? spec.days : null;
+};
+
+// Daily quests outside the rotation, shown on their own days: "like &
+// repost" (days with a post) and "share your progress" (its listed days).
+export const isOutsideRotation = (verifier: string | null) =>
+  isPostOfTheDay(verifier) || shareDaysOf(verifier) !== null;

@@ -9,24 +9,31 @@ import { useCompletions } from "@/app/quests/claims";
 import { QuestRow } from "@/app/quests/quest-row";
 import { useQuestStatuses } from "@/app/quests/quest-status";
 import { connectX, useXAccount } from "@/app/x/use-x";
+import { ShareProgress } from "@/app/home/share-progress";
+import { useProgress } from "@/app/home/use-progress";
 
 export const HomeDailyQuests = () => {
   const dailyQuests = useDailyQuests();
   const completions = useCompletions();
-  const { items: quests, start } = useQuestStatuses(
-    dailyQuests.data,
-    completions.data,
-  );
+  const { data: progress } = useProgress();
   const [timeLeft, setTimeLeft] = useState("");
   const requireAuth = useRequireAuth();
   const { address } = useAuth();
   const { data: x } = useXAccount();
-  // With X linking set up, "like & repost" asks a signed-in user to link X
-  // first, like the follow tasks on the Quests page.
+  // With X linking set up, "like & repost" and "share your progress" ask a
+  // signed-in user to link X first, like the follow tasks on the Quests
+  // page.
   const xBlocker =
     address && x?.available && !x.username
       ? { label: "Connect X", onClick: connectX }
       : undefined;
+  const { items: quests, start } = useQuestStatuses(
+    dailyQuests.data,
+    completions.data,
+    // Sharing happens in the dialog next to Verify, not on another page, so
+    // once X is linked there's nothing to open first.
+    (quest) => quest.type === "x-share" && !xBlocker,
+  );
 
   const completedCount = quests.filter((q) => q.status === "completed").length;
 
@@ -113,6 +120,21 @@ export const HomeDailyQuests = () => {
               {...(quest.type === "x-post" && {
                 actionLabel: "Like & repost ↗",
                 blocker: xBlocker,
+              })}
+              {...(quest.type === "x-share" && {
+                blocker: xBlocker,
+                secondary: progress && (
+                  <ShareProgress
+                    progress={progress}
+                    label="Share on X"
+                    className="w-full px-4 py-2 text-sm md:w-auto"
+                  />
+                ),
+                proof: {
+                  placeholder: "https://x.com/you/status/…",
+                  label: "Link to your post on X",
+                },
+                claimLabel: `Verify ${quest.points} XP`,
               })}
             />
           ))}

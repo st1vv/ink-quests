@@ -1,0 +1,2 @@
+ALTER TABLE "quest_completions" ADD COLUMN "proof_url" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "quest_completions_quest_id_proof_url_index" ON "quest_completions" USING btree ("quest_id","proof_url");

@@ -226,6 +226,20 @@ const QUESTS: SeedQuest[] = [
     verifier: 'x-like-repost',
     tags: ['Social'],
   },
+  // Not in the rotation either: shown on the days listed in its verifier.
+  // The user posts their progress card and pastes the post's link to claim.
+  {
+    slug: 'daily-x-share-progress',
+    kind: 'daily',
+    title: 'Share your progress on X',
+    description:
+      'Post your InkQuests progress card on X, tagging @inkquests, then paste the link to your post.',
+    actionUrl: 'https://x.com/compose/post',
+    points: 30,
+    sortOrder: 0,
+    verifier: 'x-share-progress',
+    tags: ['Social'],
+  },
   {
     slug: 'daily-gm',
     kind: 'daily',

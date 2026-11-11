@@ -120,6 +120,13 @@
       "when": 1794134046503,
       "tag": "0016_challenge_prize_url",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794379735819,
+      "tag": "0017_completion_proof_url",
+      "breakpoints": true
     }
   ]
 }

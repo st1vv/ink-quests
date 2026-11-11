@@ -24,9 +24,18 @@ import {
   isOffchain,
   isPostOfTheDay,
   minUsdOf,
+  shareDaysOf,
   VERIFIERS,
   withMinUsd,
 } from './verifiers';
+import {
+  parsePostUrl,
+  sharePostProblem,
+  type PostEmbed,
+} from '../x/share-post';
+
+// The account a progress post must tag; the share text always does.
+const SHARE_MENTION = 'inkquests';
 
 // Explorers and Relay index a few seconds behind the chain, so a fresh
 // transaction may not be visible on the first try.
@@ -85,7 +94,13 @@ export class QuestsService {
     return rows.map((r) => r.questId);
   }
 
-  async claim(user: AuthUser, questId: number, now = new Date()) {
+  // `proofUrl` is the user's X post, for "share your progress".
+  async claim(
+    user: AuthUser,
+    questId: number,
+    { proofUrl }: { proofUrl?: string } = {},
+    now = new Date(),
+  ) {
     const [quest] = await this.db
       .select({
         id: quests.id,
@@ -105,13 +120,17 @@ export class QuestsService {
       throw new BadRequestException("This quest can't be claimed yet");
     }
     // Only the day's rotating set can be claimed, not the whole catalog. The
-    // "like & repost" quest is on whenever the day has a post.
+    // "like & repost" quest is on whenever the day has a post, "share your
+    // progress" on its own days.
     const postOfTheDay = isPostOfTheDay(quest.verifier);
+    const shareDays = shareDaysOf(quest.verifier);
     if (
       quest.kind === 'daily' &&
       !(postOfTheDay
         ? await this.socialPosts.forDay(utcDay(now))
-        : await this.schedule.isScheduled(quest.id, now))
+        : shareDays
+          ? shareDays.includes(utcDay(now))
+          : await this.schedule.isScheduled(quest.id, now))
     ) {
       throw new BadRequestException("This isn't one of today's daily quests");
     }
@@ -155,11 +174,16 @@ export class QuestsService {
     }
     // Opening a page has nothing to check.
     const visit = spec.every((s) => s.type === 'visit');
+    // The progress post is checked here, before anything onchain.
+    const share = spec.every((s) => s.type === 'x-share-progress');
+    const proof = share
+      ? await this.checkSharePost(user.id, proofUrl, windowStart)
+      : null;
 
     let result: Verification;
     try {
       result =
-        follow || dailyDone || visit
+        follow || dailyDone || visit || share
           ? { done: true, txHash: null }
           : await this.verification.verify(
               spec,
@@ -180,7 +204,16 @@ export class QuestsService {
       );
     }
 
-    // The unique index settles a race between two parallel claims.
+    // A post already used by someone else (possible only without X linking,
+    // where the author isn't checked) is turned away here; the unique index
+    // below still settles a race.
+    if (proof && (await this.proofUsed(quest.id, proof))) {
+      throw new UnprocessableEntityException(
+        'This post was already used to claim the quest',
+      );
+    }
+
+    // The unique indexes settle a race between two parallel claims.
     const [completion] = await this.db
       .insert(questCompletions)
       .values({
@@ -189,6 +222,7 @@ export class QuestsService {
         period,
         points: quest.points,
         txHash: result.txHash,
+        proofUrl: proof,
       })
       .onConflictDoNothing()
       .returning({ points: questCompletions.points });
@@ -203,6 +237,82 @@ export class QuestsService {
       points: completion.points,
       txHash: result.txHash,
     };
+  }
+
+  // The canonical link of the user's progress post, once X confirms it: it
+  // exists and is public, was posted since `since` (the quest's day), tags
+  // @inkquests and, with X linking set up, is by the user's linked account.
+  private async checkSharePost(
+    userId: number,
+    proofUrl: string | undefined,
+    since: Date,
+  ) {
+    const post = proofUrl ? parsePostUrl(proofUrl) : null;
+    if (!post) {
+      throw new BadRequestException(
+        'Paste the link to your post on X, like https://x.com/you/status/123',
+      );
+    }
+
+    const username = this.x.available
+      ? (await this.x.account(userId)).username
+      : null;
+    if (this.x.available && !username) {
+      throw new UnprocessableEntityException(
+        'Connect your X account on your profile first',
+      );
+    }
+
+    let embed: PostEmbed | null;
+    try {
+      embed = await this.x.postEmbed(post.url);
+    } catch (err) {
+      this.logger.warn(`X post check failed: ${(err as Error).message}`);
+      throw new ServiceUnavailableException(
+        "Couldn't reach X right now, try again in a moment",
+      );
+    }
+    if (!embed) {
+      throw new UnprocessableEntityException(
+        "Couldn't find this post on X. Make sure it's public and the link is right",
+      );
+    }
+
+    switch (
+      sharePostProblem(post.id, embed, {
+        username,
+        mention: SHARE_MENTION,
+        since,
+      })
+    ) {
+      case 'author':
+        throw new UnprocessableEntityException(
+          `This post isn't from your linked X account @${username}`,
+        );
+      case 'date':
+        throw new UnprocessableEntityException(
+          'This post is older than today. Share your progress again today',
+        );
+      case 'mention':
+        throw new UnprocessableEntityException(
+          `The post has to tag @${SHARE_MENTION}. Post it with the Share button, which adds the tag`,
+        );
+    }
+    return post.url;
+  }
+
+  private async proofUsed(questId: number, proofUrl: string) {
+    const [row] = await this.db
+      .select({ id: questCompletions.id })
+      .from(questCompletions)
+      .where(
+        and(
+          eq(questCompletions.questId, questId),
+          eq(questCompletions.proofUrl, proofUrl),
+        ),
+      )
+      .limit(1);
+    return Boolean(row);
   }
 
   private async hasDoneADailyQuest(userId: number) {

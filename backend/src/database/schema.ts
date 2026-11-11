@@ -287,7 +287,13 @@ export const questCompletions = pgTable(
     // Points are copied at claim time so later quest edits don't rewrite history.
     points: integer().notNull(),
     txHash: varchar({ length: 66 }),
+    // The link the user gave as proof, e.g. their X post for "share your
+    // progress"; one post counts once per quest.
+    proofUrl: text(),
     completedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex().on(t.userId, t.questId, t.period)],
+  (t) => [
+    uniqueIndex().on(t.userId, t.questId, t.period),
+    uniqueIndex().on(t.questId, t.proofUrl),
+  ],
 );

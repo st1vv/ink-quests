@@ -4,7 +4,7 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { dailyQuestSchedule, quests } from '../database/schema';
 import { utcDay } from '../quests/period';
-import { isPostOfTheDay, taskTypeOf } from '../quests/verifiers';
+import { isOutsideRotation, taskTypeOf } from '../quests/verifiers';
 import { pickDailyQuests } from './rotation';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -40,7 +40,7 @@ export class DailyScheduleService {
 
   private async create(day: string, yesterday: string) {
     // Only quests that can be claimed are worth a slot. The "like & repost"
-    // quest isn't rotated: it shows on every day that has a post.
+    // and "share your progress" quests aren't rotated (isOutsideRotation).
     const candidates = (
       await this.db
         .select({
@@ -57,7 +57,7 @@ export class DailyScheduleService {
             isNotNull(quests.verifier),
           ),
         )
-    ).filter((c) => !isPostOfTheDay(c.verifier));
+    ).filter((c) => !isOutsideRotation(c.verifier));
     const groupOf = new Map(candidates.map((c) => [c.id, c.group ?? c.slug]));
 
     const yesterdays = await this.scheduled(yesterday);

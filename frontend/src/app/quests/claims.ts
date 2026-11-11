@@ -26,10 +26,19 @@ export const useCompletions = () => {
 export const useClaimQuest = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ questId }: { questId: number; title: string }) => {
+    mutationFn: async ({
+      questId,
+      proofUrl,
+    }: {
+      questId: number;
+      title: string;
+      // The user's X post, for "share your progress".
+      proofUrl?: string;
+    }) => {
       try {
         return await apiFetch<ClaimResult>(`/quests/${questId}/claim`, {
           method: "POST",
+          ...(proofUrl && { body: JSON.stringify({ proofUrl }) }),
         });
       } catch (err) {
         // Claimed in another tab: nothing went wrong from the user's side.

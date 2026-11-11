@@ -7,9 +7,11 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { users, xOauthStates } from '../database/schema';
 import { ReferralsService } from '../referrals/referrals.service';
+import type { PostEmbed } from './share-post';
 import { xLinkingConfigured } from './x-config';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
+const OEMBED_URL = 'https://publish.x.com/oembed';
 // Enough to read the user's own id and handle; no tokens are kept.
 const SCOPES = 'users.read tweet.read';
 
@@ -69,6 +71,23 @@ export class XService {
 
   async isLinked(userId: number) {
     return (await this.account(userId)).username !== null;
+  }
+
+  // A public post's author and text from X's oEmbed, which is free and needs
+  // no app; null when X has no such public post (deleted, private, a bad
+  // id). Throws when X can't be reached.
+  async postEmbed(postUrl: string): Promise<PostEmbed | null> {
+    const params = new URLSearchParams({ url: postUrl, omit_script: '1' });
+    const res = await fetch(`${OEMBED_URL}?${params}`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (res.status === 404 || res.status === 403) return null;
+    if (!res.ok) throw new Error(`X oEmbed answered ${res.status}`);
+    const body = (await res.json()) as { author_url?: unknown; html?: unknown };
+    if (typeof body.author_url !== 'string' || typeof body.html !== 'string') {
+      throw new Error('X oEmbed answered without an author or text');
+    }
+    return { authorUrl: body.author_url, html: body.html };
   }
 
   // The X page to send the user to.

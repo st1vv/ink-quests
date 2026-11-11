@@ -65,6 +65,8 @@ export type TaskType =
   | "daily-quest"
   | "visit"
   | "x-post"
+  // Post your progress on X and paste the link to claim.
+  | "x-share"
   | "onchain";
 
 export type CampaignTask = Quest & { type: TaskType };

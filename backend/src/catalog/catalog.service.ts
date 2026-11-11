@@ -4,7 +4,12 @@ import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
 import { partners, quests } from '../database/schema';
 import { utcDay } from '../quests/period';
-import { isPostOfTheDay, taskTypeOf, tokenOf } from '../quests/verifiers';
+import {
+  isPostOfTheDay,
+  shareDaysOf,
+  taskTypeOf,
+  tokenOf,
+} from '../quests/verifiers';
 import { DailyScheduleService } from './daily-schedule.service';
 import { SocialPostsService } from './social-posts.service';
 
@@ -44,7 +49,8 @@ export class CatalogService {
 
   // Today's daily quests (a rotating set, see DailyScheduleService), in the
   // day's order, then the "like & repost" quest if today has a post, with
-  // that post as its link. Each with its `type` for the UI.
+  // that post as its link, then "share your progress" on its days. Each with
+  // its `type` for the UI.
   async dailyQuests(now = new Date()) {
     const ids = await this.schedule.questIdsFor(now);
     const rows = ids.length
@@ -55,24 +61,30 @@ export class CatalogService {
       : [];
     const rotation = ids.flatMap((id) => rows.filter((q) => q.id === id));
 
-    const postUrl = await this.socialPosts.forDay(utcDay(now));
+    const day = utcDay(now);
+    const postUrl = await this.socialPosts.forDay(day);
+    const extras = await this.db
+      .select({ ...questFields, verifier: quests.verifier })
+      .from(quests)
+      .where(and(eq(quests.kind, 'daily'), eq(quests.isActive, true)))
+      .orderBy(asc(quests.sortOrder), asc(quests.id));
     const postQuests = postUrl
-      ? (
-          await this.db
-            .select({ ...questFields, verifier: quests.verifier })
-            .from(quests)
-            .where(and(eq(quests.kind, 'daily'), eq(quests.isActive, true)))
-        )
+      ? extras
           .filter((q) => isPostOfTheDay(q.verifier))
           .map((q) => ({ ...q, actionUrl: postUrl }))
       : [];
+    const shareQuests = extras.filter((q) =>
+      shareDaysOf(q.verifier)?.includes(day),
+    );
 
-    return [...rotation, ...postQuests].map(({ verifier, ...quest }) => ({
-      ...quest,
-      type: taskTypeOf(verifier),
-      // The token's contract, for the app's copy button; null for most quests.
-      token: tokenOf(verifier),
-    }));
+    return [...rotation, ...postQuests, ...shareQuests].map(
+      ({ verifier, ...quest }) => ({
+        ...quest,
+        type: taskTypeOf(verifier),
+        // The token's contract, for the app's copy button; null for most quests.
+        token: tokenOf(verifier),
+      }),
+    );
   }
 
   // Campaigns for the Quests page: active partners with at least one active
