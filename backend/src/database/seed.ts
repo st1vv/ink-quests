@@ -176,6 +176,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'rekt-ink',
+    title: 'Rekt Ink',
+    description:
+      'Unapologetically rekt: the first animated NFT project on Ink.',
+    imageUrl: '/campaigns/rekt-ink.webp',
+    websiteUrl: 'https://www.rektink.com/',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -1002,6 +1012,41 @@ const QUESTS: SeedQuest[] = [
     points: 0,
     sortOrder: 4,
     verifier: 'merge-smolboi',
+  },
+  // Rekt Ink
+  {
+    slug: 'rekt-ink-hold-rekt-ink',
+    kind: 'partner',
+    partner: 'rekt-ink',
+    title: 'Hold a Rekt Ink NFT',
+    description: 'Hold at least one Rekt Ink NFT in your wallet.',
+    actionUrl: 'https://opensea.io/collection/rekt-ink',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-rekt-ink',
+  },
+  {
+    slug: 'rekt-ink-follow-rektink',
+    kind: 'partner',
+    partner: 'rekt-ink',
+    title: 'Follow @RektInk on X',
+    description:
+      'Follow Rekt Ink on X to keep up with announcements and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=RektInk',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-rektink',
+  },
+  {
+    slug: 'rekt-ink-complete-daily-quest',
+    kind: 'partner',
+    partner: 'rekt-ink',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
   },
 ];
 

@@ -369,6 +369,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-0x-snatch': [{ type: 'x-follow', handle: '0x_snatch' }],
   'x-follow-inkbunniesnft': [{ type: 'x-follow', handle: 'InkBunniesNFT' }],
   'x-follow-krakmask': [{ type: 'x-follow', handle: 'KrakMask' }],
+  'x-follow-rektink': [{ type: 'x-follow', handle: 'RektInk' }],
   'visit-krak-heads': [{ type: 'visit' }],
   'hold-krakmask-10k': [
     {
