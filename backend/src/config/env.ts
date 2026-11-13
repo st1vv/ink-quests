@@ -1,56 +1,77 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
-  DATABASE_URL: z.url(),
-  FRONTEND_ORIGIN: z.url(),
-  // Used to verify smart-contract wallet signatures; viem's public Ink RPC
-  // is used when unset.
-  INK_RPC_URL: z.url().optional(),
-  // Blockscout PRO API key (dev.blockscout.com), used to find the
-  // transactions that complete a quest. Without it the public Ink explorer
-  // is used, which allows only ~10 requests per IP: fine for local dev,
-  // not for production.
-  EXPLORER_API_KEY: z.string().min(1).optional(),
-  // Overrides the Blockscout API base picked from the key above.
-  EXPLORER_API_URL: z.url().optional(),
-  // Reverse proxies in front of the API (1 on Railway, 0 locally), so rate
-  // limits key on the real client IP.
-  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
-  // Relay's public API, used to verify bridges to Ink.
-  RELAY_API_URL: z.url().default('https://api.relay.link'),
-  // The paid CheckIn contract on Ink (contracts/src/CheckIn.sol). Once set,
-  // a check-in needs a paid transaction to it; without it check-ins are
-  // free, e.g. for local development.
-  CHECKIN_CONTRACT: z
-    .string()
-    .regex(/^0x[0-9a-fA-F]{40}$/, 'Not an address')
-    .optional(),
-  // Nado's archive (indexer) API, used to verify futures trades.
-  NADO_ARCHIVE_URL: z.url().default('https://api.prod.nado.xyz/archive/v1'),
-  // X (Twitter) OAuth 2.0 app from developer.x.com, for linking X accounts.
-  // Without the id, secret and redirect URI, linking is turned off.
-  X_CLIENT_ID: z.string().min(1).optional(),
-  X_CLIENT_SECRET: z.string().min(1).optional(),
-  // Must match the app's callback URL exactly, e.g.
-  // https://api.inkquests.xyz/auth/x/callback
-  X_REDIRECT_URI: z.url().optional(),
-  // Overridable so the OAuth flow can be tested against a fake X.
-  X_AUTHORIZE_URL: z.url().default('https://x.com/i/oauth2/authorize'),
-  X_API_URL: z.url().default('https://api.x.com'),
-  // Comma-separated wallets allowed to open the admin pages (/admin). Empty means
-  // nobody can.
-  ADMIN_ADDRESSES: z
-    .string()
-    .default('')
-    .transform((value) =>
-      value
-        .split(',')
-        .map((address) => address.trim().toLowerCase())
-        .filter(Boolean),
-    )
-    .pipe(z.array(z.string().regex(/^0x[0-9a-f]{40}$/, 'Not an address'))),
-});
+const envSchema = z
+  .object({
+    PORT: z.coerce.number().int().positive().default(3000),
+    DATABASE_URL: z.url(),
+    FRONTEND_ORIGIN: z.url(),
+    // Used to verify smart-contract wallet signatures; viem's public Ink RPC
+    // is used when unset.
+    INK_RPC_URL: z.url().optional(),
+    // Blockscout PRO API key (dev.blockscout.com), used to find the
+    // transactions that complete a quest. Without it the public Ink explorer
+    // is used, which allows only ~10 requests per IP: fine for local dev,
+    // not for production.
+    EXPLORER_API_KEY: z.string().min(1).optional(),
+    // Overrides the Blockscout API base picked from the key above.
+    EXPLORER_API_URL: z.url().optional(),
+    // Reverse proxies in front of the API (1 on Railway, 0 locally), so rate
+    // limits key on the real client IP.
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+    // Relay's public API, used to verify bridges to Ink.
+    RELAY_API_URL: z.url().default('https://api.relay.link'),
+    // The paid CheckIn contract on Ink (contracts/src/CheckIn.sol). Once set,
+    // a check-in needs a paid transaction to it; without it check-ins are
+    // free, e.g. for local development.
+    CHECKIN_CONTRACT: z
+      .string()
+      .regex(/^0x[0-9a-fA-F]{40}$/, 'Not an address')
+      .optional(),
+    // Nado's archive (indexer) API, used to verify futures trades.
+    NADO_ARCHIVE_URL: z.url().default('https://api.prod.nado.xyz/archive/v1'),
+    // X (Twitter) OAuth 2.0 app from developer.x.com, for linking X accounts.
+    // Without the id, secret and redirect URI, linking is turned off.
+    X_CLIENT_ID: z.string().min(1).optional(),
+    X_CLIENT_SECRET: z.string().min(1).optional(),
+    // Must match the app's callback URL exactly, e.g.
+    // https://api.inkquests.xyz/auth/x/callback
+    X_REDIRECT_URI: z.url().optional(),
+    // Overridable so the OAuth flow can be tested against a fake X.
+    X_AUTHORIZE_URL: z.url().default('https://x.com/i/oauth2/authorize'),
+    X_API_URL: z.url().default('https://api.x.com'),
+    // Telegram bot from @BotFather: links Telegram accounts, checks the
+    // "join our group" quest and answers commands (/links, /daily_quests).
+    // Without the token all of that is off.
+    TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+    // The group the quest asks to join; the bot must be an admin there.
+    TELEGRAM_CHAT_ID: z.string().min(1).default('@inkquests'),
+    // Where Telegram sends updates, e.g.
+    // https://api.inkquests.xyz/telegram/webhook. Set on startup; without it
+    // the bot gets no messages (linking and commands don't work).
+    TELEGRAM_WEBHOOK_URL: z.url().optional(),
+    // Telegram sends it back with every update, so only Telegram can call
+    // the webhook. Required with the webhook URL.
+    TELEGRAM_WEBHOOK_SECRET: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{16,256}$/, '16-256 of A-Z a-z 0-9 _ -')
+      .optional(),
+    // Comma-separated wallets allowed to open the admin pages (/admin). Empty means
+    // nobody can.
+    ADMIN_ADDRESSES: z
+      .string()
+      .default('')
+      .transform((value) =>
+        value
+          .split(',')
+          .map((address) => address.trim().toLowerCase())
+          .filter(Boolean),
+      )
+      .pipe(z.array(z.string().regex(/^0x[0-9a-f]{40}$/, 'Not an address'))),
+  })
+  .refine((env) => !env.TELEGRAM_WEBHOOK_URL || env.TELEGRAM_WEBHOOK_SECRET, {
+    message: 'TELEGRAM_WEBHOOK_SECRET is required with TELEGRAM_WEBHOOK_URL',
+    path: ['TELEGRAM_WEBHOOK_SECRET'],
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

@@ -67,6 +67,8 @@ export type TaskType =
   | "x-post"
   // Post your progress on X and paste the link to claim.
   | "x-share"
+  // Join our Telegram group, checked by the bot.
+  | "telegram-join"
   | "onchain";
 
 export type CampaignTask = Quest & { type: TaskType };

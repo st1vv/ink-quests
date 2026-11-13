@@ -13,6 +13,7 @@ import type { Address } from 'viem';
 import type { AuthUser } from '../auth/auth.service';
 import { DailyScheduleService } from '../catalog/daily-schedule.service';
 import { SocialPostsService } from '../catalog/social-posts.service';
+import { TelegramService } from '../telegram/telegram.service';
 import { XService } from '../x/x.service';
 import type { Database } from '../database/client';
 import { DB } from '../database/database.module';
@@ -24,7 +25,7 @@ import {
   isOffchain,
   isPostOfTheDay,
   minUsdOf,
-  shareDaysOf,
+  questDaysOf,
   VERIFIERS,
   withMinUsd,
 } from './verifiers';
@@ -76,6 +77,7 @@ export class QuestsService {
     private readonly schedule: DailyScheduleService,
     private readonly socialPosts: SocialPostsService,
     private readonly x: XService,
+    private readonly telegram: TelegramService,
     private readonly referrals: ReferralsService,
   ) {}
 
@@ -123,13 +125,13 @@ export class QuestsService {
     // "like & repost" quest is on whenever the day has a post, "share your
     // progress" on its own days.
     const postOfTheDay = isPostOfTheDay(quest.verifier);
-    const shareDays = shareDaysOf(quest.verifier);
+    const ownDays = questDaysOf(quest.verifier);
     if (
       quest.kind === 'daily' &&
       !(postOfTheDay
         ? await this.socialPosts.forDay(utcDay(now))
-        : shareDays
-          ? shareDays.includes(utcDay(now))
+        : ownDays
+          ? ownDays.includes(utcDay(now))
           : await this.schedule.isScheduled(quest.id, now))
     ) {
       throw new BadRequestException("This isn't one of today's daily quests");
@@ -176,6 +178,9 @@ export class QuestsService {
     const visit = spec.every((s) => s.type === 'visit');
     // The progress post is checked here, before anything onchain.
     const share = spec.every((s) => s.type === 'x-share-progress');
+    // Asked of the Telegram bot, before anything onchain.
+    const telegramJoin = spec.every((s) => s.type === 'telegram-member');
+    if (telegramJoin) await this.checkTelegramMember(user.id);
     const proof = share
       ? await this.checkSharePost(user.id, proofUrl, windowStart)
       : null;
@@ -183,7 +188,7 @@ export class QuestsService {
     let result: Verification;
     try {
       result =
-        follow || dailyDone || visit || share
+        follow || dailyDone || visit || share || telegramJoin
           ? { done: true, txHash: null }
           : await this.verification.verify(
               spec,
@@ -299,6 +304,35 @@ export class QuestsService {
         );
     }
     return post.url;
+  }
+
+  // Throws unless the user's linked Telegram account is in our group.
+  private async checkTelegramMember(userId: number) {
+    if (!this.telegram.available) {
+      throw new ServiceUnavailableException(
+        "Telegram quests aren't available right now",
+      );
+    }
+    const telegramId = await this.telegram.telegramIdOf(userId);
+    if (!telegramId) {
+      throw new UnprocessableEntityException(
+        'Connect your Telegram account first',
+      );
+    }
+    let member: boolean;
+    try {
+      member = await this.telegram.isMember(telegramId);
+    } catch (err) {
+      this.logger.warn(`Telegram check failed: ${(err as Error).message}`);
+      throw new ServiceUnavailableException(
+        "Couldn't reach Telegram right now, try again in a moment",
+      );
+    }
+    if (!member) {
+      throw new UnprocessableEntityException(
+        "You're not in the InkQuests Telegram group yet. Join it, then try again",
+      );
+    }
   }
 
   private async proofUsed(questId: number, proofUrl: string) {

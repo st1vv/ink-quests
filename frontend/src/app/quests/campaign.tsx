@@ -25,6 +25,10 @@ import { QuestRow } from "@/app/quests/quest-row";
 import { NotFound } from "@/app/not-found/not-found";
 import { useQuestStatuses } from "@/app/quests/quest-status";
 import { connectX, useXAccount } from "@/app/x/use-x";
+import {
+  useConnectTelegram,
+  useTelegramAccount,
+} from "@/app/telegram/use-telegram";
 
 const secondaryLink =
   "inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 md:w-auto";
@@ -84,6 +88,8 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
   const completions = useCompletions();
   const { address } = useAuth();
   const { data: x } = useXAccount();
+  const { data: telegram } = useTelegramAccount();
+  const connectTelegram = useConnectTelegram();
   const requireAuth = useRequireAuth();
   const { items, start } = useQuestStatuses(
     campaign.quests,
@@ -108,6 +114,16 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
   const xBlocker =
     address && x?.available && !x.username
       ? { label: "Connect X", onClick: connectX }
+      : undefined;
+  // The Telegram task is checked with the bot, which needs to know who the
+  // user is on Telegram.
+  const telegramBlocker =
+    address && telegram?.available && !telegram.linked
+      ? {
+          label: connectTelegram.pending ? "Opening…" : "Connect Telegram",
+          onClick: () => void connectTelegram.connect(),
+          disabled: connectTelegram.pending,
+        }
       : undefined;
 
   return (
@@ -175,6 +191,7 @@ const CampaignView = ({ campaign }: { campaign: CampaignData }) => {
                 step={i + 1}
                 onStart={requireAuth(start)}
                 xBlocker={xBlocker}
+                telegramBlocker={telegramBlocker}
               />
             ))}
           </div>
@@ -225,16 +242,32 @@ type CampaignTaskRowProps = {
   task: Parameters<typeof QuestRow>[0]["quest"] & CampaignTask;
   step: number;
   onStart: (questId: number, actionUrl: string) => void;
-  xBlocker?: { label: string; onClick: () => void; disabled?: boolean };
+  xBlocker?: Blocker;
+  telegramBlocker?: Blocker;
 };
+
+type Blocker = { label: string; onClick: () => void; disabled?: boolean };
 
 const CampaignTaskRow = ({
   task,
   step,
   onStart,
   xBlocker,
+  telegramBlocker,
 }: CampaignTaskRowProps) => {
   switch (task.type) {
+    case "telegram-join":
+      return (
+        <QuestRow
+          quest={task}
+          claimLabel="Verify"
+          doneLabel="Verified"
+          marker={step}
+          actionLabel="Join ↗"
+          onStart={onStart}
+          blocker={telegramBlocker}
+        />
+      );
     case "x-follow":
       return (
         <QuestRow
@@ -324,7 +357,7 @@ const VisitTaskRow = ({
   task,
   step,
   onStart,
-}: Omit<CampaignTaskRowProps, "xBlocker">) => {
+}: Omit<CampaignTaskRowProps, "xBlocker" | "telegramBlocker">) => {
   const requireAuth = useRequireAuth();
   const claim = useClaimQuest();
 

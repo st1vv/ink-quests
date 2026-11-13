@@ -9,7 +9,8 @@ import { SocialPostsService } from './social-posts.service';
   controllers: [CatalogController],
   providers: [CatalogService, DailyScheduleService, SocialPostsService],
   // Claims check that a daily quest is on today's schedule (or, for the
-  // "like & repost" quest, that today has a post); admins set the posts.
-  exports: [DailyScheduleService, SocialPostsService],
+  // "like & repost" quest, that today has a post); admins set the posts;
+  // the Telegram bot lists today's quests.
+  exports: [CatalogService, DailyScheduleService, SocialPostsService],
 })
 export class CatalogModule {}

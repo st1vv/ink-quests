@@ -11,6 +11,10 @@ import { useQuestStatuses } from "@/app/quests/quest-status";
 import { connectX, useXAccount } from "@/app/x/use-x";
 import { ShareProgress } from "@/app/home/share-progress";
 import { useProgress } from "@/app/home/use-progress";
+import {
+  useConnectTelegram,
+  useTelegramAccount,
+} from "@/app/telegram/use-telegram";
 
 export const HomeDailyQuests = () => {
   const dailyQuests = useDailyQuests();
@@ -26,6 +30,18 @@ export const HomeDailyQuests = () => {
   const xBlocker =
     address && x?.available && !x.username
       ? { label: "Connect X", onClick: connectX }
+      : undefined;
+  const { data: telegram } = useTelegramAccount();
+  const connectTelegram = useConnectTelegram();
+  // The Telegram quest is checked with the bot, which needs to know who the
+  // user is on Telegram.
+  const telegramBlocker =
+    address && telegram?.available && !telegram.linked
+      ? {
+          label: connectTelegram.pending ? "Opening…" : "Connect Telegram",
+          onClick: () => void connectTelegram.connect(),
+          disabled: connectTelegram.pending,
+        }
       : undefined;
   const { items: quests, start } = useQuestStatuses(
     dailyQuests.data,
@@ -120,6 +136,10 @@ export const HomeDailyQuests = () => {
               {...(quest.type === "x-post" && {
                 actionLabel: "Like & repost ↗",
                 blocker: xBlocker,
+              })}
+              {...(quest.type === "telegram-join" && {
+                actionLabel: "Join ↗",
+                blocker: telegramBlocker,
               })}
               {...(quest.type === "x-share" && {
                 blocker: xBlocker,

@@ -166,6 +166,15 @@ export type ReferrerSpec = {
   referrer: Address;
 };
 
+// Being in our Telegram group (TELEGRAM_CHAT_ID) right now, asked of the
+// bot at claim time. Needs a linked Telegram account. As a daily quest it
+// lists its UTC days (YYYY-MM-DD) and stays out of the rotation, like
+// "share your progress"; a campaign task has none.
+export type TelegramMemberSpec = {
+  type: 'telegram-member';
+  days?: string[];
+};
+
 export type VerifierSpec =
   | ContractCallSpec
   | NftHolderSpec
@@ -181,6 +190,7 @@ export type VerifierSpec =
   | VisitSpec
   | XPostSpec
   | XShareProgressSpec
+  | TelegramMemberSpec
   | ReferrerSpec;
 
 // USD price of an asset, scaled by 1e8 (the Aave oracle's base unit).
@@ -370,6 +380,9 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-inkbunniesnft': [{ type: 'x-follow', handle: 'InkBunniesNFT' }],
   'x-follow-krakmask': [{ type: 'x-follow', handle: 'KrakMask' }],
   'x-follow-rektink': [{ type: 'x-follow', handle: 'RektInk' }],
+  'telegram-join-inkquests': [{ type: 'telegram-member' }],
+  // The daily version; add a day here to run it again.
+  'telegram-join-daily': [{ type: 'telegram-member', days: ['2026-11-13'] }],
   'visit-krak-heads': [{ type: 'visit' }],
   'hold-krakmask-10k': [
     {
@@ -782,6 +795,7 @@ export type TaskType =
   | 'visit'
   | 'x-post'
   | 'x-share'
+  | 'telegram-join'
   | 'onchain';
 
 export const taskTypeOf = (verifier: string | null): TaskType => {
@@ -793,6 +807,7 @@ export const taskTypeOf = (verifier: string | null): TaskType => {
   if (type === 'visit') return 'visit';
   if (type === 'x-like-repost') return 'x-post';
   if (type === 'x-share-progress') return 'x-share';
+  if (type === 'telegram-member') return 'telegram-join';
   return 'onchain';
 };
 
@@ -816,7 +831,8 @@ export const isOffchain = (specs: VerifierSpec[]) =>
       s.type === 'daily-quest-done' ||
       s.type === 'visit' ||
       s.type === 'x-like-repost' ||
-      s.type === 'x-share-progress',
+      s.type === 'x-share-progress' ||
+      s.type === 'telegram-member',
   );
 
 // The daily "like & repost the post of the day" quest, which lives outside
@@ -824,13 +840,14 @@ export const isOffchain = (specs: VerifierSpec[]) =>
 export const isPostOfTheDay = (verifier: string | null) =>
   taskTypeOf(verifier) === 'x-post';
 
-// The UTC days a "share your progress" quest is on; null if it isn't one.
-export const shareDaysOf = (verifier: string | null) => {
+// The UTC days a daily quest with its own days ("share your progress",
+// the daily Telegram join) is on; null for every other quest.
+export const questDaysOf = (verifier: string | null) => {
   const spec = verifier ? VERIFIERS[verifier]?.[0] : undefined;
-  return spec?.type === 'x-share-progress' ? spec.days : null;
+  return spec && 'days' in spec && spec.days ? spec.days : null;
 };
 
 // Daily quests outside the rotation, shown on their own days: "like &
-// repost" (days with a post) and "share your progress" (its listed days).
+// repost" (days with a post) and those that list their days.
 export const isOutsideRotation = (verifier: string | null) =>
-  isPostOfTheDay(verifier) || shareDaysOf(verifier) !== null;
+  isPostOfTheDay(verifier) || questDaysOf(verifier) !== null;

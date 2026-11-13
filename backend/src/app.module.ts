@@ -11,6 +11,7 @@ import { ProgressModule } from './progress/progress.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { AdminModule } from './admin/admin.module';
 import { XModule } from './x/x.module';
+import { TelegramModule } from './telegram/telegram.module';
 import { QuestsModule } from './quests/quests.module';
 import { validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
@@ -30,6 +31,7 @@ import { HealthController } from './health/health.controller';
     ProfileModule,
     ReferralsModule,
     XModule,
+    TelegramModule,
     CampaignsModule,
     AdminModule,
   ],

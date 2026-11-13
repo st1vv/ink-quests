@@ -61,7 +61,7 @@ const PARTNERS: SeedPartner[] = [
     slug: 'inkquests',
     title: 'InkQuests',
     description:
-      'Get started with InkQuests: follow us on X and complete your first daily quest.',
+      'Get started with InkQuests: follow us on X, join our Telegram and complete your first daily quest.',
     imageUrl: '/campaigns/inkquests.webp',
     websiteUrl: 'https://inkquests.xyz',
     rewardXp: 100,
@@ -248,6 +248,20 @@ const QUESTS: SeedQuest[] = [
     points: 30,
     sortOrder: 0,
     verifier: 'x-share-progress',
+    tags: ['Social'],
+  },
+  // Also on the days listed in its verifier. Checked with the Telegram bot,
+  // so it needs a linked Telegram account.
+  {
+    slug: 'daily-telegram-join',
+    kind: 'daily',
+    title: 'Join our Telegram group',
+    description:
+      'Join the InkQuests group on Telegram to chat with the community and get news first.',
+    actionUrl: 'https://t.me/inkquests',
+    points: 30,
+    sortOrder: 0,
+    verifier: 'telegram-join-daily',
     tags: ['Social'],
   },
   {
@@ -533,6 +547,18 @@ const QUESTS: SeedQuest[] = [
     verifier: 'x-follow-inkquests',
   },
   {
+    slug: 'inkquests-join-telegram',
+    kind: 'partner',
+    partner: 'inkquests',
+    title: 'Join our Telegram group',
+    description:
+      'Join the InkQuests group on Telegram to chat with the community and get news first.',
+    actionUrl: 'https://t.me/inkquests',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'telegram-join-inkquests',
+  },
+  {
     slug: 'inkquests-complete-daily-quest',
     kind: 'partner',
     partner: 'inkquests',
@@ -540,7 +566,7 @@ const QUESTS: SeedQuest[] = [
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
     points: 0,
-    sortOrder: 3,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
   // Ink Hornet

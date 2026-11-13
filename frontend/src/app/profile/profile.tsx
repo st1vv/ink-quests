@@ -15,6 +15,7 @@ import {
   CloseIcon,
   ExternalLinkIcon,
   PencilIcon,
+  TelegramIcon,
   WalletIcon,
   XLogoIcon,
 } from "@/shared/ui/icons";
@@ -28,6 +29,10 @@ import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { toast } from "@/lib/notify";
 import { useAuth } from "@/app/auth/use-auth";
 import { connectX, useXAccount, useXLinkResult } from "@/app/x/use-x";
+import {
+  useConnectTelegram,
+  useTelegramAccount,
+} from "@/app/telegram/use-telegram";
 import { useProgress } from "@/app/home/use-progress";
 import { useMyRank } from "@/app/leaderboard/use-leaderboard";
 import {
@@ -90,6 +95,7 @@ const SignedInProfile = ({ address }: { address: Address }) => {
   const { data: rank, isPending: rankPending } = useMyRank();
   const { data: stats, isPending: statsPending } = useProfileStats();
   const { data: x } = useXAccount();
+  const { data: telegram } = useTelegramAccount();
   // The name being typed; null when not editing.
   const [draft, setDraft] = useState<string | null>(null);
   const name = stats?.displayName;
@@ -174,6 +180,9 @@ const SignedInProfile = ({ address }: { address: Address }) => {
 
       {/* Only once X linking is set up on the backend (X_CLIENT_* env). */}
       {x?.available && <XAccountCard />}
+
+      {/* Only once the bot is set up (TELEGRAM_BOT_TOKEN). */}
+      {telegram?.available && <TelegramAccountCard />}
 
       <ReferralCard />
 
@@ -355,6 +364,58 @@ const XAccountCard = () => {
           >
             {x && !x.available ? "Coming soon" : "Connect"}
             <XLogoIcon className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </Surface>
+  );
+};
+
+const TelegramAccountCard = () => {
+  const { data: telegram } = useTelegramAccount();
+  const { connect, pending } = useConnectTelegram();
+
+  return (
+    <Surface>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 flex-1 items-center gap-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/5 text-white">
+            <TelegramIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 max-w-2xl">
+            <h2 className="text-lg font-semibold tracking-tight text-white md:text-xl">
+              {telegram?.linked ? "Telegram connected" : "Connect Telegram"}
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-white/60">
+              {telegram?.linked
+                ? "Telegram quests are open to you."
+                : "Needed for Telegram quests. Our bot opens in Telegram: press Start there and come back. One Telegram account per wallet."}
+            </p>
+          </div>
+        </div>
+
+        {telegram?.linked ? (
+          telegram.username ? (
+            <a
+              href={`https://t.me/${telegram.username}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 px-4 py-2 font-mono text-sm text-white transition hover:bg-white/10"
+            >
+              @{telegram.username}
+              <ExternalLinkIcon className="h-3.5 w-3.5 text-white/50" />
+            </a>
+          ) : (
+            <Badge className="shrink-0 px-3 py-1.5">Connected</Badge>
+          )
+        ) : (
+          <Button
+            onClick={() => void connect()}
+            disabled={pending}
+            className="w-full shrink-0 md:w-auto"
+          >
+            {pending ? "Opening…" : "Connect"}
+            <TelegramIcon className="h-4 w-4" />
           </Button>
         )}
       </div>

@@ -37,6 +37,12 @@ export const users = pgTable(
     xUserId: varchar({ length: 32 }).unique(),
     xUsername: varchar({ length: 32 }),
     xLinkedAt: timestamp({ withTimezone: true }),
+    // The linked Telegram account, for the "join our group" quest. One per
+    // wallet (unique), like X.
+    telegramUserId: varchar({ length: 32 }).unique(),
+    // Null when the Telegram account has no public username.
+    telegramUsername: varchar({ length: 32 }),
+    telegramLinkedAt: timestamp({ withTimezone: true }),
     // Shown instead of the address on the leaderboard; null shows the address.
     displayName: varchar({ length: 20 }),
   },
@@ -56,6 +62,17 @@ export const xOauthStates = pgTable('x_oauth_states', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   codeVerifier: varchar({ length: 128 }).notNull(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+});
+
+// In-flight Telegram links: the token rides in the bot's /start deep link
+// and names the wallet to link when the bot receives it. Single use,
+// short-lived.
+export const telegramLinkTokens = pgTable('telegram_link_tokens', {
+  token: varchar({ length: 64 }).primaryKey(),
+  userId: integer()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   expiresAt: timestamp({ withTimezone: true }).notNull(),
 });
 

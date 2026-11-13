@@ -6,7 +6,7 @@ import { partners, quests } from '../database/schema';
 import { utcDay } from '../quests/period';
 import {
   isPostOfTheDay,
-  shareDaysOf,
+  questDaysOf,
   taskTypeOf,
   tokenOf,
 } from '../quests/verifiers';
@@ -49,8 +49,8 @@ export class CatalogService {
 
   // Today's daily quests (a rotating set, see DailyScheduleService), in the
   // day's order, then the "like & repost" quest if today has a post, with
-  // that post as its link, then "share your progress" on its days. Each with
-  // its `type` for the UI.
+  // that post as its link, then the quests that list their days (e.g.
+  // "share your progress"). Each with its `type` for the UI.
   async dailyQuests(now = new Date()) {
     const ids = await this.schedule.questIdsFor(now);
     const rows = ids.length
@@ -73,11 +73,11 @@ export class CatalogService {
           .filter((q) => isPostOfTheDay(q.verifier))
           .map((q) => ({ ...q, actionUrl: postUrl }))
       : [];
-    const shareQuests = extras.filter((q) =>
-      shareDaysOf(q.verifier)?.includes(day),
+    const datedQuests = extras.filter((q) =>
+      questDaysOf(q.verifier)?.includes(day),
     );
 
-    return [...rotation, ...postQuests, ...shareQuests].map(
+    return [...rotation, ...postQuests, ...datedQuests].map(
       ({ verifier, ...quest }) => ({
         ...quest,
         type: taskTypeOf(verifier),

@@ -67,11 +67,12 @@ type RankedRow = {
 export class LeaderboardService {
   constructor(@Inject(DB) private readonly db: Database) {}
 
-  async top() {
+  // The first `limit` places (the whole board by default).
+  async top(limit = LEADERBOARD_SIZE) {
     const { rows } = await this.db.execute<RankedRow>(sql`
       select * from (${rankedUsers}) r
       order by r.rank, r.user_id
-      limit ${LEADERBOARD_SIZE}
+      limit ${limit}
     `);
     return rows.map((r) => ({
       rank: r.rank,

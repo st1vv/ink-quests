@@ -9,5 +9,7 @@ import { LeaderboardService } from './leaderboard.service';
   imports: [AuthModule],
   controllers: [LeaderboardController],
   providers: [LeaderboardService, ChallengeService],
+  // The Telegram bot posts the top of the board.
+  exports: [LeaderboardService],
 })
 export class LeaderboardModule {}
