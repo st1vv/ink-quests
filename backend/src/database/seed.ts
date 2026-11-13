@@ -177,6 +177,16 @@ const PARTNERS: SeedPartner[] = [
     tags: ['NFT'],
   },
   {
+    slug: 'beast',
+    title: 'Beast',
+    description:
+      "Kraken's friendly purple plushie, now a community meme token on Ink, with Ink-exclusive tools, Beast Cinema and Beast Photography.",
+    imageUrl: '/campaigns/beast.webp',
+    websiteUrl: 'https://www.beastmeme.ink/',
+    rewardXp: 100,
+    tags: ['Token'],
+  },
+  {
     slug: 'rekt-ink',
     title: 'Rekt Ink',
     description:
@@ -1038,6 +1048,41 @@ const QUESTS: SeedQuest[] = [
     points: 0,
     sortOrder: 4,
     verifier: 'merge-smolboi',
+  },
+  // Beast
+  {
+    slug: 'beast-follow-beastthemascot',
+    kind: 'partner',
+    partner: 'beast',
+    title: 'Follow @BeastTheMascot on X',
+    description: 'Follow Beast on X for the memes and community news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=BeastTheMascot',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'x-follow-beastthemascot',
+  },
+  {
+    slug: 'beast-hold-5k-beast',
+    kind: 'partner',
+    partner: 'beast',
+    title: 'Hold 5,000 BEAST',
+    description: 'Hold at least 5,000 BEAST tokens in your wallet.',
+    actionUrl:
+      'https://inkypump.com/ink/trade/0xD95B9A5Fa7C2708fD4FE0E07E59bDE1Ef35b194a',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'hold-beast-5k',
+  },
+  {
+    slug: 'beast-complete-daily-quest',
+    kind: 'partner',
+    partner: 'beast',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'any-daily-quest',
   },
   // Rekt Ink
   {

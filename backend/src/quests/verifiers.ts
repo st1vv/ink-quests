@@ -380,6 +380,15 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-inkbunniesnft': [{ type: 'x-follow', handle: 'InkBunniesNFT' }],
   'x-follow-krakmask': [{ type: 'x-follow', handle: 'KrakMask' }],
   'x-follow-rektink': [{ type: 'x-follow', handle: 'RektInk' }],
+  'x-follow-beastthemascot': [{ type: 'x-follow', handle: 'BeastTheMascot' }],
+  'hold-beast-5k': [
+    {
+      type: 'token-holder',
+      token: '0xD95B9A5Fa7C2708fD4FE0E07E59bDE1Ef35b194a', // BEAST
+      decimals: 18,
+      minBalance: 5_000,
+    },
+  ],
   'telegram-join-inkquests': [{ type: 'telegram-member' }],
   // The daily version; add a day here to run it again.
   'telegram-join-daily': [{ type: 'telegram-member', days: ['2026-11-13'] }],
