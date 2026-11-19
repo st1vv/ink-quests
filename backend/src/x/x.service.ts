@@ -30,6 +30,12 @@ export class XLinkFailure extends Error {
   }
 }
 
+// What X said went wrong, for the logs: its error body (e.g. title
+// "Client Forbidden", reason "client-not-enrolled"), cut short. Never
+// holds a token: those only come in successful answers.
+const xErrorText = (body: unknown) =>
+  body ? JSON.stringify(body).slice(0, 500) : '(no body)';
+
 const base64url = (buf: Buffer) => buf.toString('base64url');
 
 const isUniqueViolation = (err: unknown) =>
@@ -163,7 +169,9 @@ export class XService {
       access_token?: string;
     } | null;
     if (!res.ok || !body?.access_token) {
-      this.logger.warn(`X token exchange failed: ${res.status}`);
+      this.logger.warn(
+        `X token exchange failed: ${res.status} ${xErrorText(body)}`,
+      );
       throw new XLinkFailure('failed');
     }
     return body.access_token;
@@ -180,7 +188,7 @@ export class XService {
     const id = body?.data?.id;
     const username = body?.data?.username;
     if (!res.ok || !id || !username) {
-      this.logger.warn(`X users/me failed: ${res.status}`);
+      this.logger.warn(`X users/me failed: ${res.status} ${xErrorText(body)}`);
       throw new XLinkFailure('failed');
     }
     return { id, username };

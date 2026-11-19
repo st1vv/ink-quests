@@ -31,6 +31,7 @@ import {
 import { levelProgress } from './level';
 import { currentStreak } from './streak';
 import { completesWeek, utcWeekDays } from './week';
+import { errorText } from '../common/error-text';
 
 export const CHECK_IN_XP = 10;
 // Extra XP for checking in every day from Monday to Sunday.
@@ -193,7 +194,7 @@ export class ProgressService {
       );
     } catch (err) {
       if (err instanceof UnprocessableEntityException) throw err;
-      this.logger.warn(`Check-in read failed: ${(err as Error).message}`);
+      this.logger.warn(`Check-in read failed: ${errorText(err)}`);
       throw new ServiceUnavailableException(
         "Couldn't check the chain right now, try again in a moment",
       );
@@ -221,7 +222,7 @@ export class ProgressService {
         ? txHash
         : null;
     } catch (err) {
-      this.logger.warn(`Check-in receipt failed: ${(err as Error).message}`);
+      this.logger.warn(`Check-in receipt failed: ${errorText(err)}`);
       return null;
     }
   }

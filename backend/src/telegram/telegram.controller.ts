@@ -16,6 +16,7 @@ import type { AuthUser } from '../auth/auth.service';
 import type { TelegramUpdate } from './telegram.api';
 import { TelegramBotService } from './telegram-bot.service';
 import { TelegramService } from './telegram.service';
+import { errorText } from '../common/error-text';
 
 @Controller()
 export class TelegramController {
@@ -48,7 +49,7 @@ export class TelegramController {
     try {
       return { url: await this.telegram.linkUrl(user.id) };
     } catch (err) {
-      this.logger.warn(`Telegram link failed: ${(err as Error).message}`);
+      this.logger.warn(`Telegram link failed: ${errorText(err)}`);
       throw new ServiceUnavailableException(
         "Couldn't reach Telegram right now, try again in a moment",
       );
@@ -69,7 +70,7 @@ export class TelegramController {
     try {
       await this.bot.handle(update);
     } catch (err) {
-      this.logger.warn(`Telegram update failed: ${(err as Error).message}`);
+      this.logger.warn(`Telegram update failed: ${errorText(err)}`);
     }
     return {};
   }

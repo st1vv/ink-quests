@@ -17,6 +17,7 @@ import {
 } from './bot-messages';
 import { TelegramApi, type TelegramUpdate } from './telegram.api';
 import { TelegramLinkFailure, TelegramService } from './telegram.service';
+import { errorText } from '../common/error-text';
 
 // How many places /leaderboard shows.
 const TOP_PLAYERS = 10;
@@ -66,7 +67,7 @@ export class TelegramBotService implements OnApplicationBootstrap {
       });
       await this.api.call('setMyCommands', { commands: BOT_COMMANDS });
     } catch (err) {
-      this.logger.warn(`Telegram setup failed: ${(err as Error).message}`);
+      this.logger.warn(`Telegram setup failed: ${errorText(err)}`);
     }
   }
 

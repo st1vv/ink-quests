@@ -34,6 +34,7 @@ import {
   sharePostProblem,
   type PostEmbed,
 } from '../x/share-post';
+import { errorText } from '../common/error-text';
 
 // The account a progress post must tag; the share text always does.
 const SHARE_MENTION = 'inkquests';
@@ -197,7 +198,7 @@ export class QuestsService {
               now,
             );
     } catch (err) {
-      this.logger.warn(`Quest check failed: ${(err as Error).message}`);
+      this.logger.warn(`Quest check failed: ${errorText(err)}`);
       throw new ServiceUnavailableException(
         "Couldn't check the chain right now, try again in a moment",
       );
@@ -272,7 +273,7 @@ export class QuestsService {
     try {
       embed = await this.x.postEmbed(post.url);
     } catch (err) {
-      this.logger.warn(`X post check failed: ${(err as Error).message}`);
+      this.logger.warn(`X post check failed: ${errorText(err)}`);
       throw new ServiceUnavailableException(
         "Couldn't reach X right now, try again in a moment",
       );
@@ -323,7 +324,7 @@ export class QuestsService {
     try {
       member = await this.telegram.isMember(telegramId);
     } catch (err) {
-      this.logger.warn(`Telegram check failed: ${(err as Error).message}`);
+      this.logger.warn(`Telegram check failed: ${errorText(err)}`);
       throw new ServiceUnavailableException(
         "Couldn't reach Telegram right now, try again in a moment",
       );
