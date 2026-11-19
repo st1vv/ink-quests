@@ -479,7 +479,9 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'visit-inkverse': [{ type: 'visit' }],
   'x-like-repost': [{ type: 'x-like-repost' }],
   // Add a day here to run the quest again.
-  'x-share-progress': [{ type: 'x-share-progress', days: ['2026-11-11'] }],
+  'x-share-progress': [
+    { type: 'x-share-progress', days: ['2026-11-11', '2026-11-19'] },
+  ],
 
   'hold-templars-of-the-storm': [
     {
