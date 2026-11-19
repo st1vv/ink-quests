@@ -64,118 +64,146 @@ export const QuestRow = ({
   }, [quest.status]);
 
   const isCompleted = quest.status === "completed";
+  // A quest that needs a link gets its own row for it, under the text, so
+  // the action column keeps a single button.
+  const proofRow = Boolean(
+    proof && quest.status === "claim_ready" && quest.claimable,
+  );
+
+  const submitClaim = requireAuth(() =>
+    claim.mutate({
+      questId: quest.id,
+      title: quest.title,
+      ...(proof && { proofUrl: proofUrl.trim() }),
+    }),
+  );
+
+  const claimButton = (
+    <Button
+      type={proof ? "submit" : "button"}
+      variant="secondary"
+      onClick={proof ? undefined : submitClaim}
+      disabled={claim.isPending || Boolean(proof && !proofUrl.trim())}
+      className={ACTION_WIDTH}
+    >
+      {claim.isPending
+        ? "Checking…"
+        : (claimLabel ?? `Claim ${quest.points} XP`)}
+    </Button>
+  );
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-3xl border p-4 transition md:flex-row md:items-center md:justify-between ${
+      className={`flex flex-col gap-4 rounded-3xl border p-4 transition ${
         isCompleted
           ? "border-emerald-400/20 bg-emerald-400/5"
           : "border-white/10 bg-black/20 hover:border-white/20"
       }`}
     >
-      <div className="flex min-w-0 gap-4">
-        <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-            isCompleted
-              ? "bg-emerald-400/15 text-emerald-300"
-              : "bg-white/5 text-white/60"
-          }`}
-        >
-          {isCompleted ? <CheckIcon /> : marker}
-        </span>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 gap-4">
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+              isCompleted
+                ? "bg-emerald-400/15 text-emerald-300"
+                : "bg-white/5 text-white/60"
+            }`}
+          >
+            {isCompleted ? <CheckIcon /> : marker}
+          </span>
 
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="text-base font-semibold text-white md:text-lg">
-              {quest.title}
-            </h3>
-            {quest.token && <CopyContract address={quest.token} />}
-            {quest.points > 0 && (
-              <Badge className="px-2 py-0.5 text-xs">+{quest.points} XP</Badge>
-            )}
-            {quest.optional && (
-              <Badge variant="neutral" className="px-2 py-0.5 text-xs">
-                Optional
-              </Badge>
-            )}
-            {/* Only daily quests have tags; campaign tasks have none. */}
-            <TagBadges tags={quest.tags} />
-          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="text-base font-semibold text-white md:text-lg">
+                {quest.title}
+              </h3>
+              {quest.token && <CopyContract address={quest.token} />}
+              {quest.points > 0 && (
+                <Badge className="px-2 py-0.5 text-xs">
+                  +{quest.points} XP
+                </Badge>
+              )}
+              {quest.optional && (
+                <Badge variant="neutral" className="px-2 py-0.5 text-xs">
+                  Optional
+                </Badge>
+              )}
+              {/* Only daily quests have tags; campaign tasks have none. */}
+              <TagBadges tags={quest.tags} />
+            </div>
 
-          {/* break-words: long unbroken text (a wallet address) wraps
+            {/* break-words: long unbroken text (a wallet address) wraps
               instead of running out of the card. */}
-          <p className="mt-1 text-sm leading-6 break-words text-white/60">
-            {quest.description}
-          </p>
+            <p className="mt-1 text-sm leading-6 break-words text-white/60">
+              {quest.description}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center">
+          {quest.status === "idle" && blocker && (
+            <Button
+              onClick={blocker.onClick}
+              disabled={blocker.disabled}
+              className={ACTION_WIDTH}
+            >
+              {blocker.label}
+            </Button>
+          )}
+
+          {quest.status === "idle" && !blocker && (
+            <Button
+              onClick={() => onStart(quest.id, quest.actionUrl)}
+              className={ACTION_WIDTH}
+            >
+              {actionLabel}
+            </Button>
+          )}
+
+          {quest.status === "started" && (
+            <Button disabled className={`${ACTION_WIDTH} tabular-nums`}>
+              {claimLabel ?? "Claim"} in {secondsLeft}s
+            </Button>
+          )}
+
+          {quest.status === "claim_ready" && secondary}
+
+          {quest.status === "claim_ready" &&
+            quest.claimable &&
+            !proofRow &&
+            claimButton}
+
+          {isCompleted && (
+            <span
+              className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
+            >
+              {doneLabel}
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center">
-        {quest.status === "idle" && blocker && (
-          <Button
-            onClick={blocker.onClick}
-            disabled={blocker.disabled}
-            className={ACTION_WIDTH}
-          >
-            {blocker.label}
-          </Button>
-        )}
-
-        {quest.status === "idle" && !blocker && (
-          <Button
-            onClick={() => onStart(quest.id, quest.actionUrl)}
-            className={ACTION_WIDTH}
-          >
-            {actionLabel}
-          </Button>
-        )}
-
-        {quest.status === "started" && (
-          <Button disabled className={`${ACTION_WIDTH} tabular-nums`}>
-            {claimLabel ?? "Claim"} in {secondsLeft}s
-          </Button>
-        )}
-
-        {quest.status === "claim_ready" && secondary}
-
-        {quest.status === "claim_ready" && quest.claimable && proof && (
+      {proofRow && proof && (
+        // Lined up with the text above (past the marker), full width below
+        // it; Enter in the field verifies too.
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (proofUrl.trim() && !claim.isPending) submitClaim();
+          }}
+          className="flex flex-col gap-3 md:flex-row md:items-center md:pl-13"
+        >
           <input
             type="url"
             value={proofUrl}
             onChange={(e) => setProofUrl(e.target.value)}
             placeholder={proof.placeholder}
             aria-label={proof.label}
-            className="w-full min-w-0 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-ink/60 focus:outline-none md:w-56"
+            className="w-full min-w-0 flex-1 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-ink/60 focus:outline-none"
           />
-        )}
-
-        {quest.status === "claim_ready" && quest.claimable && (
-          <Button
-            variant="secondary"
-            onClick={requireAuth(() =>
-              claim.mutate({
-                questId: quest.id,
-                title: quest.title,
-                ...(proof && { proofUrl: proofUrl.trim() }),
-              }),
-            )}
-            disabled={claim.isPending || (proof && !proofUrl.trim())}
-            className={ACTION_WIDTH}
-          >
-            {claim.isPending
-              ? "Checking…"
-              : (claimLabel ?? `Claim ${quest.points} XP`)}
-          </Button>
-        )}
-
-        {isCompleted && (
-          <span
-            className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
-          >
-            {doneLabel}
-          </span>
-        )}
-      </div>
+          {claimButton}
+        </form>
+      )}
     </div>
   );
 };
