@@ -381,6 +381,15 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-krakmask': [{ type: 'x-follow', handle: 'KrakMask' }],
   'x-follow-rektink': [{ type: 'x-follow', handle: 'RektInk' }],
   'x-follow-beastthemascot': [{ type: 'x-follow', handle: 'BeastTheMascot' }],
+  'x-follow-quotrons404': [{ type: 'x-follow', handle: 'quotrons404' }],
+  'visit-quotrons': [{ type: 'visit' }],
+  // QUOTRONS, 4,444 terminals; an ERC-721 behind an ERC-1967 proxy.
+  'hold-quotrons': [
+    {
+      type: 'nft-holder',
+      contract: '0x69b56842c64bBEAa58A7B7659761059E34147Be1',
+    },
+  ],
   'hold-beast-5k': [
     {
       type: 'token-holder',

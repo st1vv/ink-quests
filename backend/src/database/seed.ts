@@ -200,6 +200,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'quotrons',
+    title: 'Quotrons',
+    description:
+      '4,444 machines that carried stock prices through history. Burn to hardwire; lit terminals earn real tokenized stock.',
+    imageUrl: '/campaigns/quotrons.webp',
+    websiteUrl: 'https://www.quotrons.cash/',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -1118,6 +1128,52 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 3,
+    verifier: 'any-daily-quest',
+  },
+  // QUOTRONS
+  {
+    slug: 'quotrons-hold-quotron',
+    kind: 'partner',
+    partner: 'quotrons',
+    title: 'Hold a Quotrons',
+    description: 'Hold at least one Quotrons terminal in your wallet.',
+    actionUrl: 'https://opensea.io/collection/quotrons404',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-quotrons',
+  },
+  {
+    slug: 'quotrons-follow-quotrons404',
+    kind: 'partner',
+    partner: 'quotrons',
+    title: 'Follow @quotrons404 on X',
+    description: 'Follow Quotrons on X for terminal news and updates.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=quotrons404',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-quotrons404',
+  },
+  {
+    slug: 'quotrons-explore-site',
+    kind: 'partner',
+    partner: 'quotrons',
+    title: 'Explore Quotrons',
+    description:
+      'Open the Quotrons website and see how terminals are hardwired and lit.',
+    actionUrl: 'https://www.quotrons.cash/',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-quotrons',
+  },
+  {
+    slug: 'quotrons-complete-daily-quest',
+    kind: 'partner',
+    partner: 'quotrons',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
 ];
