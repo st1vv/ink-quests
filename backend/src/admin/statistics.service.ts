@@ -49,12 +49,13 @@ const iso = (value: unknown) =>
 
 // Daily quest completions and finished partner quests (campaign rewards),
 // in one shape. A partner quest counts once its whole campaign is done; its
-// single tasks don't show here.
+// single tasks don't show here. partner_slug is for the campaign filter.
 const dailyCompletions = sql`
   select
     'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
     'daily' as kind,
-    null::text as partner, c.points, c.tx_hash, c.completed_at
+    null::text as partner, c.points, c.tx_hash, c.completed_at,
+    null::text as partner_slug
   from quest_completions c
   join users u on u.id = c.user_id
   join quests q on q.id = c.quest_id
@@ -65,7 +66,8 @@ const partnerCompletions = sql`
     'c' || cr.id as id, u.address, u.display_name, u.x_username, p.title as quest,
     'partner' as kind,
     null::text as partner, cr.points, null::text as tx_hash,
-    cr.created_at as completed_at
+    cr.created_at as completed_at,
+    p.slug as partner_slug
   from campaign_rewards cr
   join users u on u.id = cr.user_id
   join partners p on p.id = cr.partner_id
@@ -307,11 +309,20 @@ export class StatisticsService {
   }
 
   // One page of the list behind a stat card, in its own order. `address`
-  // narrows it to one wallet.
-  async list(view: StatsView, page: number, address?: string) {
+  // narrows it to one wallet, `partner` (a campaign slug) the partner quests
+  // to one campaign.
+  async list(
+    view: StatsView,
+    page: number,
+    { address, partner }: { address?: string; partner?: string } = {},
+  ) {
     const { query, orderBy, toItem } = LISTS[view];
-    const where = address
-      ? sql`where l.address = ${address.toLowerCase()}`
+    const conditions = [
+      address && sql`l.address = ${address.toLowerCase()}`,
+      partner && sql`l.partner_slug = ${partner}`,
+    ].filter((c): c is SQL => Boolean(c));
+    const where = conditions.length
+      ? sql`where ${sql.join(conditions, sql` and `)}`
       : sql.empty();
 
     const [counted, listed] = await Promise.all([

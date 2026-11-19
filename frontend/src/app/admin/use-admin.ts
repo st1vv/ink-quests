@@ -145,13 +145,16 @@ export const useStatsList = <T>(
   view: StatsView,
   page: number,
   filter: string | null,
+  // A campaign slug; only the partner-quests list takes it.
+  partner: string | null = null,
 ) => {
   const { address } = useAuth();
   const params = new URLSearchParams({ page: String(page) });
   if (filter) params.set("address", filter);
+  if (partner) params.set("partner", partner);
 
   return useQuery({
-    queryKey: ["admin", view, address, page, filter],
+    queryKey: ["admin", view, address, page, filter, partner],
     queryFn: () => apiFetch<StatsPage<T>>(`/admin/stats/${view}?${params}`),
     enabled: Boolean(address),
     retry: retryUnlessNotFound,

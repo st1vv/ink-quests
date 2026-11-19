@@ -120,11 +120,14 @@ export class AdminController {
 
   // The list behind a stat card (see STATS_VIEWS), e.g. /admin/stats/users:
   // { total, page, pageSize, items }. Item fields depend on the list.
+  // Optional ?address= (one wallet) and, on partner-quests, ?partner= (a
+  // campaign slug).
   @Get('stats/:view')
   list(
     @Param('view') view: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('address') address?: string,
+    @Query('partner') partner?: string,
   ) {
     if (!STATS_VIEWS.includes(view as StatsView)) {
       throw new NotFoundException();
@@ -133,7 +136,16 @@ export class AdminController {
     if (address && !isAddress(address, { strict: false })) {
       throw new BadRequestException('Not an address');
     }
-    return this.statistics.list(view as StatsView, page, address);
+    if (partner && view !== 'partner-quests') {
+      throw new BadRequestException('partner filters partner-quests only');
+    }
+    if (partner && !/^[a-z0-9-]{1,64}$/.test(partner)) {
+      throw new BadRequestException('Not a campaign slug');
+    }
+    return this.statistics.list(view as StatsView, page, {
+      address,
+      partner,
+    });
   }
 
   // Everything a user did, newest first, campaign tasks included:

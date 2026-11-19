@@ -13,6 +13,7 @@ import { EXPLORER_TX_URL } from "@/lib/explorer";
 import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
 import { AdminNav } from "@/app/admin/admin-nav";
+import { usePartners } from "@/app/quests/catalog";
 import {
   isNotFound,
   useStatsList,
@@ -80,14 +81,17 @@ const CARDS: {
 const isView = (value: string | null): value is StatsView =>
   CARDS.some((c) => c.view === value);
 
-// The list, page and wallet filter live in the URL (?view=users&page=2&
-// address=0x…), so a reload or a shared link shows the same table.
+// The list, page and filters live in the URL (?view=users&page=2&
+// address=0x…&partner=nado), so a reload or a shared link shows the same
+// table.
 const useListParams = () => {
   const [params, setParams] = useSearchParams();
   const rawView = params.get("view");
   const view = isView(rawView) ? rawView : DEFAULT_VIEW;
   const page = Math.max(1, Number(params.get("page")) || 1);
   const filter = params.get("address");
+  // A campaign, for the partner quests list only.
+  const partner = view === "partner-quests" ? params.get("partner") : null;
 
   // A new list or filter starts on page 1; the filter carries over to
   // another list, so one wallet can be followed across them.
@@ -95,6 +99,7 @@ const useListParams = () => {
     view?: StatsView;
     page?: number;
     address?: string | null;
+    partner?: string | null;
   }) => {
     const search = new URLSearchParams(params);
     if (next.view !== undefined) {
@@ -108,10 +113,18 @@ const useListParams = () => {
       if (next.address) search.set("address", next.address);
       else search.delete("address");
     }
+    // Another list drops the campaign: only partner quests have one.
+    if (next.view !== undefined && next.view !== "partner-quests") {
+      search.delete("partner");
+    }
+    if (next.partner !== undefined) {
+      if (next.partner) search.set("partner", next.partner);
+      else search.delete("partner");
+    }
     setParams(search);
   };
 
-  return { view, page, filter, go };
+  return { view, page, filter, partner, go };
 };
 
 // Owner-only stats. Not linked anywhere; the backend decides who sees data.
@@ -243,7 +256,17 @@ const StatsList = (props: ListProps) => {
           {...props}
           title="Partner quests"
           description="Partner quests with every task done and the reward claimed, newest first."
-          empty="No partner quests completed yet."
+          empty={
+            props.partner
+              ? "Nobody has completed this partner quest yet."
+              : "No partner quests completed yet."
+          }
+          toolbar={
+            <CampaignFilter
+              value={props.partner}
+              onChange={(partner) => props.go({ partner })}
+            />
+          }
           grid={COMPLETION_GRID}
           columns={COMPLETION_COLUMNS}
         />
@@ -284,6 +307,35 @@ const StatsList = (props: ListProps) => {
   }
 };
 
+// Narrows the partner quests to one campaign. Lists the active campaigns,
+// as the Quests page does.
+const CampaignFilter = ({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (partner: string | null) => void;
+}) => {
+  const partners = usePartners();
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      aria-label="Campaign"
+      className="cursor-pointer rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-ink/60 focus:outline-none"
+    >
+      <option value="" className="bg-canvas">
+        All campaigns
+      </option>
+      {partners.data?.map((p) => (
+        <option key={p.slug} value={p.slug} className="bg-canvas">
+          {p.title}
+        </option>
+      ))}
+    </select>
+  );
+};
+
 type Column<T> = {
   label: string;
   align?: "right";
@@ -297,20 +349,24 @@ type StatsTableProps<T> = ListProps & {
   // md:grid-cols-[…], one track per column.
   grid: string;
   columns: Column<T>[];
+  // Extra filters, shown next to the title.
+  toolbar?: ReactNode;
 };
 
 const StatsTable = <T extends { id: number | string }>({
   view,
   page,
   filter,
+  partner,
   go,
   title,
   description,
   empty,
   grid,
   columns,
+  toolbar,
 }: StatsTableProps<T>) => {
-  const list = useStatsList<T>(view, page, filter);
+  const list = useStatsList<T>(view, page, filter, partner);
   const data = list.data;
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const filterBy = (address: Address) => go({ address });
@@ -329,16 +385,19 @@ const StatsTable = <T extends { id: number | string }>({
             </p>
           </div>
 
-          {filter && (
-            <div className="flex items-center gap-2">
-              <Badge className="px-3 py-1 font-mono text-xs">
-                {shortAddress(filter)}
-              </Badge>
-              <Button variant="ghost" onClick={() => go({ address: null })}>
-                Show all wallets
-              </Button>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {toolbar}
+            {filter && (
+              <div className="flex items-center gap-2">
+                <Badge className="px-3 py-1 font-mono text-xs">
+                  {shortAddress(filter)}
+                </Badge>
+                <Button variant="ghost" onClick={() => go({ address: null })}>
+                  Show all wallets
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/20">
