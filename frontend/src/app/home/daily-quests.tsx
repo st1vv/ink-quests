@@ -6,7 +6,7 @@ import { useAuth } from "@/app/auth/use-auth";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { useDailyQuests } from "@/app/quests/catalog";
 import { useCompletions } from "@/app/quests/claims";
-import { QuestRow } from "@/app/quests/quest-row";
+import { ACTION_WIDTH, QuestRow } from "@/app/quests/quest-row";
 import { useQuestStatuses } from "@/app/quests/quest-status";
 import { connectX, useXAccount } from "@/app/x/use-x";
 import { ShareProgress } from "@/app/home/share-progress";
@@ -147,7 +147,7 @@ export const HomeDailyQuests = () => {
                   <ShareProgress
                     progress={progress}
                     label="Share on X"
-                    className="w-full px-4 py-2 text-sm md:w-auto"
+                    className={ACTION_WIDTH}
                   />
                 ),
                 proof: {

@@ -29,7 +29,8 @@ type QuestRowProps = {
 
 // The main button keeps one width (about "Go to quest ↗") through Claim in Ns,
 // Claim and Completed, so the row doesn't jump as the quest moves along.
-const ACTION_WIDTH = "w-full md:w-auto md:min-w-32";
+// Also for buttons passed in from outside (e.g. as `secondary`).
+export const ACTION_WIDTH = "w-full md:w-auto md:min-w-32";
 
 export const QuestRow = ({
   quest,
