@@ -45,6 +45,10 @@ type SeedQuest = Omit<
 // Every Nado link carries our referral code.
 const NADO_URL = 'https://app.nado.xyz?join=inkquests';
 
+// Added to the description of every campaign task whose link carries our
+// referral, so users know before they open it.
+const REFERRAL_NOTE = 'The link includes our InkQuests referral.';
+
 // Tydro's ETH (WETH) market, where ETH supply quests point.
 const TYDRO_WETH_URL =
   'https://app.tydro.com/reserve-overview/?underlyingAsset=0x4200000000000000000000000000000000000006&marketName=proto_ink_v3';
@@ -703,8 +707,7 @@ const QUESTS: SeedQuest[] = [
     kind: 'partner',
     partner: 'nado',
     title: 'Trade futures on Nado',
-    description:
-      "Make any futures (perps) trade on Nado. Nado's stats can take up to 20 minutes to update.",
+    description: `Make any futures (perps) trade on Nado. Nado's stats can take up to 20 minutes to update. ${REFERRAL_NOTE}`,
     actionUrl: NADO_URL,
     points: 0,
     sortOrder: 2,
@@ -904,8 +907,7 @@ const QUESTS: SeedQuest[] = [
     kind: 'partner',
     partner: 'xstocks',
     title: 'Join xStocks xPoints',
-    description:
-      'Open the xPoints page and connect your wallet to start earning points for your xStocks.',
+    description: `Open the xPoints page and connect your wallet to start earning points for your xStocks. ${REFERRAL_NOTE}`,
     actionUrl: 'https://defi.xstocks.fi/points?ref=INKQUESTS',
     points: 0,
     sortOrder: 1,
@@ -927,8 +929,7 @@ const QUESTS: SeedQuest[] = [
     kind: 'partner',
     partner: 'xstocks',
     title: 'Hold $10 of wSPYx',
-    description:
-      'Buy wSPYx, the S&P 500 xStock, and hold at least $10 of it in your wallet. Pay with USDG for the best price.',
+    description: `Buy wSPYx, the S&P 500 xStock, and hold at least $10 of it in your wallet. Pay with USDG for the best price. ${REFERRAL_NOTE}`,
     // Our referral code, on CoW Swap's Ink USDG → wSPYx page.
     actionUrl:
       'https://swap.cow.fi/?ref=INKQUESTS#/57073/swap/USDG/0xE7E553Cd128F0011777323A0b44a7b96EA1CB540',

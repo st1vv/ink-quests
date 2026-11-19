@@ -15,28 +15,23 @@ const FILE_NAME = "inkquests-progress.png";
 
 // The post that goes with the image; X adds the invite link after it. Tags
 // Ink's own account (@inkonchain), so it can reshare. A streak leads once
-// there is one worth showing.
+// there is one worth showing; the stats share one line. Lines are kept
+// apart by a blank line. The first line always tags @inkquests: the "share your
+// progress" quest checks for it.
 const postText = (progress: Progress, rank: number | null) => {
   const stats = [
     `Level ${progress.level}`,
     `${formatNumber(progress.totalXp)} XP`,
-    rank !== null && `#${formatNumber(rank)} on the leaderboard`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    ...(rank !== null ? [`#${formatNumber(rank)} on the leaderboard`] : []),
+  ].join(" · ");
 
-  return progress.streak > 1
-    ? [
-        `🔥 ${progress.streak}-day check-in streak on @inkquests`,
-        `${stats}`,
-        "",
-        "Daily quests on @inkonchain. Join me:",
-      ].join("\n")
-    : [
-        `${stats} on @inkquests`,
-        "",
-        "Daily quests on @inkonchain. Join me:",
-      ].join("\n");
+  return [
+    progress.streak > 1
+      ? `🔥 ${progress.streak}-day check-in streak on @inkquests`
+      : "My progress on @inkquests",
+    stats,
+    "Daily quests on @inkonchain. Join me:",
+  ].join("\n\n");
 };
 
 // What the browser can do with an image, known before one is rendered so
