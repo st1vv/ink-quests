@@ -1302,6 +1302,21 @@ const CHALLENGES: SeedChallenge[] = [
     // picture is frontend/public/challenges/challenge-3-boi.png.
     prizeItems: null,
   },
+  {
+    slug: 'challenge-4-auranodes',
+    title: 'Leaderboard Challenge #4',
+    // Nov 23 00:00 UTC through the Nov 29 23:59 UTC snapshot.
+    startsAt: new Date('2026-11-23T00:00:00Z'),
+    endsAt: new Date('2026-11-30T00:00:00Z'),
+    places: 11,
+    prize: '1 AuraNode',
+    prizeUrl: 'https://opensea.io/collection/auranodes/overview',
+    postUrl:
+      'https://x.com/inkquests/status/2123779861042839784?a=edoDqSg56eA2NrJmAVY&s=20',
+    // Same prize for every place; the picture is
+    // frontend/public/challenges/challenge-4-auranodes.png.
+    prizeItems: null,
+  },
 ];
 
 // Fail before touching the DB instead of half-applying a broken catalog.
