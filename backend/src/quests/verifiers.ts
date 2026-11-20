@@ -383,6 +383,16 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-beastthemascot': [{ type: 'x-follow', handle: 'BeastTheMascot' }],
   'x-follow-quotrons404': [{ type: 'x-follow', handle: 'quotrons404' }],
   'visit-quotrons': [{ type: 'visit' }],
+  'x-follow-inkednodes': [{ type: 'x-follow', handle: 'inkednodes' }],
+  'visit-aftermint': [{ type: 'visit' }],
+  // AuraNodes (AURANODES), the collection OpenSea's auranodes page lists;
+  // several look-alike "AuraNodes" contracts exist on Ink.
+  'hold-auranodes': [
+    {
+      type: 'nft-holder',
+      contract: '0x98716E4f6bE7abC8f14612BBB9c653bFe4E8cF51',
+    },
+  ],
   // QUOTRONS, 4,444 terminals; an ERC-721 behind an ERC-1967 proxy.
   'hold-quotrons': [
     {

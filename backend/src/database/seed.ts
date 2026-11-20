@@ -210,6 +210,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'auranodes',
+    title: 'AuraNodes',
+    description:
+      'Generative art on Ink where integer harmonics become energy fields, ribbon vortices and interference lattices.',
+    imageUrl: '/campaigns/auranodes.webp',
+    websiteUrl: 'https://www.auranodes.ink/',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -1169,6 +1179,53 @@ const QUESTS: SeedQuest[] = [
     slug: 'quotrons-complete-daily-quest',
     kind: 'partner',
     partner: 'quotrons',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 4,
+    verifier: 'any-daily-quest',
+  },
+  // AuraNodes
+  {
+    slug: 'auranodes-hold-auranode',
+    kind: 'partner',
+    partner: 'auranodes',
+    title: 'Hold an AuraNode',
+    description:
+      'Hold at least one AuraNode in your wallet. No AuraNode yet? Buy or mint one on OpenSea.',
+    actionUrl: 'https://opensea.io/collection/auranodes/overview',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-auranodes',
+  },
+  {
+    slug: 'auranodes-follow-inkednodes',
+    kind: 'partner',
+    partner: 'auranodes',
+    title: 'Follow @inkednodes on X',
+    description: 'Follow AuraNodes on X for drops and news.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=inkednodes',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-inkednodes',
+  },
+  {
+    slug: 'auranodes-explore-aftermint',
+    kind: 'partner',
+    partner: 'auranodes',
+    title: 'Explore AfterMint',
+    description:
+      "Open AfterMint, powered by AuraNodes: swipe through Ink's NFTs and tokens to HODL or JEET and earn AM points.",
+    actionUrl: 'https://www.aftermint.trade/welcome',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-aftermint',
+  },
+  {
+    slug: 'auranodes-complete-daily-quest',
+    kind: 'partner',
+    partner: 'auranodes',
     title: 'Complete any daily quest',
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
