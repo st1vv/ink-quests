@@ -10,11 +10,12 @@ const PAGES = [
   { to: "/admin/users", label: "Users" },
 ];
 
-// Tabs between the admin pages, styled like TabButton.
+// Tabs between the admin pages, styled like TabButton. On a phone the tabs
+// share the screen's width, so the row never runs past it.
 export const AdminNav = () => (
   <nav
     aria-label="Admin"
-    className="flex w-fit gap-1 rounded-full border border-white/10 bg-black/20 p-1"
+    className="flex w-full gap-1 rounded-full border border-white/10 bg-black/20 p-1 sm:w-fit"
   >
     {PAGES.map((page) => (
       <NavLink
@@ -22,7 +23,7 @@ export const AdminNav = () => (
         to={page.to}
         end={page.end}
         className={({ isActive }) =>
-          `inline-flex items-center rounded-full px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${
+          `inline-flex flex-auto items-center sm:flex-none justify-center rounded-full px-2 py-2 text-[13px] sm:px-4 sm:text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-ink-light ${
             isActive
               ? "bg-ink text-white"
               : "text-white/60 hover:bg-white/5 hover:text-white"

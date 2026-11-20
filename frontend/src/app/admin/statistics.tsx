@@ -6,7 +6,7 @@ import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { ExternalLinkIcon, UserIcon } from "@/shared/ui/icons";
+import { ChevronDownIcon, ExternalLinkIcon, UserIcon } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { formatDateTime, formatNumber, shortAddress } from "@/lib/format";
 import { EXPLORER_TX_URL } from "@/lib/explorer";
@@ -318,21 +318,26 @@ const CampaignFilter = ({
 }) => {
   const partners = usePartners();
   return (
-    <select
-      value={value ?? ""}
-      onChange={(e) => onChange(e.target.value || null)}
-      aria-label="Campaign"
-      className="cursor-pointer rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-white focus:border-ink/60 focus:outline-none"
-    >
-      <option value="" className="bg-canvas">
-        All campaigns
-      </option>
-      {partners.data?.map((p) => (
-        <option key={p.slug} value={p.slug} className="bg-canvas">
-          {p.title}
+    // The browser's own arrow sits against the pill's rounded edge, so it's
+    // hidden and drawn here, inside the padding.
+    <div className="relative w-full sm:w-auto">
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        aria-label="Campaign"
+        className="w-full cursor-pointer appearance-none rounded-full border border-white/10 bg-black/30 py-2 pr-10 pl-4 text-sm text-white focus:border-ink/60 focus:outline-none"
+      >
+        <option value="" className="bg-canvas">
+          All campaigns
         </option>
-      ))}
-    </select>
+        {partners.data?.map((p) => (
+          <option key={p.slug} value={p.slug} className="bg-canvas">
+            {p.title}
+          </option>
+        ))}
+      </select>
+      <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-white/60" />
+    </div>
   );
 };
 
