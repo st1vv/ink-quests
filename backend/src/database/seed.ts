@@ -552,6 +552,18 @@ const QUESTS: SeedQuest[] = [
     verifier: 'hold-inkverse',
     tags: ['NFT'],
   },
+  {
+    slug: 'daily-hold-auranodes',
+    kind: 'daily',
+    title: 'Hold an AuraNode',
+    description:
+      'Hold at least one AuraNode in your wallet to claim this daily reward. No AuraNode yet? Buy or mint one on OpenSea.',
+    actionUrl: 'https://opensea.io/collection/auranodes/overview',
+    points: 50,
+    sortOrder: 15,
+    verifier: 'hold-auranodes',
+    tags: ['NFT'],
+  },
   // Campaigns (partner quests): one-time tasks grouped under a partner,
   // shown on the Quests page. Tasks are worth 0 XP; the partner's rewardXp
   // is paid once all of them are verified. Follows on X need a linked X
