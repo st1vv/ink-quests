@@ -1212,15 +1212,17 @@ const QUESTS: SeedQuest[] = [
     verifier: 'hold-auranodes',
   },
   {
+    // The slug keeps the old handle on purpose: renaming it would make a new
+    // task and send everyone who already verified it back to redo it.
     slug: 'auranodes-follow-inkednodes',
     kind: 'partner',
     partner: 'auranodes',
-    title: 'Follow @inkednodes on X',
+    title: 'Follow @auranodes on X',
     description: 'Follow AuraNodes on X for drops and news.',
-    actionUrl: 'https://x.com/intent/follow?screen_name=inkednodes',
+    actionUrl: 'https://x.com/intent/follow?screen_name=auranodes',
     points: 0,
     sortOrder: 2,
-    verifier: 'x-follow-inkednodes',
+    verifier: 'x-follow-auranodes',
   },
   {
     slug: 'auranodes-explore-aftermint',
