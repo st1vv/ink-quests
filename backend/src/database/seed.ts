@@ -342,7 +342,8 @@ const QUESTS: SeedQuest[] = [
     title: (usd) => `Swap $${usd} on Velodrome`,
     description: (usd) =>
       `Swap at least $${usd} worth on Velodrome to complete this daily quest. Swaps to or from ETH or USD₮0 count.`,
-    actionUrl: 'https://velo.drome.eth.limo/swap?chain0=57073&chain1=57073',
+    actionUrl:
+      'https://velodrome.finance/swap?from=eth&to=0x0200c29006150606b650577bbe7b6248f58470c1&chain0=57073&chain1=57073',
     points: 30,
     sortOrder: 3,
     verifier: 'velodrome-swap',
