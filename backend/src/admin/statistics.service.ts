@@ -16,6 +16,7 @@ export const STATS_VIEWS = [
   'users-with-xp',
   'quests',
   'daily-quests',
+  'social-quests',
   'partner-quests',
   'check-ins',
   'transactions',
@@ -27,6 +28,7 @@ type StatsRow = {
   users: number;
   users_with_xp: number;
   daily_quests: number;
+  social_quests: number;
   partner_quests: number;
   check_ins: number;
   transactions: number;
@@ -47,20 +49,30 @@ type ListSpec = {
 const iso = (value: unknown) =>
   value === null ? null : new Date(value as string).toISOString();
 
-// Daily quest completions and finished partner quests (campaign rewards),
-// in one shape. A partner quest counts once its whole campaign is done; its
-// single tasks don't show here. partner_slug is for the campaign filter.
-const dailyCompletions = sql`
+// Social quests are daily quests tagged Social (X, Telegram); the stats
+// count them apart from the other daily quests. `q` is the quests row.
+const isSocial = sql`'Social' = any(q.tags)`;
+const questKind = sql`
+  case when q.kind = 'daily' and ${isSocial} then 'social' else q.kind::text end
+`;
+
+// Daily and social quest completions and finished partner quests (campaign
+// rewards), in one shape. A partner quest counts once its whole campaign is
+// done; its single tasks don't show here. partner_slug is for the campaign
+// filter.
+const questCompletions = (social: boolean) => sql`
   select
     'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
-    'daily' as kind,
+    ${questKind} as kind,
     null::text as partner, c.points, c.tx_hash, c.completed_at,
     null::text as partner_slug
   from quest_completions c
   join users u on u.id = c.user_id
   join quests q on q.id = c.quest_id
-  where q.kind = 'daily'
+  where q.kind = 'daily' and ${social ? isSocial : sql`not ${isSocial}`}
 `;
+const dailyCompletions = questCompletions(false);
+const socialCompletions = questCompletions(true);
 const partnerCompletions = sql`
   select
     'c' || cr.id as id, u.address, u.display_name, u.x_username, p.title as quest,
@@ -171,12 +183,21 @@ const LISTS: Record<StatsView, ListSpec> = {
   },
 
   quests: {
-    query: sql`${dailyCompletions} union all ${partnerCompletions}`,
+    query: sql`
+      ${dailyCompletions}
+      union all ${socialCompletions}
+      union all ${partnerCompletions}
+    `,
     orderBy: completionOrder,
     toItem: toCompletion,
   },
   'daily-quests': {
     query: dailyCompletions,
+    orderBy: completionOrder,
+    toItem: toCompletion,
+  },
+  'social-quests': {
+    query: socialCompletions,
     orderBy: completionOrder,
     toItem: toCompletion,
   },
@@ -216,7 +237,7 @@ const LISTS: Record<StatsView, ListSpec> = {
     query: sql`
       select
         'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
-        q.kind::text as kind,
+        ${questKind} as kind,
         p.title as partner, c.points, c.tx_hash, c.completed_at
       from quest_completions c
       join users u on u.id = c.user_id
@@ -283,7 +304,10 @@ export class StatisticsService {
       select
         (select count(*)::int from users) as users,
         (select count(*)::int from (${userXp}) x) as users_with_xp,
-        (count(*) filter (where q.kind = 'daily'))::int as daily_quests,
+        (count(*) filter (where q.kind = 'daily' and not ${isSocial}))::int
+          as daily_quests,
+        (count(*) filter (where q.kind = 'daily' and ${isSocial}))::int
+          as social_quests,
         (select count(*)::int from campaign_rewards) as partner_quests,
         (select count(*)::int from check_ins) as check_ins,
         (select count(*)::int from (${onchainActions}) o) as transactions,
@@ -299,8 +323,10 @@ export class StatisticsService {
       usersWithXp: s.users_with_xp,
       // A partner quest counts once its whole campaign is done; its single
       // tasks don't count.
-      questsCompleted: s.daily_quests + s.partner_quests,
+      questsCompleted: s.daily_quests + s.social_quests + s.partner_quests,
+      // Daily quests without the social ones, which count on their own.
       dailyQuestsCompleted: s.daily_quests,
+      socialQuestsCompleted: s.social_quests,
       partnerQuestsCompleted: s.partner_quests,
       checkIns: s.check_ins,
       transactions: s.transactions,

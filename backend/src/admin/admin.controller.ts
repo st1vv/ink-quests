@@ -45,7 +45,7 @@ export class AdminController {
   ) {}
 
   // { users, usersWithXp, questsCompleted, dailyQuestsCompleted,
-  //   partnerQuestsCompleted, checkIns, transactions, transactionUsers }
+  //   socialQuestsCompleted, partnerQuestsCompleted, checkIns, transactions, transactionUsers }
   @Get('stats')
   stats() {
     return this.statistics.stats();

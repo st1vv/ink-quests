@@ -10,7 +10,9 @@ export type StatsSummary = {
   users: number;
   usersWithXp: number;
   questsCompleted: number;
+  // Daily quests without the social ones (tagged Social), counted apart.
   dailyQuestsCompleted: number;
+  socialQuestsCompleted: number;
   // Campaigns with every task done; single tasks don't count.
   partnerQuestsCompleted: number;
   checkIns: number;
@@ -26,6 +28,7 @@ export type StatsView =
   | "users-with-xp"
   | "quests"
   | "daily-quests"
+  | "social-quests"
   | "partner-quests"
   | "check-ins"
   | "transactions"
@@ -66,7 +69,7 @@ export type StatsRankedUser = {
   xUsername: string | null;
 };
 
-// A daily quest completion, a finished partner quest, or (in the
+// A daily or social quest completion, a finished partner quest, or (in the
 // transactions list) any completion proven onchain.
 export type StatsCompletion = {
   id: string;
@@ -77,7 +80,7 @@ export type StatsCompletion = {
   // Quest title; the partner's title for a finished partner quest.
   quest: string;
   // "check-in" only in the transactions list: a paid check-in.
-  kind: "daily" | "partner" | "check-in";
+  kind: "daily" | "social" | "partner" | "check-in";
   // Campaign title for a partner task.
   partner: string | null;
   points: number;

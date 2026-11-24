@@ -5,6 +5,7 @@ import { Surface } from "@/shared/ui/surface";
 import { PageIntro } from "@/shared/ui/page-intro";
 import { StatCard } from "@/shared/ui/stat-card";
 import { Badge } from "@/shared/ui/badge";
+import type { BadgeVariant } from "@/shared/ui/badge-colors";
 import { Button } from "@/shared/ui/button";
 import { ChevronDownIcon, ExternalLinkIcon, UserIcon } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
@@ -14,6 +15,7 @@ import { useAuth } from "@/app/auth/use-auth";
 import { NotFound } from "@/app/not-found/not-found";
 import { AdminNav } from "@/app/admin/admin-nav";
 import { usePartners } from "@/app/quests/catalog";
+import { tagVariant } from "@/app/quests/tag-colors";
 import {
   isNotFound,
   useStatsList,
@@ -51,12 +53,19 @@ const CARDS: {
     view: "quests",
     label: "Quests completed",
     value: (s) => s.questsCompleted,
-    hint: () => "daily + partner",
+    hint: () => "daily + social + partner",
   },
   {
     view: "daily-quests",
     label: "Daily quests",
     value: (s) => s.dailyQuestsCompleted,
+    hint: () => "social not included",
+  },
+  {
+    view: "social-quests",
+    label: "Social quests",
+    value: (s) => s.socialQuestsCompleted,
+    hint: () => "X and Telegram",
   },
   {
     view: "partner-quests",
@@ -233,7 +242,7 @@ const StatsList = (props: ListProps) => {
         <StatsTable<StatsCompletion>
           {...props}
           title="Quests completed"
-          description="Daily quests and finished partner quests, newest first."
+          description="Daily, social and finished partner quests, newest first."
           empty="No quests completed yet."
           grid={COMPLETION_GRID}
           columns={COMPLETION_COLUMNS}
@@ -244,8 +253,19 @@ const StatsList = (props: ListProps) => {
         <StatsTable<StatsCompletion>
           {...props}
           title="Daily quests"
-          description="Daily quest completions, newest first."
+          description="Daily quest completions, social quests aside, newest first."
           empty="No daily quests completed yet."
+          grid={COMPLETION_GRID}
+          columns={COMPLETION_COLUMNS}
+        />
+      );
+    case "social-quests":
+      return (
+        <StatsTable<StatsCompletion>
+          {...props}
+          title="Social quests"
+          description="X and Telegram quest completions, newest first."
+          empty="No social quests completed yet."
           grid={COMPLETION_GRID}
           columns={COMPLETION_COLUMNS}
         />
@@ -660,6 +680,17 @@ const RANKED_USER_COLUMNS: Column<StatsRankedUser>[] = [
   { label: "Last XP", align: "right", cell: (u) => <When at={u.lastXpAt} /> },
 ];
 
+// What kind of quest a completion is, as a badge.
+const KIND_BADGES: Record<
+  StatsCompletion["kind"],
+  { label: string; variant: BadgeVariant }
+> = {
+  daily: { label: "Daily", variant: "violet" },
+  social: { label: "Social", variant: tagVariant("Social") },
+  partner: { label: "Partner", variant: "amber" },
+  "check-in": { label: "Check-in", variant: "neutral" },
+};
+
 const COMPLETION_GRID = "md:grid-cols-[150px_130px_1fr_80px_170px]";
 
 const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
@@ -675,15 +706,17 @@ const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
     cell: (c) => (
       <>
         <p className="truncate text-sm font-semibold text-white">{c.quest}</p>
-        <p className="mt-0.5 truncate text-xs text-white/40">
-          {c.kind === "daily"
-            ? "Daily quest"
-            : c.kind === "check-in"
-              ? "Paid check-in"
-              : c.partner
-                ? `Partner · ${c.partner}`
-                : "Partner quest"}
-        </p>
+        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+          <Badge
+            variant={KIND_BADGES[c.kind].variant}
+            className="shrink-0 px-2 py-0.5 text-[10px]"
+          >
+            {KIND_BADGES[c.kind].label}
+          </Badge>
+          {c.partner && (
+            <span className="truncate text-xs text-white/40">{c.partner}</span>
+          )}
+        </div>
       </>
     ),
   },

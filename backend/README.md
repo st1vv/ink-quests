@@ -211,13 +211,14 @@ frontend shows them in its admin pages (`/admin`, `/admin/posts`, `/admin/xp`,
 `/admin/users/:address`), which aren't linked anywhere.
 
 - `GET /admin/stats`: the counts on the stat cards (`users`, `usersWithXp`, `questsCompleted`,
-  `dailyQuestsCompleted`, `partnerQuestsCompleted`, `checkIns`, `transactions`,
-  `transactionUsers`). A partner quest counts once its whole campaign is done, so
-  `questsCompleted` is daily + finished campaigns; `transactions` counts completions with a
+  `dailyQuestsCompleted`, `socialQuestsCompleted`, `partnerQuestsCompleted`, `checkIns`,
+  `transactions`, `transactionUsers`). Social quests are daily quests tagged `Social` and
+  count apart from the other daily quests. A partner quest counts once its whole campaign is
+  done, so `questsCompleted` is daily + social + finished campaigns; `transactions` counts completions with a
   `tx_hash`.
 - `GET /admin/stats/:view?page=&address=`: the list behind one card, 50 per page, as
   `{ total, page, pageSize, items }`. `view` is one of `users`, `users-with-xp`, `quests`,
-  `daily-quests`, `partner-quests`, `check-ins`, `transactions`, `transaction-wallets` (see
+  `daily-quests`, `social-quests`, `partner-quests`, `check-ins`, `transactions`, `transaction-wallets` (see
   `STATS_VIEWS` in `statistics.service.ts` for each list's fields). `address` narrows it to one
   wallet.
 - `GET /admin/xp-grants`: the latest 50 XP grants, newest first, as
