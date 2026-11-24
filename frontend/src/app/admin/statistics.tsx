@@ -635,6 +635,13 @@ const SocialLink = ({ href, handle }: { href: string; handle: string }) => (
 
 // The linked X and Telegram accounts, one per line. A Telegram account
 // without a public username can't be linked to, so it only says it's there.
+// Names the network in front of a handle.
+const SocialLabel = ({ children }: { children: ReactNode }) => (
+  <span className="shrink-0 text-[10px] font-medium uppercase text-white/40">
+    {children}
+  </span>
+);
+
 const X_COLUMN: Column<{
   xUsername: string | null;
   telegramUsername: string | null;
@@ -645,16 +652,17 @@ const X_COLUMN: Column<{
     u.xUsername || u.telegramLinked ? (
       <div className="flex min-w-0 flex-col">
         {u.xUsername && (
-          <SocialLink
-            href={`https://x.com/${u.xUsername}`}
-            handle={u.xUsername}
-          />
+          <span className="flex min-w-0 items-center gap-1.5">
+            <SocialLabel>X:</SocialLabel>
+            <SocialLink
+              href={`https://x.com/${u.xUsername}`}
+              handle={u.xUsername}
+            />
+          </span>
         )}
         {u.telegramUsername ? (
           <span className="flex min-w-0 items-center gap-1.5">
-            <span className="shrink-0 text-[10px] font-medium uppercase text-white/40">
-              TG
-            </span>
+            <SocialLabel>TG:</SocialLabel>
             <SocialLink
               href={`https://t.me/${u.telegramUsername}`}
               handle={u.telegramUsername}
@@ -663,7 +671,7 @@ const X_COLUMN: Column<{
         ) : (
           u.telegramLinked && (
             <span className="text-xs text-white/40">
-              TG linked, no username
+              TG: linked, no username
             </span>
           )
         )}
@@ -725,7 +733,7 @@ const KIND_BADGES: Record<
   "check-in": { label: "Check-in", variant: "neutral" },
 };
 
-const COMPLETION_GRID = "md:grid-cols-[150px_130px_1fr_80px_170px]";
+const COMPLETION_GRID = "md:grid-cols-[150px_130px_1fr_90px_80px_170px]";
 
 const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
   {
@@ -740,18 +748,21 @@ const completionColumns = (lastLabel: string): Column<StatsCompletion>[] => [
     cell: (c) => (
       <>
         <p className="truncate text-sm font-semibold text-white">{c.quest}</p>
-        <div className="mt-1 flex min-w-0 items-center gap-1.5">
-          <Badge
-            variant={KIND_BADGES[c.kind].variant}
-            className="shrink-0 px-2 py-0.5 text-[10px]"
-          >
-            {KIND_BADGES[c.kind].label}
-          </Badge>
-          {c.partner && (
-            <span className="truncate text-xs text-white/40">{c.partner}</span>
-          )}
-        </div>
+        {c.partner && (
+          <p className="mt-0.5 truncate text-xs text-white/40">{c.partner}</p>
+        )}
       </>
+    ),
+  },
+  {
+    label: "Type",
+    cell: (c) => (
+      <Badge
+        variant={KIND_BADGES[c.kind].variant}
+        className="px-2 py-0.5 text-[10px]"
+      >
+        {KIND_BADGES[c.kind].label}
+      </Badge>
     ),
   },
   { label: "XP", align: "right", cell: (c) => <Strong>{xp(c.points)}</Strong> },
