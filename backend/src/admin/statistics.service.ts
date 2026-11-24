@@ -62,7 +62,8 @@ const questKind = sql`
 // filter.
 const questCompletions = (social: boolean) => sql`
   select
-    'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
+    'q' || c.id as id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked, q.title as quest,
     ${questKind} as kind,
     null::text as partner, c.points, c.tx_hash, c.completed_at,
     null::text as partner_slug
@@ -75,7 +76,8 @@ const dailyCompletions = questCompletions(false);
 const socialCompletions = questCompletions(true);
 const partnerCompletions = sql`
   select
-    'c' || cr.id as id, u.address, u.display_name, u.x_username, p.title as quest,
+    'c' || cr.id as id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked, p.title as quest,
     'partner' as kind,
     null::text as partner, cr.points, null::text as tx_hash,
     cr.created_at as completed_at,
@@ -91,6 +93,9 @@ const toCompletion = (r: ListRow) => ({
   address: getAddress(r.address),
   name: r.display_name,
   xUsername: r.x_username,
+      // The linked Telegram account; the username is null when it has none.
+      telegramUsername: r.telegram_username,
+      telegramLinked: r.telegram_linked,
   quest: r.quest,
   kind: r.kind,
   // Campaign title for a partner task.
@@ -125,7 +130,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   users: {
     query: sql`
       select
-        u.id, u.address, u.display_name, u.x_username,
+        u.id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked,
         coalesce(x.xp, 0)::int as xp,
         u.created_at, u.last_login_at, r.address as referrer,
         r.display_name as referrer_name,
@@ -151,6 +157,9 @@ const LISTS: Record<StatsView, ListSpec> = {
       rewardedReferrals: r.rewarded_referrals,
       // The linked X handle, without the @.
       xUsername: r.x_username,
+      // The linked Telegram account; the username is null when it has none.
+      telegramUsername: r.telegram_username,
+      telegramLinked: r.telegram_linked,
     }),
   },
 
@@ -159,7 +168,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   'users-with-xp': {
     query: sql`
       select
-        u.id, u.address, u.display_name, u.x_username, x.xp, x.reached_at,
+        u.id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked, x.xp, x.reached_at,
         ${referralCounts},
         row_number() over (
           order by x.xp desc, x.reached_at asc, u.id asc
@@ -179,6 +189,9 @@ const LISTS: Record<StatsView, ListSpec> = {
       referrals: r.referrals,
       rewardedReferrals: r.rewarded_referrals,
       xUsername: r.x_username,
+      // The linked Telegram account; the username is null when it has none.
+      telegramUsername: r.telegram_username,
+      telegramLinked: r.telegram_linked,
     }),
   },
 
@@ -210,7 +223,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   'check-ins': {
     query: sql`
       select
-        ci.id, u.address, u.display_name, u.x_username, ci.day::text as day, ci.points, ci.bonus_points,
+        ci.id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked, ci.day::text as day, ci.points, ci.bonus_points,
         ci.tx_hash,
         ci.created_at
       from check_ins ci
@@ -222,6 +236,9 @@ const LISTS: Record<StatsView, ListSpec> = {
       address: getAddress(r.address),
       name: r.display_name,
       xUsername: r.x_username,
+      // The linked Telegram account; the username is null when it has none.
+      telegramUsername: r.telegram_username,
+      telegramLinked: r.telegram_linked,
       day: r.day,
       points: r.points,
       bonusPoints: r.bonus_points,
@@ -236,7 +253,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   transactions: {
     query: sql`
       select
-        'q' || c.id as id, u.address, u.display_name, u.x_username, q.title as quest,
+        'q' || c.id as id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked, q.title as quest,
         ${questKind} as kind,
         p.title as partner, c.points, c.tx_hash, c.completed_at
       from quest_completions c
@@ -246,7 +264,8 @@ const LISTS: Record<StatsView, ListSpec> = {
       where c.tx_hash is not null
       union all
       select
-        'k' || ci.id, u.address, u.display_name, u.x_username,
+        'k' || ci.id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked,
         'Daily check-in', 'check-in', null, ci.points + ci.bonus_points,
         ci.tx_hash, ci.created_at
       from check_ins ci
@@ -260,7 +279,8 @@ const LISTS: Record<StatsView, ListSpec> = {
   'transaction-wallets': {
     query: sql`
       select
-        u.id, u.address, u.display_name, u.x_username,
+        u.id, u.address, u.display_name, u.x_username, u.telegram_username,
+    (u.telegram_user_id is not null) as telegram_linked,
         count(*)::int as transactions, sum(o.points)::int as xp,
         max(o.at) as last_tx_at
       from (${onchainActions}) o
@@ -273,6 +293,9 @@ const LISTS: Record<StatsView, ListSpec> = {
       address: getAddress(r.address),
       name: r.display_name,
       xUsername: r.x_username,
+      // The linked Telegram account; the username is null when it has none.
+      telegramUsername: r.telegram_username,
+      telegramLinked: r.telegram_linked,
       transactions: r.transactions,
       xp: r.xp,
       lastTxAt: iso(r.last_tx_at),

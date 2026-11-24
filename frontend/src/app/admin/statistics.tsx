@@ -621,19 +621,53 @@ const REFERRALS_COLUMN: Column<{
   ),
 };
 
-const X_COLUMN: Column<{ xUsername: string | null }> = {
-  label: "X",
+const SocialLink = ({ href, handle }: { href: string; handle: string }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex max-w-full items-center gap-1 text-sm text-ink-light transition hover:text-white"
+  >
+    <span className="truncate">@{handle}</span>
+    <ExternalLinkIcon className="h-3 w-3 shrink-0" />
+  </a>
+);
+
+// The linked X and Telegram accounts, one per line. A Telegram account
+// without a public username can't be linked to, so it only says it's there.
+const X_COLUMN: Column<{
+  xUsername: string | null;
+  telegramUsername: string | null;
+  telegramLinked: boolean;
+}> = {
+  label: "X / Telegram",
   cell: (u) =>
-    u.xUsername ? (
-      <a
-        href={`https://x.com/${u.xUsername}`}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex max-w-full items-center gap-1 text-sm text-ink-light transition hover:text-white"
-      >
-        <span className="truncate">@{u.xUsername}</span>
-        <ExternalLinkIcon className="h-3 w-3 shrink-0" />
-      </a>
+    u.xUsername || u.telegramLinked ? (
+      <div className="flex min-w-0 flex-col">
+        {u.xUsername && (
+          <SocialLink
+            href={`https://x.com/${u.xUsername}`}
+            handle={u.xUsername}
+          />
+        )}
+        {u.telegramUsername ? (
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="shrink-0 text-[10px] font-medium uppercase text-white/40">
+              TG
+            </span>
+            <SocialLink
+              href={`https://t.me/${u.telegramUsername}`}
+              handle={u.telegramUsername}
+            />
+          </span>
+        ) : (
+          u.telegramLinked && (
+            <span className="text-xs text-white/40">
+              TG linked, no username
+            </span>
+          )
+        )}
+      </div>
     ) : (
       <span className="text-xs text-white/40">{PLACEHOLDER}</span>
     ),

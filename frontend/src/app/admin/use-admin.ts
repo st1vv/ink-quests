@@ -51,6 +51,9 @@ export type StatsUser = {
   rewardedReferrals: number;
   // The linked X handle, without the @; null when not linked.
   xUsername: string | null;
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: string | null;
+  telegramLinked: boolean;
 };
 
 export type StatsRankedUser = {
@@ -67,6 +70,9 @@ export type StatsRankedUser = {
   rewardedReferrals: number;
   // The linked X handle, without the @; null when not linked.
   xUsername: string | null;
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: string | null;
+  telegramLinked: boolean;
 };
 
 // A daily or social quest completion, a finished partner quest, or (in the
@@ -77,6 +83,9 @@ export type StatsCompletion = {
   name: string | null;
   // The linked X handle, without the @; null when not linked.
   xUsername: string | null;
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: string | null;
+  telegramLinked: boolean;
   // Quest title; the partner's title for a finished partner quest.
   quest: string;
   // "check-in" only in the transactions list: a paid check-in.
@@ -94,6 +103,9 @@ export type StatsCheckIn = {
   name: string | null;
   // The linked X handle, without the @; null when not linked.
   xUsername: string | null;
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: string | null;
+  telegramLinked: boolean;
   // UTC day, YYYY-MM-DD.
   day: string;
   points: number;
@@ -109,6 +121,9 @@ export type StatsTransactionWallet = {
   name: string | null;
   // The linked X handle, without the @; null when not linked.
   xUsername: string | null;
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: string | null;
+  telegramLinked: boolean;
   transactions: number;
   // XP from those transactions.
   xp: number;
