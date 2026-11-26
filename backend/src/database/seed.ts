@@ -1283,6 +1283,18 @@ const QUESTS: SeedQuest[] = [
     verifier: 'x-follow-thinkersclub',
   },
   {
+    slug: 'thinkers-explore-nftx',
+    kind: 'partner',
+    partner: 'thinkers',
+    title: 'Explore Thinkers on NFTX',
+    description:
+      'Open the Thinkers_ collection on NFTX, where Thinkers trade through its liquidity pool.',
+    actionUrl: 'https://nftx.io/ink/collections/thinkers',
+    points: 0,
+    sortOrder: 3,
+    verifier: 'visit-nftx-thinkers',
+  },
+  {
     slug: 'thinkers-complete-daily-quest',
     kind: 'partner',
     partner: 'thinkers',
@@ -1290,7 +1302,7 @@ const QUESTS: SeedQuest[] = [
     description: "Finish any of today's daily quests on the home page.",
     actionUrl: '/',
     points: 0,
-    sortOrder: 3,
+    sortOrder: 4,
     verifier: 'any-daily-quest',
   },
 ];

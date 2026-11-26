@@ -386,6 +386,7 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'x-follow-auranodes': [{ type: 'x-follow', handle: 'auranodes' }],
   'visit-aftermint': [{ type: 'visit' }],
   'x-follow-thinkersclub': [{ type: 'x-follow', handle: 'ThinkersClub_' }],
+  'visit-nftx-thinkers': [{ type: 'visit' }],
   // AuraNodes (AURANODES), the collection OpenSea's auranodes page lists;
   // several look-alike "AuraNodes" contracts exist on Ink.
   'hold-auranodes': [
