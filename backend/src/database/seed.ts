@@ -220,6 +220,16 @@ const PARTNERS: SeedPartner[] = [
     rewardXp: 100,
     tags: ['NFT'],
   },
+  {
+    slug: 'thinkers',
+    title: 'Thinkers_',
+    description:
+      'A world inside a thought: 3,333 early-internet characters on Ink, the first NFTs paired with a stock.',
+    imageUrl: '/campaigns/thinkers.webp',
+    websiteUrl: 'https://thinkers.club/',
+    rewardXp: 100,
+    tags: ['NFT'],
+  },
 ];
 
 // Amount quests come in $1 / $5 / $10 variants (or the quest's own
@@ -1246,6 +1256,41 @@ const QUESTS: SeedQuest[] = [
     actionUrl: '/',
     points: 0,
     sortOrder: 4,
+    verifier: 'any-daily-quest',
+  },
+  // Thinkers_
+  {
+    slug: 'thinkers-hold-thinker',
+    kind: 'partner',
+    partner: 'thinkers',
+    title: 'Hold a Thinker',
+    description:
+      'Hold at least one Thinker NFT in your wallet. No Thinker yet? Buy one on OpenSea.',
+    actionUrl: 'https://opensea.io/collection/thinkers_',
+    points: 0,
+    sortOrder: 1,
+    verifier: 'hold-thinkers',
+  },
+  {
+    slug: 'thinkers-follow-thinkersclub',
+    kind: 'partner',
+    partner: 'thinkers',
+    title: 'Follow @ThinkersClub_ on X',
+    description: 'Follow Thinkers_ on X for news and updates.',
+    actionUrl: 'https://x.com/intent/follow?screen_name=ThinkersClub_',
+    points: 0,
+    sortOrder: 2,
+    verifier: 'x-follow-thinkersclub',
+  },
+  {
+    slug: 'thinkers-complete-daily-quest',
+    kind: 'partner',
+    partner: 'thinkers',
+    title: 'Complete any daily quest',
+    description: "Finish any of today's daily quests on the home page.",
+    actionUrl: '/',
+    points: 0,
+    sortOrder: 3,
     verifier: 'any-daily-quest',
   },
 ];

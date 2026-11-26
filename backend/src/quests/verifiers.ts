@@ -385,12 +385,22 @@ export const VERIFIERS: Record<string, VerifierSpec[]> = {
   'visit-quotrons': [{ type: 'visit' }],
   'x-follow-auranodes': [{ type: 'x-follow', handle: 'auranodes' }],
   'visit-aftermint': [{ type: 'visit' }],
+  'x-follow-thinkersclub': [{ type: 'x-follow', handle: 'ThinkersClub_' }],
   // AuraNodes (AURANODES), the collection OpenSea's auranodes page lists;
   // several look-alike "AuraNodes" contracts exist on Ink.
   'hold-auranodes': [
     {
       type: 'nft-holder',
       contract: '0x98716E4f6bE7abC8f14612BBB9c653bFe4E8cF51',
+    },
+  ],
+  // Thinkers_ (THINK), the ERC-721 OpenSea's thinkers_ page lists (2,782
+  // tokens). Not the THINK ERC-20 at 0xc22727…30C3, which wraps NFTs held
+  // in its pool: only the NFT itself counts.
+  'hold-thinkers': [
+    {
+      type: 'nft-holder',
+      contract: '0xf0Eb4D1EE2278b0874fb68Af83E6443c04AF7300',
     },
   ],
   // QUOTRONS, 4,444 terminals; an ERC-721 behind an ERC-1967 proxy.
