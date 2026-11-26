@@ -11,7 +11,7 @@ import {
   trustWallet,
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { createConfig, http } from "wagmi";
+import { createConfig, fallback, http } from "wagmi";
 import { ink } from "viem/chains";
 
 const appName = "InkQuests";
@@ -75,7 +75,14 @@ export const wagmiConfig = createConfig({
   connectors,
   chains: [ink],
   transports: {
-    [ink.id]: http(),
+    // Every public Ink RPC in turn: a bare http() uses only the first, so a
+    // 403 or rate limit from it broke check-ins. Gelato answers 403 to some
+    // VPN and proxy exits, so an independent provider comes last.
+    [ink.id]: fallback(
+      [...ink.rpcUrls.default.http, "https://ink.drpc.org"].map((url) =>
+        http(url),
+      ),
+    ),
   },
 });
 
