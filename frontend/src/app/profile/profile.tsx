@@ -560,6 +560,7 @@ const activityTitle = (item: Activity) => {
       : "Daily check-in";
   }
   if (item.type === "campaign") return `Completed the ${item.title} quest`;
+  if (item.type === "weekly") return `Weekly mission: ${item.title}`;
   if (item.type === "referral" && item.title) {
     return `Friend ${shortAddress(item.title)} completed a quest`;
   }

@@ -93,9 +93,9 @@ const toCompletion = (r: ListRow) => ({
   address: getAddress(r.address),
   name: r.display_name,
   xUsername: r.x_username,
-      // The linked Telegram account; the username is null when it has none.
-      telegramUsername: r.telegram_username,
-      telegramLinked: r.telegram_linked,
+  // The linked Telegram account; the username is null when it has none.
+  telegramUsername: r.telegram_username,
+  telegramLinked: r.telegram_linked,
   quest: r.quest,
   kind: r.kind,
   // Campaign title for a partner task.

@@ -3,17 +3,28 @@ import { Surface } from "@/shared/ui/surface";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Skeleton, ValueSkeleton } from "@/shared/ui/skeleton";
-import { CheckIcon, GiftIcon } from "@/shared/ui/icons";
+import { CheckIcon } from "@/shared/ui/icons";
 import { useRequireAuth } from "@/app/auth/use-require-auth";
 import { ACTION_WIDTH } from "@/app/quests/quest-row";
-import { tagVariant } from "@/app/quests/tag-colors";
 import {
-  BONUS_SLUG,
-  nextUtcMonday,
   useClaimWeeklyMission,
   useWeeklyMissions,
   type WeeklyMission,
 } from "@/app/home/use-weekly-missions";
+
+// Monday 00:00 UTC of next week: when the missions reset. Shown until the
+// API's own resetsAt is in.
+const nextUtcMonday = () => {
+  const now = new Date();
+  const daysLeft = (8 - now.getUTCDay()) % 7 || 7;
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + daysLeft,
+    ),
+  ).toISOString();
+};
 
 // "3d 09:52:10" until the weekly reset; the days drop off on the last day.
 const formatTimeLeft = (until: string) => {
@@ -28,13 +39,12 @@ const formatTimeLeft = (until: string) => {
   return days > 0 ? `${days}d ${clock}` : clock;
 };
 
-// Until the given reset, or the next Monday 00:00 UTC when there's none
-// (yet), worked out on every tick so it rolls over into the next week.
+// Worked out on every tick, so without a reset from the API it rolls over
+// into the next week by itself.
 const useTimeLeft = (until?: string) => {
   const [timeLeft, setTimeLeft] = useState("");
   useEffect(() => {
-    const update = () =>
-      setTimeLeft(formatTimeLeft(until ?? nextUtcMonday().toISOString()));
+    const update = () => setTimeLeft(formatTimeLeft(until ?? nextUtcMonday()));
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
@@ -42,127 +52,82 @@ const useTimeLeft = (until?: string) => {
   return timeLeft;
 };
 
-// The missions aren't live yet: the block shows the weekly timer and a
-// "coming soon" note. Set to false once the backend serves them.
-const COMING_SOON = true;
-
-export const HomeWeeklyMissions = () =>
-  COMING_SOON ? <WeeklyComingSoon /> : <WeeklyMissionsList />;
-
-const WeeklyHeader = ({
-  count,
-  timeLeft,
-}: {
-  count?: ReactNode;
-  timeLeft: string;
-}) => (
-  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
-    <div>
-      <div className="flex items-baseline gap-3">
-        <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-          Weekly missions
-        </h2>
-        {count && (
-          <span className="text-sm text-white/40 tabular-nums">{count}</span>
-        )}
-      </div>
-      <p className="mt-1 text-sm leading-6 text-white/60">
-        Bigger goals for the whole week. Progress counts from your daily quests
-        and campaigns.
-      </p>
-    </div>
-    {timeLeft && (
-      <Badge className="shrink-0 items-center gap-2 self-start px-3 py-1.5 text-xs md:px-4 md:text-sm">
-        <span>Resets in</span>
-        <span className="font-semibold text-white tabular-nums">
-          {timeLeft}
-        </span>
-      </Badge>
-    )}
-  </div>
-);
-
-const WeeklyComingSoon = () => {
-  const timeLeft = useTimeLeft();
-  return (
-    <Surface>
-      <div className="flex flex-col gap-4">
-        <WeeklyHeader timeLeft={timeLeft} />
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-white/15 bg-black/20 px-6 py-10 text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink/15 text-ink-light">
-            <GiftIcon className="h-6 w-6" />
-          </span>
-          <h3 className="text-lg font-semibold text-white">Coming soon</h3>
-          <p className="max-w-md text-sm leading-6 text-white/60">
-            Weekly missions with bonus XP are almost here. Keep up your daily
-            quests and check back soon.
-          </p>
-        </div>
-      </div>
-    </Surface>
-  );
-};
-
-const WeeklyMissionsList = () => {
+export const HomeWeeklyMissions = () => {
   const weekly = useWeeklyMissions();
   const claim = useClaimWeeklyMission();
   const requireAuth = useRequireAuth();
-  const data = weekly.data;
-  const timeLeft = useTimeLeft(data?.resetsAt);
+  const timeLeft = useTimeLeft(weekly.data?.resetsAt);
 
-  const missions = data?.missions ?? [];
+  const missions = weekly.data?.missions ?? [];
   const claimedCount = missions.filter((m) => m.claimed).length;
-  const allClaimed = missions.length > 0 && claimedCount === missions.length;
-
-  const claimMission = requireAuth((slug: string, points: number) =>
-    claim.mutate({ slug, points }),
-  );
+  const claimMission = requireAuth((slug: string) => claim.mutate(slug));
 
   return (
     <Surface>
       <div className="flex flex-col gap-4">
-        <WeeklyHeader
-          timeLeft={timeLeft}
-          count={
-            weekly.isPending ? (
-              <ValueSkeleton className="w-8" />
-            ) : (
-              `${claimedCount}/${missions.length}`
-            )
-          }
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+          <div>
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+                Weekly missions
+              </h2>
+              <span className="text-sm text-white/40 tabular-nums">
+                {weekly.isPending ? (
+                  <ValueSkeleton className="w-8" />
+                ) : (
+                  missions.length > 0 && `${claimedCount}/${missions.length}`
+                )}
+              </span>
+            </div>
+            <p className="mt-1 text-sm leading-6 text-white/60">
+              Bigger goals for the whole week, with bonus XP. New missions every
+              Monday.
+            </p>
+          </div>
+          {timeLeft && (
+            <Badge className="shrink-0 items-center gap-2 self-start px-3 py-1.5 text-xs md:px-4 md:text-sm">
+              <span>Resets in</span>
+              <span className="font-semibold text-white tabular-nums">
+                {timeLeft}
+              </span>
+            </Badge>
+          )}
+        </div>
 
         <div className="flex flex-col gap-3">
           {weekly.isPending &&
             [0, 1, 2].map((i) => (
               <Skeleton
                 key={i}
-                className="h-[94px] rounded-3xl border border-white/10 bg-white/[0.03]"
+                className="h-[110px] rounded-3xl border border-white/10 bg-white/[0.03]"
               />
             ))}
+
+          {weekly.isError && (
+            <Message>
+              Couldn't load this week's missions.{" "}
+              <button
+                type="button"
+                onClick={() => weekly.refetch()}
+                className="cursor-pointer font-semibold text-ink-light hover:text-white"
+              >
+                Try again
+              </button>
+            </Message>
+          )}
+
+          {weekly.isSuccess && missions.length === 0 && (
+            <Message>No missions this week. Check back on Monday.</Message>
+          )}
 
           {missions.map((mission) => (
             <MissionRow
               key={mission.slug}
               mission={mission}
-              claiming={
-                claim.isPending && claim.variables?.slug === mission.slug
-              }
-              onClaim={() => claimMission(mission.slug, mission.points)}
+              claiming={claim.isPending && claim.variables === mission.slug}
+              onClaim={() => claimMission(mission.slug)}
             />
           ))}
-
-          {data && (
-            <BonusRow
-              points={data.bonus.points}
-              claimed={data.bonus.claimed}
-              unlocked={allClaimed}
-              claimedCount={claimedCount}
-              total={missions.length}
-              claiming={claim.isPending && claim.variables?.slug === BONUS_SLUG}
-              onClaim={() => claimMission(BONUS_SLUG, data.bonus.points)}
-            />
-          )}
         </div>
       </div>
     </Surface>
@@ -179,7 +144,6 @@ const MissionRow = ({
   onClaim: () => void;
 }) => {
   const done = mission.progress >= mission.target;
-  const left = mission.target - mission.progress;
 
   return (
     <div
@@ -220,69 +184,38 @@ const MissionRow = ({
           <p className="mt-1 text-sm leading-6 text-white/60">
             {mission.description}
           </p>
-
           {!mission.claimed && (
-            <div className="mt-3 flex flex-col gap-2">
-              {mission.steps && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {mission.steps.map((step) => (
-                    <Badge
-                      key={step.label}
-                      variant={tagVariant(step.label)}
-                      className="items-center gap-1 px-2 py-0.5 text-xs"
-                    >
-                      {step.done && <CheckIcon className="h-3 w-3" />}
-                      {step.label}
-                    </Badge>
-                  ))}
-                  {Array.from(
-                    {
-                      length: Math.max(
-                        0,
-                        mission.target - mission.steps.length,
-                      ),
-                    },
-                    (_, i) => (
-                      <span
-                        key={i}
-                        className="rounded-full border border-dashed border-white/20 px-2 py-0.5 text-xs text-white/50"
-                      >
-                        any other
-                      </span>
-                    ),
-                  )}
-                </div>
-              )}
+            <div className="mt-3 flex items-center gap-3">
               <ProgressBar value={mission.progress} max={mission.target} />
+              <span className="shrink-0 text-xs text-white/60 tabular-nums">
+                {mission.progress}/{mission.target}
+              </span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex shrink-0 md:items-center">
-        {mission.claimed ? (
-          <span
-            className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
-          >
-            Claimed
-          </span>
-        ) : done ? (
-          <Button
-            variant="secondary"
-            onClick={onClaim}
-            disabled={claiming}
-            className={ACTION_WIDTH}
-          >
-            {claiming ? "Claiming…" : `Claim ${mission.points} XP`}
-          </Button>
-        ) : (
-          <span
-            className={`${ACTION_WIDTH} text-center text-sm text-white/50 tabular-nums`}
-          >
-            {left} to go
-          </span>
-        )}
-      </div>
+      {/* A mission in progress has no action: its bar says how far along. */}
+      {(mission.claimed || done) && (
+        <div className="flex shrink-0 md:items-center">
+          {mission.claimed ? (
+            <span
+              className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
+            >
+              Claimed
+            </span>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={onClaim}
+              disabled={claiming}
+              className={ACTION_WIDTH}
+            >
+              {claiming ? "Claiming…" : `Claim ${mission.points} XP`}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -302,92 +235,8 @@ const ProgressBar = ({ value, max }: { value: number; max: number }) => (
   </div>
 );
 
-const BonusRow = ({
-  points,
-  claimed,
-  unlocked,
-  claimedCount,
-  total,
-  claiming,
-  onClaim,
-}: {
-  points: number;
-  claimed: boolean;
-  unlocked: boolean;
-  claimedCount: number;
-  total: number;
-  claiming: boolean;
-  onClaim: () => void;
-}) => (
-  <div
-    className={`flex flex-col gap-4 rounded-3xl border p-4 md:flex-row md:items-center md:justify-between ${
-      claimed
-        ? "border-emerald-400/20 bg-emerald-400/5"
-        : unlocked
-          ? "border-amber-400/40 bg-amber-400/10"
-          : "border-dashed border-white/15"
-    }`}
-  >
-    <div className="flex min-w-0 flex-1 gap-4">
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-          claimed
-            ? "bg-emerald-400/15 text-emerald-300"
-            : "bg-amber-400/15 text-amber-300"
-        }`}
-      >
-        {claimed ? <CheckIcon /> : <GiftIcon />}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <h3 className="text-base font-semibold text-white md:text-lg">
-            Weekly bonus
-          </h3>
-          <Badge variant="amber" className="px-2 py-0.5 text-xs">
-            +{points} XP
-          </Badge>
-        </div>
-        <p className="mt-1 text-sm leading-6 text-white/60">
-          Claim all {total} missions this week to unlock it.
-        </p>
-        {!claimed && (
-          <div className="mt-3 flex gap-1">
-            {Array.from({ length: total }, (_, i) => (
-              <span
-                key={i}
-                className={`h-1.5 flex-1 rounded-full ${
-                  i < claimedCount ? "bg-amber-300" : "bg-white/10"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-
-    <div className="flex shrink-0 md:items-center">
-      {claimed ? (
-        <span
-          className={`${ACTION_WIDTH} text-center text-sm font-semibold text-emerald-300`}
-        >
-          Claimed
-        </span>
-      ) : unlocked ? (
-        <Button
-          variant="secondary"
-          onClick={onClaim}
-          disabled={claiming}
-          className={ACTION_WIDTH}
-        >
-          {claiming ? "Claiming…" : `Claim ${points} XP`}
-        </Button>
-      ) : (
-        <span
-          className={`${ACTION_WIDTH} text-center text-sm text-white/50 tabular-nums`}
-        >
-          {claimedCount} of {total}
-        </span>
-      )}
-    </div>
-  </div>
+const Message = ({ children }: { children: ReactNode }) => (
+  <p className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-white/60">
+    {children}
+  </p>
 );

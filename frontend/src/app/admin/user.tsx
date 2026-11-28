@@ -287,6 +287,7 @@ const KIND_LABELS: Record<UserActivity["type"], string> = {
   referral: "Referral",
   campaign: "Campaign reward",
   bonus: "Given by hand",
+  weekly: "Weekly mission",
 };
 
 // Check-in days are UTC dates, so they're shown as such.

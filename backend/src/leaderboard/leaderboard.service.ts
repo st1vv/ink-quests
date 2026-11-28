@@ -7,8 +7,8 @@ import { levelForXp } from '../progress/level';
 
 export const LEADERBOARD_SIZE = 100;
 
-// Total XP per user from quests, check-ins, referrals, campaign rewards and
-// admin grants, the same sum as GET /me/progress. Only users with any XP get
+// Total XP per user from quests, check-ins, referrals, campaign rewards,
+// weekly missions and admin grants, the same sum as GET /me/progress. Only users with any XP get
 // a row.
 export const userXp = sql`
   select
@@ -25,6 +25,8 @@ export const userXp = sql`
     select user_id, points, created_at from campaign_rewards
     union all
     select user_id, points, created_at from xp_grants
+    union all
+    select user_id, points, created_at from weekly_mission_claims
   ) p
   group by user_id
   having sum(points) > 0

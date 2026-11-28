@@ -61,6 +61,8 @@ export const useClaimQuest = () => {
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),
+        // Daily quests count toward the weekly missions.
+        queryClient.invalidateQueries({ queryKey: ["weekly-missions"] }),
       ]);
     },
   });
@@ -90,9 +92,15 @@ export const useClaimCampaign = () => {
         description: `${title} quest completed`,
       });
       return Promise.all(
-        ["campaigns", "progress", "leaderboard", "rank", "activity"].map(
-          (key) => queryClient.invalidateQueries({ queryKey: [key] }),
-        ),
+        [
+          "campaigns",
+          "progress",
+          "leaderboard",
+          "rank",
+          "activity",
+          // A finished campaign makes the day active (weekly missions).
+          "weekly-missions",
+        ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
       );
     },
   });

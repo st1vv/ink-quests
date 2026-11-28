@@ -314,3 +314,43 @@ export const questCompletions = pgTable(
     uniqueIndex().on(t.questId, t.proofUrl),
   ],
 );
+
+// The missions of one UTC week (Monday to Sunday), picked from the pool in
+// weekly/missions.ts the first time the week is asked for, then fixed for
+// it: title, target and XP are copied so pool changes don't rewrite it.
+export const weeklyMissions = pgTable(
+  'weekly_missions',
+  {
+    id: serial().primaryKey(),
+    // The week's Monday.
+    week: date({ mode: 'string' }).notNull(),
+    // The pool entry, which says how progress is counted.
+    slug: varchar({ length: 32 }).notNull(),
+    title: text().notNull(),
+    description: text().notNull(),
+    target: integer().notNull(),
+    points: integer().notNull(),
+    // Display order within the week.
+    sortOrder: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex().on(t.week, t.slug)],
+);
+
+// A user's XP for a completed weekly mission, once per mission.
+export const weeklyMissionClaims = pgTable(
+  'weekly_mission_claims',
+  {
+    id: serial().primaryKey(),
+    userId: integer()
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    missionId: integer()
+      .notNull()
+      .references(() => weeklyMissions.id),
+    // Copied at claim time, like every other reward.
+    points: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex().on(t.userId, t.missionId)],
+);

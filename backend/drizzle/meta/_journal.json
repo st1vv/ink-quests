@@ -134,6 +134,13 @@
       "when": 1794553155609,
       "tag": "0018_telegram_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795855618516,
+      "tag": "0019_weekly_missions",
+      "breakpoints": true
     }
   ]
 }

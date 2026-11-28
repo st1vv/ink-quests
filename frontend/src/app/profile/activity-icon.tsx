@@ -4,6 +4,7 @@ import {
   FlameIcon,
   GiftIcon,
   QuestsIcon,
+  TrophyIcon,
   UsersIcon,
 } from "@/shared/ui/icons";
 import type { Activity } from "@/app/profile/use-profile";
@@ -15,6 +16,7 @@ const ICONS: Record<Activity["type"], { icon: ReactNode; style: string }> = {
   // The sword is also the Quests icon in the nav.
   campaign: { icon: <QuestsIcon />, style: "bg-amber-400/15 text-amber-300" },
   bonus: { icon: <GiftIcon />, style: "bg-fuchsia-400/15 text-fuchsia-300" },
+  weekly: { icon: <TrophyIcon />, style: "bg-ink/20 text-ink-light" },
 };
 
 // The round icon at the start of an activity row, in the profile and on

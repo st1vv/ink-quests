@@ -19,6 +19,7 @@ import {
   checkIns,
   questCompletions,
   referralRewards,
+  weeklyMissionClaims,
   xpGrants,
 } from '../database/schema';
 import { utcDay } from '../quests/period';
@@ -100,7 +101,15 @@ export class ProgressService {
       .from(xpGrants)
       .where(eq(xpGrants.userId, userId));
 
-    const totalXp = questXp + checkInXp + referralXp + campaignXp + grantedXp;
+    const [{ weeklyXp }] = await this.db
+      .select({
+        weeklyXp: sql<number>`coalesce(sum(${weeklyMissionClaims.points}), 0)::int`,
+      })
+      .from(weeklyMissionClaims)
+      .where(eq(weeklyMissionClaims.userId, userId));
+
+    const totalXp =
+      questXp + checkInXp + referralXp + campaignXp + grantedXp + weeklyXp;
     return {
       totalXp,
       ...levelProgress(totalXp),

@@ -9,7 +9,8 @@ export const ACTIVITY_PAGE_SIZE = 50;
 
 type ActivityRow = {
   // 'bonus' is XP an admin gave (or took) by hand; its title is the reason.
-  type: 'check-in' | 'quest' | 'referral' | 'campaign' | 'bonus';
+  // 'weekly' is a claimed weekly mission; its title is the mission's.
+  type: 'check-in' | 'quest' | 'referral' | 'campaign' | 'bonus' | 'weekly';
   title: string | null;
   // The campaign of a partner quest task; null for the rest.
   partner: string | null;
@@ -145,6 +146,11 @@ const activityRows = (userId: number, withTasks: boolean) => sql`
   select 'bonus', g.reason, null, g.points, 0, g.created_at, null, null
   from xp_grants g
   where g.user_id = ${userId}
+  union all
+  select 'weekly', m.title, null, w.points, 0, w.created_at, null, null
+  from weekly_mission_claims w
+  join weekly_missions m on m.id = w.mission_id
+  where w.user_id = ${userId}
 `;
 
 const toActivity = (r: ActivityRow) => ({

@@ -13,6 +13,7 @@ import { AdminModule } from './admin/admin.module';
 import { XModule } from './x/x.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { QuestsModule } from './quests/quests.module';
+import { WeeklyModule } from './weekly/weekly.module';
 import { validateEnv } from './config/env';
 import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
@@ -33,6 +34,7 @@ import { HealthController } from './health/health.controller';
     XModule,
     TelegramModule,
     CampaignsModule,
+    WeeklyModule,
     AdminModule,
   ],
   controllers: [HealthController],

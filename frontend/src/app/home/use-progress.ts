@@ -245,6 +245,8 @@ export const useCheckIn = () => {
         queryClient.invalidateQueries({ queryKey: ["rank"] }),
         queryClient.invalidateQueries({ queryKey: ["stats"] }),
         queryClient.invalidateQueries({ queryKey: ["activity"] }),
+        // Check-ins count toward the weekly missions.
+        queryClient.invalidateQueries({ queryKey: ["weekly-missions"] }),
       ]);
     },
   });
